@@ -10,20 +10,6 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Sidebar */
-.offcanvas-lg {
-    position: absolute;
-    transform: translateX(-100%);
-    visibility: hidden;
-    width: 200px;
-    transition: transform 0.3s ease-in-out;
-}
-
-.offcanvas-lg.show {
-    transform: translateX(0);
-    visibility: visible;
-    width: 250px;
-}
 
 /* Table Styling */
 .table {

@@ -28,32 +28,48 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-dark bg-dark fixed-top">
-    <div class="container-fluid">
-        <button class="btn btn-outline-light d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar">
-            <i class="bi bi-list"></i>
-        </button>
-        <a class="navbar-brand fw-bold" href="#">☕ Brew & Bake Admin</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Brew & Bake ☕</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="bi bi-receipt"></i> Orders
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="admin.php">
+            <i class="bi bi-box-seam"></i> Products
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="bi bi-bar-chart-line"></i> Reports
+          </a>
+        </li>
+        <!-- Settings Dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-gear"></i> Settings
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="settingsDropdown">
+            <li><a class="dropdown-item" href="#">Profile Settings</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="../logout.php"><i class="bi bi-box-arrow-left"></i> Logout</a></li>
+          </ul>
+        </li>
+      </ul>
     </div>
+  </div>
 </nav>
 
-<!-- Sidebar -->
-<div class="offcanvas offcanvas-start bg-dark text-white offcanvas-lg" tabindex="-1" id="sidebar">
-    <div class="offcanvas-header d-lg-none">
-        <h5 class="offcanvas-title">Navigation</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body p-0">
-        <div class="list-group list-group-flush">
-            <a href="admin.php" class="list-group-item list-group-item-action bg-dark text-white"><i class="bi bi-box-seam"></i> Manage Products</a>
-            <a href="add_product.php" class="list-group-item list-group-item-action bg-dark text-white"><i class="bi bi-plus-circle"></i> Add Product</a>
-            <a href="../logout.php" class="list-group-item list-group-item-action bg-dark text-white"><i class="bi bi-box-arrow-left"></i> Logout</a>
-        </div>
-    </div>
-</div>
 
 <!-- Main Content -->
-<div class="content pt-5 mt-4 px-3">
+<div class="flex-grow-1 p-3">
     <?php if ($successMessage): ?>
         <div id="flash-alert" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($successMessage) ?>
