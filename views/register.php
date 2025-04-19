@@ -6,45 +6,67 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 if (isset($_POST['register'])) {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
+    $name = htmlspecialchars(trim($_POST['name']));
+    $email = htmlspecialchars(trim($_POST['email']));
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $token = bin2hex(random_bytes(32));
 
-    $stmt = $conn->prepare("INSERT INTO users (name, email, password, verification_token) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$name, $email, $password, $token]);
+    // 🔍 Check if email already exists
+    $checkStmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $checkStmt->execute([$email]);
 
-    $mail = new PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com'; // Replace with your SMTP
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'your_email@gmail.com'; // Your email
-        $mail->Password   = 'your_app_password'; // App password or real pass (not recommended)
-        $mail->SMTPSecure = 'tls';
-        $mail->Port       = 587;
+    if ($checkStmt->rowCount() > 0) {
+        echo "<div class='alert alert-danger'>Email already registered. Try logging in or use a different email.</div>";
+    } else {
+        try {
+            // ✅ Insert if email is unique
+            $stmt = $conn->prepare("INSERT INTO users (name, email, password, verification_token) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$name, $email, $password, $token]);
 
-        $mail->setFrom('your_email@gmail.com', 'Brew & Bake');
-        $mail->addAddress($email, $name);
+            $mail = new PHPMailer(true);
+            try {
+                $mail->isSMTP();
+                $mail->Host = 'smtp.gmail.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'ejlqrz@gmail.com';
+                $mail->Password = 'nhnm zuna mamd ydzf'; // Your generated app password
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 587;
+                
 
-        $verify_link = "http://localhost/brew-and-bake/verify.php?token=$token";
+                $mail->setFrom('ejlqrz@gmail.com', 'Brew & Bake');
+                $mail->addAddress($email, $name);
 
-        $mail->isHTML(true);
-        $mail->Subject = 'Verify your email';
-        $mail->Body    = "Click the link to verify your account: <a href='$verify_link'>Verify Email</a>";
+                $verify_link = "http://localhost/brew-and-bake/verify.php?token=$token";
 
-        $mail->send();
-        echo "<div class='alert alert-success'>Verification email sent!</div>";
-    } catch (Exception $e) {
-        echo "<div class='alert alert-danger'>Message could not be sent. Mailer Error: {$mail->ErrorInfo}</div>";
+                $mail->isHTML(true);
+                $mail->Subject = 'Verify your email';
+                $mail->Body    = "Click the link to verify your account: <a href='$verify_link'>Verify Email</a>";
+
+                if ($mail->send()) {
+                    echo "<div class='alert alert-success'>Verification email sent!</div>";
+                } else {
+                    echo "<div class='alert alert-warning'>Verification email could not be sent, but the registration was successful. Please try again.</div>";
+                }
+
+            } catch (Exception $e) {
+                echo "<div class='alert alert-danger'>Message could not be sent. Mailer Error: {$mail->ErrorInfo}</div>";
+            }
+
+        } catch (PDOException $e) {
+            echo "<div class='alert alert-danger'>Error occurred while registering. Please try again later.</div>";
+            // Log error for debugging purposes (optional)
+            error_log("Database error: " . $e->getMessage());
+        }
     }
 }
 ?>
 
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Brew & Bake</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 </head>
@@ -60,4 +82,3 @@ if (isset($_POST['register'])) {
 </div>
 </body>
 </html>
-

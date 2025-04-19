@@ -1,0 +1,13 @@
+{
+    "name": "coding-only/brew-and-bake",
+    "description": "Coffee and pastries website",
+    "authors": [
+        {
+            "name": "EjLaquiorez",
+            "email": "ejlqrz@gmail.com"
+        }
+    ],
+    "require": {
+        "phpmailer/phpmailer": "^6.9"
+    }
+}
