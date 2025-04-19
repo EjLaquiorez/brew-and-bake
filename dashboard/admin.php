@@ -23,20 +23,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Admin Dashboard - Brew & Bake</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        @media (min-width: 992px) {
-            .offcanvas-lg {
-                position: static;
-                transform: none;
-                visibility: visible !important;
-                border: none;
-                width: 250px;
-            }
-            .content {
-                margin-left: 250px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/styles.css"> <!-- Link to external CSS -->
 </head>
 <body>
 
@@ -66,7 +53,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <!-- Main Content -->
-<div class="content pt-4 mt-5 px-3">
+<div class="content pt-5 mt-4 px-3">
     <?php if ($successMessage): ?>
         <div id="flash-alert" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($successMessage) ?>
@@ -83,7 +70,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <?php if (count($products) > 0): ?>
         <div class="table-responsive">
-            <table class="table table-hover align-middle table-bordered">
+            <table class="table table-striped table-bordered align-middle">
                 <thead class="table-dark text-center">
                     <tr>
                         <th>Name</th>
@@ -102,10 +89,10 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <td><?= htmlspecialchars($prod['description']) ?></td>
                         <td>
                             <a href="edit_product.php?id=<?= $prod['id'] ?>" class="btn btn-warning btn-sm me-1">
-                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-pencil"></i> Edit
                             </a>
                             <a href="delete_product.php?id=<?= $prod['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete this product?')">
-                                <i class="bi bi-trash"></i>
+                                <i class="bi bi-trash"></i> Delete
                             </a>
                         </td>
                     </tr>
@@ -121,14 +108,6 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    setTimeout(() => {
-        const alert = document.getElementById('flash-alert');
-        if (alert) {
-            const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-            bsAlert.close();
-        }
-    }, 2000);
-</script>
+<script src="../assets/js/scripts.js"></script> <!-- Link to external JS -->
 </body>
 </html>

@@ -1,0 +1,123 @@
+/* Global Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+    margin-top: 56px; /* Space for the fixed navbar */
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar */
+.offcanvas-lg {
+    position: absolute;
+    transform: translateX(-100%);
+    visibility: hidden;
+    width: 200px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.offcanvas-lg.show {
+    transform: translateX(0);
+    visibility: visible;
+    width: 250px;
+}
+
+/* Table Styling */
+.table {
+    margin-top: 20px;
+    border-collapse: collapse; /* Clean up table layout */
+    width: 100%;
+}
+
+.table th, .table td {
+    padding: 8px 12px; /* Reduced padding for more compact table */
+    vertical-align: middle;
+    border-bottom: 1px solid #e0e0e0; /* Soft border for table rows */
+    text-align: left; /* Left align for better readability */
+    font-size: 12px; /* Reduced font size for compactness */
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #fafafa; /* Lighter alternate row color */
+}
+
+/* Button Styling */
+.btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-block;
+    margin: 0 5px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: black;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Adjusting buttons in tables */
+.table .btn {
+    padding: 6px 12px; /* Smaller padding for buttons */
+    font-size: 12px; /* Smaller font size for buttons */
+    border-radius: 6px; /* Rounded corners for table buttons */
+}
+
+/* Button container styling for better spacing */
+.btn-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* Responsive Layout for Tables */
+@media (max-width: 767px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table th, .table td {
+        padding: 6px 10px; /* Further reduce padding on small screens */
+        font-size: 10px; /* Smaller font size for smaller screens */
+    }
+
+    .table .btn {
+        padding: 5px 10px; /* Adjust button size for mobile */
+        font-size: 10px; /* Smaller font size for mobile */
+    }
+}
+
