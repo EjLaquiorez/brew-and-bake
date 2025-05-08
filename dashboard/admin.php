@@ -140,8 +140,8 @@ $recentProducts = array_slice($products, 0, 5);
                                 <p class="mb-0">Here's what's happening with your store today.</p>
                             </div>
                             <div class="text-end">
-                                <h5 class="mb-1"><?= date('l, F j, Y') ?></h5>
-                                <p class="mb-0"><?= date('h:i A') ?></p>
+                                <h5 class="mb-1" id="currentTime"></h5>
+                                <p class="mb-0"><?= date('l, F j, Y') ?></p>
                             </div>
                         </div>
                     </div>
@@ -411,6 +411,16 @@ $recentProducts = array_slice($products, 0, 5);
                 }, 5000);
             });
         });
+
+        function updateTime() {
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit', hour12: true };
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString([], options);
+        }
+
+        // Update time immediately and set interval to update every minute
+        updateTime();
+        setInterval(updateTime, 60000); // Update every 60 seconds
     </script>
 </body>
 </html>
