@@ -32,14 +32,25 @@ if (isset($_POST['update'])) {
 
 <!-- Edit Product Form -->
 <form method="POST" enctype="multipart/form-data" class="edit-product-form">
-    <input type="text" name="name" value="<?= $product['name'] ?>" class="form-control mb-2" required>
-    <select name="category" class="form-control mb-2" required>
+    <label for="name" class="form-label">Product Name</label>
+    <input type="text" id="name" name="name" value="<?= $product['name'] ?>" class="form-control mb-2" placeholder="Enter product name" required>
+
+    <label for="category" class="form-label">Category</label>
+    <select id="category" name="category" class="form-control mb-2" required>
+        <option value="" disabled selected>Select category</option>
         <option value="coffee" <?= $product['category'] === 'coffee' ? 'selected' : '' ?>>Coffee</option>
         <option value="pastry" <?= $product['category'] === 'pastry' ? 'selected' : '' ?>>Pastry</option>
     </select>
-    <input type="number" step="0.01" name="price" value="<?= $product['price'] ?>" class="form-control mb-2" required>
-    <textarea name="description" class="form-control mb-2"><?= $product['description'] ?></textarea>
-    <input type="file" name="image" class="form-control mb-2">
+
+    <label for="price" class="form-label">Price</label>
+    <input type="number" id="price" step="0.01" name="price" value="<?= $product['price'] ?>" class="form-control mb-2" placeholder="Enter product price" required>
+
+    <label for="description" class="form-label">Description</label>
+    <textarea id="description" name="description" class="form-control mb-2" placeholder="Enter product description" required><?= $product['description'] ?></textarea>
+
+    <label for="image" class="form-label">Upload Image</label>
+    <input type="file" id="image" name="image" class="form-control mb-2" placeholder="Upload product image">
+
     <button name="update" class="btn btn-success">Update Product</button>
     <a href="admin.php" class="btn btn-secondary">Cancel</a>
 </form>

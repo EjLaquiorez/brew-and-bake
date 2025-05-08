@@ -16,9 +16,10 @@
 
 /* Edit Product Form Styles */
 body {
-    background: var(--background-gradient);
-    background-attachment: fixed;
-    background-size: cover;
+    background-color: #6F4E37; /* Light background for the form */
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.5;
 }
 
 .edit-product-form {
@@ -100,4 +101,13 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Form Label Styling */
+.form-label {
+    font-weight: 600; /* Bold font for better visibility */
+    color: var(--coffee-dark); /* Use a dark color for contrast */
+    margin-bottom: 0.5rem; /* Space below the label */
+    font-size: 1rem; /* Set a standard font size */
+    display: block; /* Ensure the label takes up the full width */
 }
