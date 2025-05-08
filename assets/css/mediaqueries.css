@@ -1,0 +1,414 @@
+/* Media Queries Breakpoints
+ * xs: 0-575px (Extra small devices)
+ * sm: 576-767px (Small devices)
+ * md: 768-991px (Medium devices)
+ * lg: 992-1199px (Large devices)
+ * xl: 1200px and up (Extra large devices)
+ */
+
+/* Base Responsive Typography and Layout */
+html {
+    font-size: 16px;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+@media (max-width: 575.98px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+@media (min-width: 1200px) {
+    html {
+        font-size: 18px;
+    }
+}
+
+/* Container Responsive Padding */
+.container {
+    padding: 1rem;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+@media (max-width: 575.98px) {
+    .container {
+        padding: 0.5rem;
+        width: 100%;
+        margin: 0;
+    }
+
+    /* Prevent horizontal scroll */
+    .row {
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+    }
+    
+    .col, [class*="col-"] {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        width: 100%;
+    }
+}
+
+@media (min-width: 768px) {
+    .container {
+        padding: 1.5rem;
+    }
+}
+
+/* Grid System Adjustments */
+@media (max-width: 575.98px) {
+    /* Force single column layout on mobile */
+    .col, [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Adjust card margins */
+    .card {
+        margin: 0.5rem 0;
+        border-radius: 8px;
+        width: 100%;
+    }
+
+    /* Adjust table layout */
+    .table-responsive {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+
+    /* Stack buttons */
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-group .btn {
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+}
+
+/* Card Responsive Styles */
+@media (min-width: 768px) {
+    .card {
+        margin: 1rem 0;
+        border-radius: 12px;
+    }
+
+    .card-header {
+        padding: 1.25rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+}
+
+/* Form Elements Responsive Styles */
+@media (max-width: 575.98px) {
+    .form-control, .form-select {
+        padding: 0.6rem;
+        font-size: 0.95rem;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .input-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .input-group > * {
+        width: 100%;
+        margin: 0.25rem 0;
+        flex: 1 1 100%;
+    }
+
+    /* Adjust form layouts */
+    .form-row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+    }
+}
+
+/* Button Responsive Styles */
+@media (max-width: 575.98px) {
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-group .btn {
+        border-radius: 4px !important;
+        margin: 0.25rem 0;
+    }
+
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .btn {
+        padding: 0.7rem 1.2rem;
+    }
+
+    .d-flex.gap-2 {
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
+}
+
+/* Table Responsive Styles */
+@media (max-width: 767.98px) {
+    .table-responsive {
+        display: block;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .table {
+        width: 100%;
+        margin: 0;
+    }
+
+    .table th, .table td {
+        white-space: normal;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    /* Stack table cells on mobile */
+    .table-mobile-stack td {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 0.5rem;
+        border: none;
+    }
+
+    .table-mobile-stack td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: inline-block;
+        width: 40%;
+    }
+}
+
+/* Navigation Responsive Styles */
+@media (max-width: 575.98px) {
+    .navbar {
+        padding: 0.5rem;
+        width: 100%;
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem;
+        max-width: 70%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .navbar-collapse {
+        width: 100%;
+        padding: 0.5rem 0;
+    }
+
+    .navbar-nav {
+        width: 100%;
+    }
+
+    .nav-item {
+        width: 100%;
+    }
+}
+
+/* Image Responsive Styles */
+@media (max-width: 575.98px) {
+    .img-fluid {
+        max-width: 100%;
+        height: auto;
+        max-height: 200px;
+        object-fit: cover;
+    }
+
+    .product-image {
+        width: 100%;
+        height: auto;
+        max-height: 150px;
+    }
+}
+
+/* Modal Responsive Styles */
+@media (max-width: 575.98px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .modal-content {
+        border-radius: 8px;
+        width: 100%;
+    }
+
+    .modal-header {
+        padding: 0.75rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+        width: 100%;
+    }
+
+    .modal-footer {
+        padding: 0.75rem;
+    }
+}
+
+/* Utility Classes for Responsive Design */
+@media (max-width: 575.98px) {
+    .hide-xs {
+        display: none !important;
+    }
+
+    .text-xs-center {
+        text-align: center !important;
+    }
+
+    .w-xs-100 {
+        width: 100% !important;
+    }
+
+    .p-xs-0 {
+        padding: 0 !important;
+    }
+
+    .m-xs-0 {
+        margin: 0 !important;
+    }
+
+    /* Prevent horizontal scroll */
+    .no-scroll-x {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    /* Increase touch targets */
+    .nav-link, .btn, .form-control, .form-select {
+        min-height: 44px;
+        padding: 0.75rem;
+    }
+
+    /* Prevent hover effects */
+    .card:hover, .btn:hover {
+        transform: none;
+    }
+}
+
+/* Fix for iOS Safari 100vh issue */
+@supports (-webkit-touch-callout: none) {
+    .min-vh-100 {
+        min-height: -webkit-fill-available;
+    }
+}
+
+/* Prevent text size adjustment */
+html {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* Fix for iOS input zoom */
+@media screen and (-webkit-min-device-pixel-ratio:0) { 
+    select,
+    textarea,
+    input {
+        font-size: 16px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .container {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    body {
+        font-size: 12pt;
+        line-height: 1.5;
+    }
+
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    :root {
+        --coffee-brown: #000000;
+        --coffee-light: #ffffff;
+        --coffee-cream: #ffffff;
+        --coffee-dark: #000000;
+    }
+
+    .card {
+        border: 2px solid #000;
+    }
+
+    .btn {
+        border: 2px solid #000;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+} 
