@@ -164,3 +164,12 @@ function getCurrentUserRole() {
 function getCurrentUserId() {
     return $_SESSION['user_id'] ?? null;
 }
+
+/**
+ * Check if current user is an admin
+ * @return bool True if user is logged in and has admin role
+ */
+function isAdmin() {
+    $role = getCurrentUserRole();
+    return $role === 'admin';
+}

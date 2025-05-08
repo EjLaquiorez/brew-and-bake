@@ -31,7 +31,7 @@ try {
         ORDER BY created_at DESC
     ");
     $stmt->execute();
-    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $errorMessage = "Error fetching products: " . $e->getMessage();
     $products = [];
@@ -71,53 +71,53 @@ $recentProducts = array_slice($products, 0, 5);
     <link rel="stylesheet" href="../assets/css/admin.css">
 </head>
 <body>
-    <!-- Navbar -->
+<!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container-fluid">
+  <div class="container-fluid">
             <a class="navbar-brand" href="#">
                 <i class="bi bi-cup-hot"></i> Brew & Bake Admin
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
                         <a class="nav-link" href="orders.php">
-                            <i class="bi bi-receipt"></i> Orders
-                        </a>
-                    </li>
-                    <li class="nav-item">
+            <i class="bi bi-receipt"></i> Orders
+          </a>
+        </li>
+        <li class="nav-item">
                         <a class="nav-link active" href="admin.php">
-                            <i class="bi bi-box-seam"></i> Products
-                        </a>
-                    </li>
-                    <li class="nav-item">
+            <i class="bi bi-box-seam"></i> Products
+          </a>
+        </li>
+        <li class="nav-item">
                         <a class="nav-link" href="reports.php">
-                            <i class="bi bi-bar-chart-line"></i> Reports
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
+            <i class="bi bi-bar-chart-line"></i> Reports
+          </a>
+        </li>
+        <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-gear"></i> Settings
-                        </a>
+            <i class="bi bi-gear"></i> Settings
+          </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="profile.php"><i class="bi bi-person"></i> Profile</a></li>
                             <li><a class="dropdown-item" href="settings.php"><i class="bi bi-sliders"></i> System Settings</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="../logout.php"><i class="bi bi-box-arrow-left"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="../logout.php"><i class="bi bi-box-arrow-left"></i> Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
 
-    <!-- Main Content -->
+<!-- Main Content -->
     <div class="container-fluid py-4">
-        <?php if ($successMessage): ?>
+    <?php if ($successMessage): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($successMessage) ?>
+            <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($successMessage) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
@@ -126,8 +126,8 @@ $recentProducts = array_slice($products, 0, 5);
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-circle-fill"></i> <?= htmlspecialchars($errorMessage) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
+        </div>
+    <?php endif; ?>
 
         <!-- Welcome Section -->
         <div class="row mb-4">
@@ -304,23 +304,23 @@ $recentProducts = array_slice($products, 0, 5);
         <!-- Products Section -->
         <div class="page-header">
             <h3><i class="bi bi-box-seam"></i> Manage Products</h3>
-            <a href="add_product.php" class="btn btn-success">
+        <a href="add_product.php" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Add New Product
-            </a>
-        </div>
+        </a>
+    </div>
 
-        <?php if (count($products) > 0): ?>
-            <div class="table-responsive">
+    <?php if (count($products) > 0): ?>
+        <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
-                        <tr>
-                            <th>Name</th>
+                    <tr>
+                        <th>Name</th>
                             <th>Category</th>
                             <th>Price</th>
                             <th>Status</th>
                             <th>Actions</th>
-                        </tr>
-                    </thead>
+                    </tr>
+                </thead>
                     <tbody>
                     <?php foreach ($products as $product): ?>
                         <tr>
@@ -360,18 +360,18 @@ $recentProducts = array_slice($products, 0, 5);
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
             <div class="alert alert-info">
                 <i class="bi bi-info-circle"></i> No products found. Start by adding your first product!
-            </div>
-        <?php endif; ?>
-    </div>
+        </div>
+    <?php endif; ?>
+</div>
 
     <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -392,7 +392,7 @@ $recentProducts = array_slice($products, 0, 5);
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Delete confirmation
         function confirmDelete(productId) {
