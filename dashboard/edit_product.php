@@ -31,7 +31,7 @@ if (isset($_POST['update'])) {
 ?>
 
 <!-- Edit Product Form -->
-<form method="POST" enctype="multipart/form-data">
+<form method="POST" enctype="multipart/form-data" class="edit-product-form">
     <input type="text" name="name" value="<?= $product['name'] ?>" class="form-control mb-2" required>
     <select name="category" class="form-control mb-2" required>
         <option value="coffee" <?= $product['category'] === 'coffee' ? 'selected' : '' ?>>Coffee</option>
@@ -43,3 +43,5 @@ if (isset($_POST['update'])) {
     <button name="update" class="btn btn-success">Update Product</button>
     <a href="admin.php" class="btn btn-secondary">Cancel</a>
 </form>
+
+<link rel="stylesheet" href="../assets/css/edit_product.css">

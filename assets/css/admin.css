@@ -11,13 +11,22 @@
     --admin-danger: #e74c3c;
     --admin-light: var(--coffee-cream);
     --admin-dark: var(--coffee-dark);
+    --background-gradient: linear-gradient(135deg, var(--coffee-light) 0%, var(--coffee-brown) 100%);
+}
+
+/* Base Styles */
+body {
+    background: var(--background-gradient);
+    background-attachment: fixed;
+    background-size: cover;
+    font-family: 'Arial', sans-serif; /* Use a clean font */
+    color: #333; /* Default text color */
 }
 
 /* Layout */
 body, html {
     overflow-x: hidden !important;
     width: 100vw;
-    background: #f3f2ef;
 }
 
 .wrapper {
@@ -77,16 +86,20 @@ body, html {
     flex: 1;
     margin-left: 250px;
     padding: 1rem;
+    padding-top: 80px;
     transition: all 0.3s ease;
 }
 
 /* Top Navigation */
 .navbar {
-    background: var(--admin-primary);
-    padding: 1rem;
-    margin-bottom: 2rem;
-    border-radius: 10px;
+    background: var(--admin-primary) !important;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1rem;
+}
+
+.navbar-brand {
+    font-size: 1.5rem; /* Increased font size for better visibility */
+    font-weight: 700; /* Bold font */
 }
 
 .sidebar-toggle {
@@ -120,20 +133,39 @@ body, html {
 /* Cards */
 .card {
     border: none;
-    border-radius: 10px;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     margin-bottom: 1.5rem;
 }
 
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
 .card-header {
-    background: white;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    padding: 1.25rem;
+    background: var(--admin-primary) !important;
+    color: white;
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1rem;
+}
+
+/* Card Body Styling */
+.card-body {
+    padding: 1.5rem;
+    margin-top:2rem;
 }
 
 /* Tables */
 .table {
     margin-bottom: 0;
+    border-collapse: collapse; /* Remove gaps between cells */
+}
+
+.table th, .table td {
+    padding: 1rem; /* Increased padding for better spacing */
+    border-bottom: 1px solid #dee2e6; /* Light border for separation */
 }
 
 .table th {
@@ -143,8 +175,8 @@ body, html {
     border: none;
 }
 
-.table td {
-    vertical-align: middle;
+.table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05); /* Highlight row on hover */
 }
 
 /* Product Thumbnails */
@@ -170,8 +202,8 @@ body, html {
 
 /* Buttons */
 .btn {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+    padding: 0.75rem 1.25rem; /* Consistent padding */
+    border-radius: 8px;
     font-weight: 500;
     transition: all 0.3s ease;
 }
@@ -194,6 +226,24 @@ body, html {
 .btn-danger:hover {
     background: #c0392b;
     transform: translateY(-2px);
+}
+
+.btn-success {
+    background: var(--admin-success);
+    border: none;
+}
+
+.btn-success:hover {
+    background: #27ae60; /* Darker green on hover */
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d; /* Darker gray on hover */
 }
 
 /* Badges */
@@ -247,11 +297,8 @@ body, html {
 
 /* Alerts */
 .alert {
-    border: none;
-    border-radius: 8px;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 8px; /* Rounded corners for alerts */
+    margin-bottom: 1rem; /* Space between alerts */
 }
 
 /* Responsive Design */
@@ -290,11 +337,19 @@ body, html {
     .navbar {
         border-radius: 0 0 14px 14px;
         margin-bottom: 1rem;
+        padding: 0.5rem; /* Less padding on smaller screens */
     }
     .product-thumbnail,
     .no-image {
         width: 50px;
         height: 50px;
+    }
+    .btn {
+        width: 100%; /* Full width buttons on small screens */
+        margin-bottom: 0.5rem; /* Space between buttons */
+    }
+    .table th, .table td {
+        padding: 0.75rem; /* Less padding for table cells */
     }
 }
 
@@ -329,4 +384,12 @@ body, html {
 /* Always center content horizontally */
 .main-content, .container {
     box-sizing: border-box;
+}
+
+.chart-title {
+    font-size: 16px;
+}
+
+.chart-label {
+    font-size: 12px;
 } 
