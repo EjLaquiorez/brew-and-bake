@@ -6,7 +6,7 @@ require_once "../includes/db.php";
 // Security check
 if (!isLoggedIn() || getCurrentUserRole() !== 'admin') {
     $_SESSION['error'] = "Access denied. Admin privileges required.";
-    header("Location: ../views/login.php");
+    header("Location: ../../views/login.php");
     exit;
 }
 
@@ -93,7 +93,7 @@ $totalTransactions = count($recentTransactions);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="../../assets/css/admin.css?v=<?= time() ?>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -236,25 +236,28 @@ $totalTransactions = count($recentTransactions);
                 </div>
             <?php endif; ?>
 
-            <!-- Sales Overview -->
-            <div class="row mb-5">
-                <div class="col-12 mb-4">
-                    <div class="card card-primary fade-in">
-                        <div class="card-body p-5">
-                            <div class="d-flex justify-content-between align-items-center">
+            <!-- Include Welcome Card -->
+            <?php include 'includes/welcome-card.php'; ?>
+
+            <!-- Date Range and Export -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card fade-in">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                                 <div>
-                                    <h2 class="mb-2">Sales Overview</h2>
-                                    <p class="text-muted mb-0">Detailed sales data and transaction history</p>
+                                    <h5 class="mb-0">Filter Data</h5>
                                 </div>
-                                <div class="d-flex gap-3">
-                                    <select class="form-select">
+                                <div class="d-flex flex-wrap gap-2 w-100 w-md-auto mt-2 mt-md-0">
+                                    <select class="form-select flex-grow-1">
                                         <option>Last 7 days</option>
                                         <option>Last 30 days</option>
                                         <option>Last 90 days</option>
                                         <option>Custom range</option>
                                     </select>
                                     <button class="btn btn-outline-primary">
-                                        <i class="bi bi-download me-2"></i> Export
+                                        <i class="bi bi-download me-md-2"></i>
+                                        <span class="d-none d-md-inline">Export</span>
                                     </button>
                                 </div>
                             </div>
@@ -269,7 +272,7 @@ $totalTransactions = count($recentTransactions);
                     <h3 class="mb-4">Key Metrics</h3>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card primary fade-in delay-100">
                         <div class="stat-icon">
                             <i class="bi bi-currency-dollar"></i>
@@ -281,7 +284,7 @@ $totalTransactions = count($recentTransactions);
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card success fade-in delay-200">
                         <div class="stat-icon">
                             <i class="bi bi-bag"></i>
@@ -293,7 +296,7 @@ $totalTransactions = count($recentTransactions);
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card info fade-in delay-300">
                         <div class="stat-icon">
                             <i class="bi bi-cash-stack"></i>
@@ -305,7 +308,7 @@ $totalTransactions = count($recentTransactions);
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card secondary fade-in delay-400">
                         <div class="stat-icon">
                             <i class="bi bi-credit-card"></i>
@@ -334,7 +337,7 @@ $totalTransactions = count($recentTransactions);
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="chart-container" style="height: 300px;">
+                            <div class="chart-container" style="height: 300px; min-height: 250px;">
                                 <canvas id="salesChart"></canvas>
                             </div>
                         </div>
@@ -351,7 +354,7 @@ $totalTransactions = count($recentTransactions);
                             <h5 class="card-title"><i class="bi bi-credit-card"></i> Payment Methods</h5>
                         </div>
                         <div class="card-body">
-                            <div class="chart-container" style="height: 250px;">
+                            <div class="chart-container" style="height: 250px; min-height: 200px;">
                                 <canvas id="paymentChart"></canvas>
                             </div>
                             <div class="table-responsive mt-4">
@@ -391,7 +394,7 @@ $totalTransactions = count($recentTransactions);
                             <h5 class="card-title"><i class="bi bi-clock"></i> Sales by Time of Day</h5>
                         </div>
                         <div class="card-body">
-                            <div class="chart-container" style="height: 250px;">
+                            <div class="chart-container" style="height: 250px; min-height: 200px;">
                                 <canvas id="timeChart"></canvas>
                             </div>
                             <div class="mt-4">
@@ -505,7 +508,11 @@ $totalTransactions = count($recentTransactions);
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: window.innerWidth < 768 ? 'bottom' : 'top',
+                        labels: {
+                            boxWidth: window.innerWidth < 768 ? 12 : 15,
+                            padding: window.innerWidth < 768 ? 10 : 15
+                        }
                     },
                     tooltip: {
                         mode: 'index',
@@ -572,10 +579,10 @@ $totalTransactions = count($recentTransactions);
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'right',
+                        position: window.innerWidth < 768 ? 'bottom' : 'right',
                         labels: {
-                            boxWidth: 15,
-                            padding: 15
+                            boxWidth: window.innerWidth < 768 ? 12 : 15,
+                            padding: window.innerWidth < 768 ? 10 : 15
                         }
                     },
                     tooltip: {

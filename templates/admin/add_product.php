@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: ../views/login.php");
+    header("Location: ../../views/login.php");
     exit;
 }
 require_once "../includes/db.php";
@@ -42,7 +42,7 @@ if (isset($_POST['save'])) {
     <title>Add Product - Brew & Bake</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="../assets/css/add_product.css">
+    <link rel="stylesheet" href="../../assets/css/add_product.css">
 </head>
 <body>
     <nav class="navbar navbar-dark">
@@ -50,7 +50,7 @@ if (isset($_POST['save'])) {
             <a class="navbar-brand" href="products.php">
                 <i class="bi bi-cup-hot"></i> Brew & Bake Admin
             </a>
-            <a href="../logout.php" class="btn btn-outline-light">
+            <a href="../includes/logout.php" class="btn btn-outline-light">
                 <i class="bi bi-box-arrow-right"></i> Logout
             </a>
         </div>

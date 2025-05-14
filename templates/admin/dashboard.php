@@ -6,7 +6,7 @@ require_once "../includes/db.php";
 // Security check
 if (!isLoggedIn() || getCurrentUserRole() !== 'admin') {
     $_SESSION['error'] = "Access denied. Admin privileges required.";
-    header("Location: ../views/login.php");
+    header("Location: ../../views/login.php");
     exit;
 }
 
@@ -75,7 +75,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="../../assets/css/admin.css?v=<?= time() ?>">
 </head>
 <body>
 <!-- Admin Container -->
@@ -217,25 +217,8 @@ try {
                 </div>
             <?php endif; ?>
 
-            <!-- Welcome Card -->
-            <div class="row mb-5">
-                <div class="col-12">
-                    <div class="card card-primary fade-in">
-                        <div class="card-body p-5">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-2">Welcome back, <?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?>!</h2>
-                                    <p class="text-muted mb-0">Here's an overview of your store's performance.</p>
-                                </div>
-                                <div class="text-end">
-                                    <h4 class="mb-1 font-medium" id="currentTime"></h4>
-                                    <p class="text-muted mb-0"><?= date('l, F j, Y') ?></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Include Welcome Card -->
+            <?php include 'includes/welcome-card.php'; ?>
 
             <!-- Statistics Overview -->
             <div class="row mb-5">
@@ -244,7 +227,7 @@ try {
                 </div>
 
                 <!-- Products Stats -->
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card primary fade-in delay-100">
                         <div class="stat-icon">
                             <i class="bi bi-box-seam"></i>
@@ -256,7 +239,7 @@ try {
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card success fade-in delay-200">
                         <div class="stat-icon">
                             <i class="bi bi-check-circle"></i>
@@ -268,7 +251,7 @@ try {
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card warning fade-in delay-300">
                         <div class="stat-icon">
                             <i class="bi bi-exclamation-triangle"></i>
@@ -280,7 +263,7 @@ try {
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card info fade-in delay-400">
                         <div class="stat-icon">
                             <i class="bi bi-currency-dollar"></i>
@@ -293,7 +276,7 @@ try {
                 </div>
 
                 <!-- Orders Stats -->
-                <div class="col-md-4 col-sm-6 mb-4">
+                <div class="col-md-4 col-sm-6 col-6 mb-4">
                     <div class="stat-card secondary fade-in delay-500">
                         <div class="stat-icon">
                             <i class="bi bi-receipt"></i>
@@ -305,7 +288,7 @@ try {
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 mb-4">
+                <div class="col-md-4 col-sm-6 col-6 mb-4">
                     <div class="stat-card warning fade-in delay-600">
                         <div class="stat-icon">
                             <i class="bi bi-hourglass-split"></i>
@@ -317,7 +300,7 @@ try {
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 mb-4">
+                <div class="col-md-4 col-sm-6 col-6 mb-4">
                     <div class="stat-card success fade-in delay-700">
                         <div class="stat-icon">
                             <i class="bi bi-check2-all"></i>
@@ -356,7 +339,7 @@ try {
                                                     <td>
                                                         <div class="cell-with-image">
                                                             <?php if (!empty($product['image'])): ?>
-                                                                <img src="../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
+                                                                <img src="../../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
                                                                     class="cell-image"
                                                                     alt="<?= htmlspecialchars($product['name']) ?>">
                                                             <?php else: ?>

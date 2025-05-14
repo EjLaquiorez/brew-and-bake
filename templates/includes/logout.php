@@ -1,5 +1,5 @@
 <?php
-require_once "includes/auth.php";
+require_once "auth.php";
 
 // Clear all session data
 $_SESSION = array();
@@ -33,6 +33,6 @@ $_SESSION['logout_message'] = "You have been successfully logged out.";
 session_write_close();
 
 // Redirect to login page
-header("Location: views/login.php");
+header("Location: ../../views/login.php");
 exit;
 ?>

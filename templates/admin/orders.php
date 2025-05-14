@@ -6,7 +6,7 @@ require_once "../includes/db.php";
 // Security check
 if (!isLoggedIn() || getCurrentUserRole() !== 'admin') {
     $_SESSION['error'] = "Access denied. Admin privileges required.";
-    header("Location: ../views/login.php");
+    header("Location: ../../views/login.php");
     exit;
 }
 
@@ -119,8 +119,8 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
     <title>Orders - Brew & Bake</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?= time() ?>">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/admin.css?v=<?= time() ?>">
 </head>
 <body>
 <!-- Admin Container -->
@@ -262,13 +262,17 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                 </div>
             <?php endif; ?>
 
+            <!-- Include Welcome Card -->
+            <?php include 'includes/welcome-card.php'; ?>
+
             <!-- Order Statistics -->
             <div class="row mb-5">
                 <div class="col-12 mb-4">
                     <h3 class="mb-4">Order Statistics</h3>
                 </div>
 
-                <div class="col-md-4 col-sm-6 mb-4">
+                <!-- First row of statistics -->
+                <div class="col-md-4 col-sm-6 col-6 mb-4">
                     <div class="stat-card primary fade-in delay-100">
                         <div class="stat-icon">
                             <i class="bi bi-receipt"></i>
@@ -280,7 +284,7 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 mb-4">
+                <div class="col-md-4 col-sm-6 col-6 mb-4">
                     <div class="stat-card info fade-in delay-200">
                         <div class="stat-icon">
                             <i class="bi bi-currency-dollar"></i>
@@ -292,7 +296,7 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 mb-4">
+                <div class="col-md-4 col-sm-6 col-6 mb-4">
                     <div class="stat-card success fade-in delay-300">
                         <div class="stat-icon">
                             <i class="bi bi-check-circle"></i>
@@ -304,7 +308,8 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 mb-4">
+                <!-- Second row of statistics -->
+                <div class="col-md-4 col-sm-6 col-6 mb-4">
                     <div class="stat-card warning fade-in delay-400">
                         <div class="stat-icon">
                             <i class="bi bi-hourglass-split"></i>
@@ -316,7 +321,7 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 mb-4">
+                <div class="col-md-4 col-sm-6 col-6 mb-4">
                     <div class="stat-card secondary fade-in delay-500">
                         <div class="stat-icon">
                             <i class="bi bi-arrow-repeat"></i>
@@ -328,7 +333,7 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 mb-4">
+                <div class="col-md-4 col-sm-6 col-6 mb-4">
                     <div class="stat-card danger fade-in delay-600">
                         <div class="stat-icon">
                             <i class="bi bi-x-circle"></i>
@@ -344,20 +349,22 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
             <!-- Orders Management -->
             <div class="row mb-5">
                 <div class="col-12 mb-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                         <div>
                             <h3 class="mb-1">Orders Management</h3>
                             <p class="text-muted mb-0">View and manage customer orders</p>
                         </div>
-                        <form class="d-flex gap-2" method="get" action="">
-                            <input type="text" name="search" class="form-control" placeholder="Search customer..." value="<?= htmlspecialchars($search) ?>">
-                            <select name="status" class="form-select">
-                                <option value="">All Statuses</option>
-                                <option value="pending" <?= $status === 'pending' ? 'selected' : '' ?>>Pending</option>
-                                <option value="processing" <?= $status === 'processing' ? 'selected' : '' ?>>Processing</option>
-                                <option value="completed" <?= $status === 'completed' ? 'selected' : '' ?>>Completed</option>
-                                <option value="cancelled" <?= $status === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
-                            </select>
+                        <form class="d-flex flex-wrap gap-2 mt-3 mt-md-0" method="get" action="">
+                            <div class="d-flex flex-column flex-sm-row gap-2 flex-grow-1">
+                                <input type="text" name="search" class="form-control" placeholder="Search customer..." value="<?= htmlspecialchars($search) ?>">
+                                <select name="status" class="form-select">
+                                    <option value="">All Statuses</option>
+                                    <option value="pending" <?= $status === 'pending' ? 'selected' : '' ?>>Pending</option>
+                                    <option value="processing" <?= $status === 'processing' ? 'selected' : '' ?>>Processing</option>
+                                    <option value="completed" <?= $status === 'completed' ? 'selected' : '' ?>>Completed</option>
+                                    <option value="cancelled" <?= $status === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                                </select>
+                            </div>
                             <button class="btn btn-primary">
                                 <i class="bi bi-search me-md-2"></i>
                                 <span class="d-none d-md-inline">Search</span>
@@ -372,10 +379,10 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                             <h5 class="table-title"><i class="bi bi-receipt"></i> All Orders</h5>
                             <div class="table-actions">
                                 <button class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-filter"></i> Filter
+                                    <i class="bi bi-filter"></i> <span class="d-none d-md-inline">Filter</span>
                                 </button>
                                 <button class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-download"></i> Export
+                                    <i class="bi bi-download"></i> <span class="d-none d-md-inline">Export</span>
                                 </button>
                             </div>
                         </div>
@@ -387,7 +394,7 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                                         <tr>
                                             <th>Order #</th>
                                             <th>Customer</th>
-                                            <th>Date</th>
+                                            <th class="d-none d-md-table-cell">Date</th>
                                             <th>Total</th>
                                             <th>Status</th>
                                             <th>Actions</th>
@@ -407,10 +414,14 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                                                         <div class="cell-image-content">
                                                             <h6 class="cell-title"><?= htmlspecialchars($order['customer_name']) ?></h6>
                                                             <p class="cell-subtitle"><?= htmlspecialchars($order['email'] ?? 'No email provided') ?></p>
+                                                            <!-- Show date on mobile only -->
+                                                            <p class="cell-subtitle d-md-none">
+                                                                <small><?= date('M d, Y', strtotime($order['created_at'])) ?></small>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td>
+                                                <td class="d-none d-md-table-cell">
                                                     <div>
                                                         <div class="fw-medium"><?= date('M d, Y', strtotime($order['created_at'])) ?></div>
                                                         <div class="text-muted small"><?= date('h:i A', strtotime($order['created_at'])) ?></div>
@@ -508,10 +519,10 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer flex-wrap gap-2">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary">
-                    <i class="bi bi-printer me-2"></i> Print Order
+                    <i class="bi bi-printer me-2"></i> <span class="d-none d-sm-inline">Print Order</span><span class="d-inline d-sm-none">Print</span>
                 </button>
             </div>
         </div>
@@ -544,10 +555,10 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer flex-wrap gap-2">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                 <a href="#" id="confirmDeleteBtn" class="btn btn-danger">
-                    <i class="bi bi-trash me-2"></i> Delete Order
+                    <i class="bi bi-trash me-2"></i> <span class="d-none d-sm-inline">Delete Order</span><span class="d-inline d-sm-none">Delete</span>
                 </a>
             </div>
         </div>
@@ -646,6 +657,28 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                 `;
             }, 1000);
         });
+
+        // Responsive adjustments for small screens
+        function handleResponsiveLayout() {
+            // Adjust table columns for small screens
+            const isMobile = window.innerWidth <= 767;
+            const tableHeaders = document.querySelectorAll('.table th');
+            const tableRows = document.querySelectorAll('.table tbody tr');
+
+            if (isMobile) {
+                // Adjust stat cards for better mobile display
+                const statLabels = document.querySelectorAll('.stat-label');
+                statLabels.forEach(label => {
+                    if (label.offsetWidth > 100) {
+                        label.style.fontSize = '0.7rem';
+                    }
+                });
+            }
+        }
+
+        // Run on load and resize
+        handleResponsiveLayout();
+        window.addEventListener('resize', handleResponsiveLayout);
     });
 </script>
 </body>

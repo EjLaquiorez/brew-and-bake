@@ -187,7 +187,7 @@ switch ($current_page) {
                         Help & Support
                     </a>
                     <div class="user-menu-divider"></div>
-                    <a href="../includes/logout.php" class="user-menu-item">
+                    <a href="../../templates/includes/logout.php" class="user-menu-item">
                         <i class="bi bi-box-arrow-right user-menu-icon"></i>
                         Logout
                     </a>

@@ -1,33 +1,39 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Sidebar toggle
-    const sidebarToggle = document.querySelector('.sidebar-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            mainContent.classList.toggle('active');
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySelector('.admin-sidebar');
+    const sidebarClose = document.querySelector('.sidebar-close');
+    const mainContent = document.querySelector('.admin-main');
+
+    // Show sidebar when menu toggle is clicked
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+            sidebar?.classList.add('show');
+        });
+    }
+
+    // Hide sidebar when close button is clicked
+    if (sidebarClose) {
+        sidebarClose.addEventListener('click', function() {
+            sidebar?.classList.remove('show');
         });
     }
 
     // Close sidebar on mobile when clicking outside
     document.addEventListener('click', function(event) {
-        const isMobile = window.innerWidth <= 768;
+        const isMobile = window.innerWidth <= 992;
         const isClickInsideSidebar = sidebar?.contains(event.target);
-        const isClickOnToggle = sidebarToggle?.contains(event.target);
+        const isClickOnToggle = menuToggle?.contains(event.target);
 
-        if (isMobile && !isClickInsideSidebar && !isClickOnToggle && sidebar?.classList.contains('active')) {
-            sidebar.classList.remove('active');
-            mainContent.classList.remove('active');
+        if (isMobile && !isClickInsideSidebar && !isClickOnToggle && sidebar?.classList.contains('show')) {
+            sidebar?.classList.remove('show');
         }
     });
 
     // Handle window resize
     window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-            sidebar?.classList.remove('active');
-            mainContent?.classList.remove('active');
+        if (window.innerWidth > 992) {
+            sidebar?.classList.remove('show');
         }
     });
 
@@ -55,4 +61,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-}); 
+});

@@ -1,5 +1,5 @@
 <?php
-require_once "includes/db.php";
+require_once "db.php";
 $message = "";
 
 if (isset($_GET['token'])) {
@@ -14,9 +14,9 @@ if (isset($_GET['token'])) {
         if ($user['verification_status'] == 0) {
             $updateStmt = $conn->prepare("UPDATE users SET verification_status = 1, verification_token = NULL WHERE verification_token = ?");
             $updateStmt->execute([$token]);
-            $message = "<div class='alert alert-success'>✅ Your account has been verified! You can now <a href='views/login.php'>log in</a>.</div>";
+            $message = "<div class='alert alert-success'>✅ Your account has been verified! You can now <a href='../../views/login.php'>log in</a>.</div>";
         } else {
-            $message = "<div class='alert alert-info'>ℹ️ Your account is already verified. <a href='views/login.php'>Go to login</a>.</div>";
+            $message = "<div class='alert alert-info'>ℹ️ Your account is already verified. <a href='../../views/login.php'>Go to login</a>.</div>";
         }
     } else {
         $message = "<div class='alert alert-danger'>❌ Invalid or expired verification link.</div>";

@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once "../templates/includes/db.php";
-require_once "../templates/includes/auth.php";
+require_once "../includes/db.php";
+require_once "../includes/auth.php";
 
 // Handle login form submission
 $alert = "";
@@ -33,13 +33,13 @@ if (isset($_POST['login'])) {
         // Role-based redirect
         switch ($user['role']) {
             case 'admin':
-                header("Location: ../templates/admin/dashboard.php");
+                header("Location: ../admin/dashboard.php");
                 exit;
             case 'staff':
-                header("Location: ../templates/staff/staff.php");
+                header("Location: ../staff/staff.php");
                 exit;
             case 'client':
-                header("Location: ../templates/client/client.php");
+                header("Location: ../client/client.php");
                 exit;
             default:
                 $alert = "<div class='alert alert-warning'>Invalid user role.</div>";
@@ -57,10 +57,15 @@ if (isset($_POST['login'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Brew & Bake</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/login.css">
+    <link rel="stylesheet" href="../../assets/css/login.css">
+    <link rel="stylesheet" href="../../assets/css/navigation.css">
 </head>
 <body>
+    <!-- Include Navigation -->
+    <?php include '../includes/navigation.php'; ?>
+
     <div class="container">
         <div class="login-container">
             <div class="row login-row g-0">
@@ -136,6 +141,7 @@ if (isset($_POST['login'])) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/scripts.js"></script>
     <script>
         // Show/Hide Password Toggle
         const togglePassword = document.querySelector('#togglePassword');

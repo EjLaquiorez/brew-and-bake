@@ -2,7 +2,7 @@
 session_start();
 require_once "../includes/db.php";
 if ($_SESSION['user_role'] !== 'admin') {
-    header("Location: ../views/login.php");
+    header("Location: ../../views/login.php");
     exit;
 }
 

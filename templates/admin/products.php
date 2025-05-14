@@ -6,7 +6,7 @@ require_once "../includes/db.php";
 // Security check
 if (!isLoggedIn() || getCurrentUserRole() !== 'admin') {
     $_SESSION['error'] = "Access denied. Admin privileges required.";
-    header("Location: ../views/login.php");
+    header("Location: ../../views/login.php");
     exit;
 }
 
@@ -72,7 +72,7 @@ $recentProducts = array_slice($products, 0, 5);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="../../assets/css/admin.css?v=<?= time() ?>">
 </head>
 <body>
 <!-- Admin Container -->
@@ -214,27 +214,16 @@ $recentProducts = array_slice($products, 0, 5);
                 </div>
             <?php endif; ?>
 
-            <!-- Dashboard Overview -->
+            <!-- Include Welcome Card -->
+            <?php include 'includes/welcome-card.php'; ?>
+
+            <!-- Statistics -->
             <div class="row mb-5">
                 <div class="col-12 mb-4">
-                    <div class="card card-primary fade-in">
-                        <div class="card-body p-5">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-2">Welcome back, <?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?>!</h2>
-                                    <p class="text-muted mb-0">Here's what's happening with your store today.</p>
-                                </div>
-                                <div class="text-end">
-                                    <h4 class="mb-1 font-medium" id="currentTime"></h4>
-                                    <p class="text-muted mb-0"><?= date('l, F j, Y') ?></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <h3 class="mb-4">Product Statistics</h3>
                 </div>
 
-                <!-- Statistics -->
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card primary fade-in delay-100">
                         <div class="stat-icon">
                             <i class="bi bi-box-seam"></i>
@@ -246,7 +235,7 @@ $recentProducts = array_slice($products, 0, 5);
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card success fade-in delay-200">
                         <div class="stat-icon">
                             <i class="bi bi-check-circle"></i>
@@ -258,7 +247,7 @@ $recentProducts = array_slice($products, 0, 5);
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card warning fade-in delay-300">
                         <div class="stat-icon">
                             <i class="bi bi-exclamation-triangle"></i>
@@ -270,7 +259,7 @@ $recentProducts = array_slice($products, 0, 5);
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-4">
+                <div class="col-md-3 col-sm-6 col-6 mb-4">
                     <div class="stat-card info fade-in delay-400">
                         <div class="stat-icon">
                             <i class="bi bi-currency-dollar"></i>
@@ -286,14 +275,20 @@ $recentProducts = array_slice($products, 0, 5);
             <!-- Products Management -->
             <div class="row mb-5">
                 <div class="col-12 mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                         <div>
-                            <h2 class="mb-1">Product Management</h2>
+                            <h3 class="mb-1">Product Management</h3>
                             <p class="text-muted mb-0">View, edit, and manage your product inventory</p>
                         </div>
-                        <a href="add_product.php" class="btn btn-primary">
-                            <i class="bi bi-plus-lg me-2"></i> Add New Product
-                        </a>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <div class="d-flex flex-grow-1">
+                                <input type="text" class="form-control" placeholder="Search products..." id="productSearch">
+                            </div>
+                            <a href="add_product.php" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-md-2"></i>
+                                <span class="d-none d-md-inline">Add Product</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -329,7 +324,7 @@ $recentProducts = array_slice($products, 0, 5);
                                                 <td>
                                                     <div class="cell-with-image">
                                                         <?php if (!empty($product['image'])): ?>
-                                                            <img src="../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
+                                                            <img src="../../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
                                                                 class="cell-image"
                                                                 alt="<?= htmlspecialchars($product['name']) ?>">
                                                         <?php else: ?>
@@ -453,6 +448,36 @@ $recentProducts = array_slice($products, 0, 5);
             document.getElementById('confirmDeleteBtn').href = `delete_product.php?id=${productId}`;
             modal.show();
         };
+
+        // Product search functionality
+        const productSearch = document.getElementById('productSearch');
+        if (productSearch) {
+            productSearch.addEventListener('keyup', function() {
+                const searchValue = this.value.toLowerCase();
+                const tableRows = document.querySelectorAll('tbody tr');
+
+                tableRows.forEach(row => {
+                    const productName = row.querySelector('.cell-title').textContent.toLowerCase();
+                    const productDesc = row.querySelector('.cell-subtitle').textContent.toLowerCase();
+                    const productCategory = row.querySelector('.cell-badge').textContent.toLowerCase();
+
+                    if (productName.includes(searchValue) ||
+                        productDesc.includes(searchValue) ||
+                        productCategory.includes(searchValue)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Update pagination info
+                const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])');
+                const paginationInfo = document.querySelector('.pagination-info');
+                if (paginationInfo) {
+                    paginationInfo.innerHTML = `Showing <span class="fw-bold">${visibleRows.length}</span> of <span class="fw-bold">${tableRows.length}</span> products`;
+                }
+            });
+        }
     });
 </script>
 </body>

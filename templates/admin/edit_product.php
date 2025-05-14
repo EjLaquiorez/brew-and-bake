@@ -1,7 +1,7 @@
 <?php
 session_start();
 if ($_SESSION['user_role'] !== 'admin') {
-    header("Location: ../views/login.php");
+    header("Location: ../../views/login.php");
     exit;
 }
 require_once "../includes/db.php";
@@ -26,7 +26,7 @@ if (isset($_POST['update'])) {
 
     $update = $conn->prepare("UPDATE products SET name=?, description=?, category=?, price=?, image=? WHERE id=?");
     $update->execute([$name, $description, $category, $price, $image, $id]);
-    header("Location: admin.php");
+    header("Location: products.php");
 }
 ?>
 
@@ -52,7 +52,7 @@ if (isset($_POST['update'])) {
     <input type="file" id="image" name="image" class="form-control mb-2" placeholder="Upload product image">
 
     <button name="update" class="btn btn-success">Update Product</button>
-    <a href="admin.php" class="btn btn-secondary">Cancel</a>
+    <a href="products.php" class="btn btn-secondary">Cancel</a>
 </form>
 
-<link rel="stylesheet" href="../assets/css/edit_product.css">
+<link rel="stylesheet" href="../../assets/css/edit_product.css">

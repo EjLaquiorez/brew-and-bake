@@ -27,8 +27,9 @@ body {
     background-attachment: fixed;
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    padding-top: 80px; /* Space for the fixed navbar */
 }
 
 .login-container {

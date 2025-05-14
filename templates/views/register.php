@@ -1,6 +1,6 @@
 <?php
-require_once "../templates/includes/db.php";
-require '../templates/includes/vendor/autoload.php'; // PHPMailer
+require_once "../includes/db.php";
+require '../includes/vendor/autoload.php'; // PHPMailer
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -76,9 +76,15 @@ if (isset($_POST['register'])) {
     <title>Register - Brew & Bake</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="../assets/css/register.css">
+    <link rel="stylesheet" href="../../assets/css/register.css">
+    <link rel="stylesheet" href="../../assets/css/navigation.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/scripts.js"></script>
 </head>
 <body>
+    <!-- Include Navigation -->
+    <?php include '../includes/navigation.php'; ?>
+
     <div class="register-container">
         <div class="register-header">
             <h3><i class="bi bi-cup-hot"></i> Brew & Bake</h3>
