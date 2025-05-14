@@ -1,13 +1,40 @@
-/* Global Styles */
+/* Global Styles with Earthy Color Palette */
+:root {
+    /* Earthy Color Palette */
+    --color-dark-green: #223030;     /* #223030 */
+    --color-brown: #523D35;          /* #523D35 - Main color */
+    --color-sage: #959D90;           /* #959D90 */
+    --color-tan: #BBA58F;            /* #BBA58F */
+    --color-cream: #E8D9CD;          /* #E8D9CD */
+    --color-off-white: #EFEFE9;      /* #EFEFE9 */
+
+    /* Feedback colors */
+    --color-success: #6B8E6B;        /* Forest green */
+    --color-warning: #BBA58F;        /* Tan */
+    --color-danger: #A35D5D;         /* Terracotta */
+    --color-info: #6E8A9C;           /* Slate blue */
+}
+
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f8f9fa;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--color-off-white);
     margin-top: 56px; /* Space for the fixed navbar */
+    color: var(--color-dark-green);
 }
 
 /* Navbar */
 .navbar {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(82, 61, 53, 0.1);
+    background-color: var(--color-brown);
+}
+
+.navbar-dark .navbar-brand,
+.navbar-dark .navbar-nav .nav-link {
+    color: var(--color-off-white);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: var(--color-cream);
 }
 
 
@@ -16,18 +43,37 @@ body {
     margin-top: 20px;
     border-collapse: collapse; /* Clean up table layout */
     width: 100%;
+    background-color: var(--color-off-white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(82, 61, 53, 0.1);
 }
 
-.table th, .table td {
-    padding: 8px 12px; /* Reduced padding for more compact table */
+.table th {
+    background-color: var(--color-brown);
+    color: var(--color-off-white);
+    padding: 12px 16px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 13px;
+}
+
+.table td {
+    padding: 10px 16px;
     vertical-align: middle;
-    border-bottom: 1px solid #e0e0e0; /* Soft border for table rows */
-    text-align: left; /* Left align for better readability */
-    font-size: 12px; /* Reduced font size for compactness */
+    border-bottom: 1px solid var(--color-cream);
+    text-align: left;
+    font-size: 14px;
+    color: var(--color-dark-green);
 }
 
 .table-striped tbody tr:nth-of-type(odd) {
-    background-color: #fafafa; /* Lighter alternate row color */
+    background-color: rgba(187, 165, 143, 0.1); /* Light tan background */
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(149, 157, 144, 0.1); /* Light sage green on hover */
 }
 
 /* Button Styling */
@@ -42,37 +88,70 @@ body {
     white-space: nowrap;
 }
 
+.btn-primary {
+    background-color: var(--color-brown);
+    border-color: var(--color-brown);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #3A2B26; /* Darker brown */
+    border-color: #3A2B26;
+}
+
+.btn-secondary {
+    background-color: var(--color-sage);
+    border-color: var(--color-sage);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #767D6E; /* Darker sage */
+    border-color: #767D6E;
+}
+
 .btn-success {
-    background-color: #28a745;
-    border-color: #28a745;
+    background-color: var(--color-success);
+    border-color: var(--color-success);
     color: white;
 }
 
 .btn-success:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
+    background-color: #4A6B4A; /* Darker green */
+    border-color: #4A6B4A;
 }
 
 .btn-warning {
-    background-color: #ffc107;
-    border-color: #ffc107;
-    color: black;
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+    color: #3A2B26; /* Dark brown text for contrast */
 }
 
 .btn-warning:hover {
-    background-color: #e0a800;
-    border-color: #d39e00;
+    background-color: #9A8772; /* Darker tan */
+    border-color: #9A8772;
 }
 
 .btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
     color: white;
 }
 
 .btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
+    background-color: #7A4545; /* Darker terracotta */
+    border-color: #7A4545;
+}
+
+.btn-info {
+    background-color: var(--color-info);
+    border-color: var(--color-info);
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #4F6A7A; /* Darker slate blue */
+    border-color: #4F6A7A;
 }
 
 /* Adjusting buttons in tables */

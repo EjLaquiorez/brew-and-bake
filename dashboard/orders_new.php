@@ -160,7 +160,7 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="products.php" class="nav-link">
+                        <a href="admin.php" class="nav-link">
                             <i class="bi bi-box-seam"></i>
                             Products
                         </a>

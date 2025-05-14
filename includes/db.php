@@ -2,7 +2,7 @@
 $host = "localhost";
 $db = "brew_and_bake";
 $user = "root";
-$pass = "admin"; // default XAMPP password is empty
+$pass = "admin"; 
 
 try {
     $conn = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);

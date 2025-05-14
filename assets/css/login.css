@@ -1,11 +1,21 @@
 :root {
-    --coffee-brown: #6F4E37;
-    --coffee-light: #D2B48C;
-    --coffee-cream: #F5DEB3;
-    --coffee-dark: #3C2A21;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    /* Earthy Color Palette */
+    --rich-brown: #523D35;     /* Main color */
+    --dark-green: #223030;     /* Dark green/almost black */
+    --sage-green: #959D90;     /* Sage green */
+    --tan: #BBA58F;            /* Tan/beige */
+    --cream: #E8D9CD;          /* Cream */
+    --off-white: #EFEFE9;      /* Off-white */
+
+    /* Additional earthy colors */
+    --forest-green: #6B8E6B;   /* Forest green for success */
+    --terracotta: #A35D5D;     /* Terracotta for danger/alerts */
+    --slate-blue: #6E8A9C;     /* Slate blue for info */
+
+    /* Shadows and transitions */
+    --shadow-sm: 0 2px 4px rgba(82, 61, 53, 0.1);
+    --shadow-md: 0 4px 6px rgba(82, 61, 53, 0.1);
+    --shadow-lg: 0 10px 15px rgba(82, 61, 53, 0.1);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -54,7 +64,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, var(--coffee-brown), transparent);
+    background: linear-gradient(45deg, var(--rich-brown), transparent);
     opacity: 0.3;
 }
 
@@ -64,7 +74,7 @@ body {
 
 .brand-logo {
     font-size: 2.75rem;
-    color: var(--coffee-brown);
+    color: var(--rich-brown);
     margin-bottom: 1.5rem;
     font-weight: 700;
     letter-spacing: -0.5px;
@@ -73,7 +83,7 @@ body {
 
 .brand-logo:hover {
     transform: scale(1.02);
-    color: var(--coffee-dark);
+    color: var(--dark-green);
 }
 
 .form-control {
@@ -86,8 +96,8 @@ body {
 }
 
 .form-control:focus {
-    border-color: var(--coffee-light);
-    box-shadow: 0 0 0 4px rgba(210, 180, 140, 0.15);
+    border-color: var(--tan);
+    box-shadow: 0 0 0 4px rgba(187, 165, 143, 0.15);
     background: white;
 }
 
@@ -97,11 +107,11 @@ body {
     border-right: none;
     border-radius: 12px 0 0 12px;
     padding: 14px;
-    color: var(--coffee-brown);
+    color: var(--rich-brown);
 }
 
 .btn-login {
-    background: var(--coffee-brown);
+    background: var(--rich-brown);
     border: none;
     padding: 14px;
     border-radius: 12px;
@@ -113,7 +123,7 @@ body {
 }
 
 .btn-login:hover {
-    background: var(--coffee-dark);
+    background: var(--dark-green);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
@@ -123,13 +133,13 @@ body {
 }
 
 .remember-me {
-    color: var(--coffee-brown);
+    color: var(--rich-brown);
     font-weight: 500;
     transition: var(--transition);
 }
 
 .remember-me:hover {
-    color: var(--coffee-dark);
+    color: var(--dark-green);
 }
 
 .form-check-input {
@@ -138,12 +148,12 @@ body {
 }
 
 .form-check-input:checked {
-    background-color: var(--coffee-brown);
-    border-color: var(--coffee-brown);
+    background-color: var(--rich-brown);
+    border-color: var(--rich-brown);
 }
 
 .form-check-input:focus {
-    box-shadow: 0 0 0 4px rgba(210, 180, 140, 0.15);
+    box-shadow: 0 0 0 4px rgba(187, 165, 143, 0.15);
 }
 
 .divider {
@@ -196,23 +206,23 @@ body {
     transform: translateY(-1px);
 }
 
-.google { 
+.google {
     background: #DB4437;
     background: linear-gradient(45deg, #DB4437, #EA4335);
 }
-.facebook { 
+.facebook {
     background: #4267B2;
     background: linear-gradient(45deg, #4267B2, #365899);
 }
-.twitter { 
+.twitter {
     background: #1DA1F2;
     background: linear-gradient(45deg, #1DA1F2, #0D8ECF);
 }
 
 /* Password Toggle Button Styles */
 #togglePassword {
-    border-color: var(--coffee-light);
-    color: var(--coffee-brown);
+    border-color: var(--tan);
+    color: var(--rich-brown);
     transition: var(--transition);
     padding: 14px;
     border-radius: 0 12px 12px 0;
@@ -220,14 +230,14 @@ body {
 }
 
 #togglePassword:hover {
-    background-color: var(--coffee-light);
-    color: white;
+    background-color: var(--tan);
+    color: var(--dark-green);
     box-shadow: var(--shadow-sm);
 }
 
 #togglePassword:focus {
     box-shadow: none;
-    border-color: var(--coffee-brown);
+    border-color: var(--rich-brown);
 }
 
 .input-group .btn-outline-secondary {
@@ -247,21 +257,21 @@ body {
 }
 
 .alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border-left: 4px solid #28a745;
+    background-color: rgba(107, 142, 107, 0.15);
+    color: #4A6B4A;
+    border-left: 4px solid var(--forest-green);
 }
 
 .alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border-left: 4px solid #dc3545;
+    background-color: rgba(163, 93, 93, 0.15);
+    color: #7A4545;
+    border-left: 4px solid var(--terracotta);
 }
 
 .alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border-left: 4px solid #ffc107;
+    background-color: rgba(187, 165, 143, 0.15);
+    color: #9A8772;
+    border-left: 4px solid var(--tan);
 }
 
 @keyframes slideIn {
@@ -306,4 +316,4 @@ body {
     .form-control, .input-group-text, .btn-login {
         padding: 12px;
     }
-} 
+}

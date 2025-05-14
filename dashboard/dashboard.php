@@ -24,40 +24,43 @@ if (isset($_SESSION['error'])) {
     unset($_SESSION['error']);
 }
 
-// Fetch products with error handling
+// Fetch statistics
 try {
+    // Products statistics
+    $totalProducts = $conn->query("SELECT COUNT(*) FROM products")->fetchColumn();
+    $activeProducts = $conn->query("SELECT COUNT(*) FROM products WHERE status = 'active'")->fetchColumn();
+    $lowStockProducts = $conn->query("SELECT COUNT(*) FROM products WHERE stock < 10")->fetchColumn();
+
+    // Orders statistics (placeholder - will be implemented when orders table exists)
+    $totalOrders = 0;
+    $pendingOrders = 0;
+    $completedOrders = 0;
+    $totalRevenue = 0;
+
+    // Recent products
     $stmt = $conn->prepare("
         SELECT * FROM products
         ORDER BY created_at DESC
+        LIMIT 5
     ");
     $stmt->execute();
-    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $errorMessage = "Error fetching products: " . $e->getMessage();
-    $products = [];
-}
+    $recentProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get statistics
-try {
-    $stats = [
-        'total_products' => $conn->query("SELECT COUNT(*) FROM products")->fetchColumn(),
-        'total_orders' => 0, // Will be implemented when orders table is created
-        'total_revenue' => 0, // Will be implemented when orders table is created
-        'active_products' => $conn->query("SELECT COUNT(*) FROM products WHERE status = 'active'")->fetchColumn(),
-        'low_stock' => $conn->query("SELECT COUNT(*) FROM products WHERE stock < 10")->fetchColumn()
-    ];
-} catch (PDOException $e) {
-    $stats = [
-        'total_products' => 0,
-        'total_orders' => 0,
-        'total_revenue' => 0,
-        'active_products' => 0,
-        'low_stock' => 0
-    ];
-}
+    // Top selling products (placeholder - will be implemented when orders table exists)
+    $topProducts = [];
 
-// Get recent products
-$recentProducts = array_slice($products, 0, 5);
+} catch (PDOException $e) {
+    $errorMessage = "Error fetching data: " . $e->getMessage();
+    $totalProducts = 0;
+    $activeProducts = 0;
+    $lowStockProducts = 0;
+    $totalOrders = 0;
+    $pendingOrders = 0;
+    $completedOrders = 0;
+    $totalRevenue = 0;
+    $recentProducts = [];
+    $topProducts = [];
+}
 ?>
 
 <!DOCTYPE html>
@@ -68,7 +71,7 @@ $recentProducts = array_slice($products, 0, 5);
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Products - Brew & Bake</title>
+    <title>Dashboard - Brew & Bake</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -99,7 +102,7 @@ $recentProducts = array_slice($products, 0, 5);
                 <h6 class="nav-section-title">Main</h6>
                 <ul class="nav-items">
                     <li class="nav-item">
-                        <a href="dashboard.php" class="nav-link">
+                        <a href="dashboard.php" class="nav-link active">
                             <i class="bi bi-speedometer2"></i>
                             Dashboard
                         </a>
@@ -112,7 +115,7 @@ $recentProducts = array_slice($products, 0, 5);
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="products.php" class="nav-link active">
+                        <a href="products.php" class="nav-link">
                             <i class="bi bi-box-seam"></i>
                             Products
                         </a>
@@ -185,7 +188,7 @@ $recentProducts = array_slice($products, 0, 5);
                 <button class="menu-toggle">
                     <i class="bi bi-list"></i>
                 </button>
-                <h1 class="page-title">Products</h1>
+                <h1 class="page-title">Dashboard</h1>
             </div>
             <div class="topbar-right">
                 <!-- Notifications Dropdown -->
@@ -369,15 +372,15 @@ $recentProducts = array_slice($products, 0, 5);
                 </div>
             <?php endif; ?>
 
-            <!-- Dashboard Overview -->
+            <!-- Welcome Card -->
             <div class="row mb-5">
-                <div class="col-12 mb-4">
+                <div class="col-12">
                     <div class="card card-primary fade-in">
                         <div class="card-body p-5">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h2 class="mb-2">Welcome back, <?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?>!</h2>
-                                    <p class="text-muted mb-0">Here's what's happening with your store today.</p>
+                                    <p class="text-muted mb-0">Here's an overview of your store's performance.</p>
                                 </div>
                                 <div class="text-end">
                                     <h4 class="mb-1 font-medium" id="currentTime"></h4>
@@ -387,15 +390,22 @@ $recentProducts = array_slice($products, 0, 5);
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Statistics -->
+            <!-- Statistics Overview -->
+            <div class="row mb-5">
+                <div class="col-12 mb-4">
+                    <h3 class="mb-4">Store Overview</h3>
+                </div>
+
+                <!-- Products Stats -->
                 <div class="col-md-3 col-sm-6 mb-4">
                     <div class="stat-card primary fade-in delay-100">
                         <div class="stat-icon">
                             <i class="bi bi-box-seam"></i>
                         </div>
                         <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($stats['total_products']) ?></h3>
+                            <h3 class="stat-value"><?= number_format($totalProducts) ?></h3>
                             <p class="stat-label">Total Products</p>
                         </div>
                     </div>
@@ -407,7 +417,7 @@ $recentProducts = array_slice($products, 0, 5);
                             <i class="bi bi-check-circle"></i>
                         </div>
                         <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($stats['active_products']) ?></h3>
+                            <h3 class="stat-value"><?= number_format($activeProducts) ?></h3>
                             <p class="stat-label">Active Products</p>
                         </div>
                     </div>
@@ -419,7 +429,7 @@ $recentProducts = array_slice($products, 0, 5);
                             <i class="bi bi-exclamation-triangle"></i>
                         </div>
                         <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($stats['low_stock']) ?></h3>
+                            <h3 class="stat-value"><?= number_format($lowStockProducts) ?></h3>
                             <p class="stat-label">Low Stock Items</p>
                         </div>
                     </div>
@@ -431,172 +441,171 @@ $recentProducts = array_slice($products, 0, 5);
                             <i class="bi bi-currency-dollar"></i>
                         </div>
                         <div class="stat-content">
-                            <h3 class="stat-value">₱<?= number_format($stats['total_revenue'], 2) ?></h3>
+                            <h3 class="stat-value">₱<?= number_format($totalRevenue, 2) ?></h3>
                             <p class="stat-label">Total Revenue</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Stats -->
+                <div class="col-md-4 col-sm-6 mb-4">
+                    <div class="stat-card secondary fade-in delay-500">
+                        <div class="stat-icon">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-value"><?= number_format($totalOrders) ?></h3>
+                            <p class="stat-label">Total Orders</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6 mb-4">
+                    <div class="stat-card warning fade-in delay-600">
+                        <div class="stat-icon">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-value"><?= number_format($pendingOrders) ?></h3>
+                            <p class="stat-label">Pending Orders</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6 mb-4">
+                    <div class="stat-card success fade-in delay-700">
+                        <div class="stat-icon">
+                            <i class="bi bi-check2-all"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-value"><?= number_format($completedOrders) ?></h3>
+                            <p class="stat-label">Completed Orders</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Products Management -->
+            <!-- Recent Activity -->
             <div class="row mb-5">
-                <div class="col-12 mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div>
-                            <h2 class="mb-1">Product Management</h2>
-                            <p class="text-muted mb-0">View, edit, and manage your product inventory</p>
+                <!-- Recent Products -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card fade-in-left">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-box-seam"></i> Recent Products</h5>
+                            <a href="products.php" class="btn btn-sm btn-outline-primary">View All</a>
                         </div>
-                        <a href="add_product.php" class="btn btn-primary">
-                            <i class="bi bi-plus-lg me-2"></i> Add New Product
-                        </a>
+                        <div class="card-body p-0">
+                            <?php if (count($recentProducts) > 0): ?>
+                                <div class="table-responsive">
+                                    <table class="table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Price</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($recentProducts as $product): ?>
+                                                <tr>
+                                                    <td>
+                                                        <div class="cell-with-image">
+                                                            <?php if (!empty($product['image'])): ?>
+                                                                <img src="../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
+                                                                    class="cell-image"
+                                                                    alt="<?= htmlspecialchars($product['name']) ?>">
+                                                            <?php else: ?>
+                                                                <div class="cell-icon">
+                                                                    <i class="bi bi-image"></i>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                            <div class="cell-image-content">
+                                                                <h6 class="cell-title"><?= htmlspecialchars($product['name']) ?></h6>
+                                                                <p class="cell-subtitle"><?= htmlspecialchars($product['category']) ?></p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="fw-bold">₱<?= number_format($product['price'], 2) ?></span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="cell-badge <?= $product['status'] === 'active' ? 'success' : 'warning' ?>">
+                                                            <?= ucfirst($product['status']) ?>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php else: ?>
+                                <div class="p-4 text-center">
+                                    <p class="text-muted mb-0">No products found.</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
 
-                <div class="col-12">
-                    <div class="table-container fade-in-up">
-                        <div class="table-header">
-                            <h5 class="table-title"><i class="bi bi-box-seam"></i> All Products</h5>
-                            <div class="table-actions">
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-filter"></i> Filter
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-download"></i> Export
-                                </button>
-                            </div>
+                <!-- Quick Actions -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card fade-in-right">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-lightning"></i> Quick Actions</h5>
                         </div>
-
-                        <?php if (count($products) > 0): ?>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Category</th>
-                                            <th>Price</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($products as $product): ?>
-                                            <tr>
-                                                <td>
-                                                    <div class="cell-with-image">
-                                                        <?php if (!empty($product['image'])): ?>
-                                                            <img src="../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
-                                                                class="cell-image"
-                                                                alt="<?= htmlspecialchars($product['name']) ?>">
-                                                        <?php else: ?>
-                                                            <div class="cell-icon">
-                                                                <i class="bi bi-image"></i>
-                                                            </div>
-                                                        <?php endif; ?>
-                                                        <div class="cell-image-content">
-                                                            <h6 class="cell-title"><?= htmlspecialchars($product['name']) ?></h6>
-                                                            <p class="cell-subtitle"><?= htmlspecialchars(substr($product['description'], 0, 60)) . (strlen($product['description']) > 60 ? '...' : '') ?></p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="cell-badge primary">
-                                                        <?= htmlspecialchars($product['category']) ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span class="fw-bold">₱<?= number_format($product['price'], 2) ?></span>
-                                                </td>
-                                                <td>
-                                                    <span class="cell-badge <?= $product['status'] === 'active' ? 'success' : 'warning' ?>">
-                                                        <?= ucfirst($product['status']) ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div class="cell-actions">
-                                                        <a href="view_product.php?id=<?= $product['id'] ?>" class="action-button view">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
-                                                        <a href="edit_product.php?id=<?= $product['id'] ?>" class="action-button edit">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </a>
-                                                        <button type="button" class="action-button delete" onclick="confirmDelete(<?= $product['id'] ?>)">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="table-footer">
-                                <div class="pagination-info">
-                                    Showing <span class="fw-bold"><?= count($products) ?></span> of <span class="fw-bold"><?= count($products) ?></span> products
-                                </div>
-                                <div class="pagination-controls">
-                                    <button class="pagination-button disabled">
-                                        <i class="bi bi-chevron-left"></i>
-                                    </button>
-                                    <button class="pagination-button active">1</button>
-                                    <button class="pagination-button disabled">
-                                        <i class="bi bi-chevron-right"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        <?php else: ?>
-                            <div class="p-5 text-center">
-                                <div class="mb-4">
-                                    <i class="bi bi-box-seam" style="font-size: 3rem; color: var(--color-gray-400);"></i>
-                                </div>
-                                <h4>No Products Found</h4>
-                                <p class="text-muted mb-4">You haven't added any products yet. Start by adding your first product!</p>
+                        <div class="card-body">
+                            <div class="d-grid gap-3">
                                 <a href="add_product.php" class="btn btn-primary">
                                     <i class="bi bi-plus-lg me-2"></i> Add New Product
                                 </a>
+                                <a href="orders.php" class="btn btn-secondary">
+                                    <i class="bi bi-receipt me-2"></i> View Orders
+                                </a>
+                                <a href="analytics.php" class="btn btn-info">
+                                    <i class="bi bi-bar-chart me-2"></i> View Analytics
+                                </a>
+                                <a href="settings.php" class="btn btn-light">
+                                    <i class="bi bi-gear me-2"></i> System Settings
+                                </a>
                             </div>
-                        <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- System Status -->
+                    <div class="card mt-4 fade-in-right delay-300">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-info-circle"></i> System Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-hdd text-success me-2"></i>
+                                        Database Connection
+                                    </div>
+                                    <span class="cell-badge success">Connected</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-globe text-success me-2"></i>
+                                        Website Status
+                                    </div>
+                                    <span class="cell-badge success">Online</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-shield-check text-success me-2"></i>
+                                        Security Status
+                                    </div>
+                                    <span class="cell-badge success">Secure</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
-                    Confirm Delete
-                </h5>
-                <button type="button" class="modal-close" data-bs-dismiss="modal">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this product? This action cannot be undone.</p>
-                <div class="alert alert-warning">
-                    <div class="alert-icon">
-                        <div class="alert-icon-symbol">
-                            <i class="bi bi-info-circle"></i>
-                        </div>
-                        <div class="alert-content">
-                            <p class="alert-text mb-0">Deleting this product will remove it from your inventory and any associated orders.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">
-                    <i class="bi bi-trash me-2"></i> Delete Product
-                </a>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -619,13 +628,6 @@ $recentProducts = array_slice($products, 0, 5);
                 sidebar.classList.remove('show');
             });
         }
-
-        // Delete confirmation
-        window.confirmDelete = function(productId) {
-            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            document.getElementById('confirmDeleteBtn').href = `delete_product.php?id=${productId}`;
-            modal.show();
-        };
 
         // Auto-hide alerts after 5 seconds
         const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
@@ -655,7 +657,21 @@ $recentProducts = array_slice($products, 0, 5);
         updateTime();
         setInterval(updateTime, 60000);
 
-        // Dropdown and notification functionality is now handled by admin-dropdowns.js
+        // Dropdown functionality is now handled by admin-dropdowns.js
+
+        // Notification functionality is now handled by admin-dropdowns.js
+
+        // Add animation effects to dropdowns
+        Object.values(dropdownToggles).forEach(dropdownId => {
+            const dropdown = document.getElementById(dropdownId);
+            if (dropdown) {
+                dropdown.addEventListener('transitionend', function() {
+                    if (!dropdown.classList.contains('show')) {
+                        // Reset any styles that might have been applied during animations
+                    }
+                });
+            }
+        });
     });
 </script>
 </body>

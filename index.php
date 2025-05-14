@@ -20,10 +20,14 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brew & Bake - Coffee & Bakery Shop</title>
+    <title>Brew & Bake - Premium Coffee House</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/index.css">
+    <!-- Add animation library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Add Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Navigation -->
@@ -38,40 +42,64 @@ try {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#menu">Menu</a>
+                        <a class="nav-link" href="#">HOME</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
+                        <a class="nav-link" href="#menu">MENU</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#contact">Contact</a>
+                        <a class="nav-link" href="#about">ABOUT</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-light ms-2" href="views/login.php">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-primary ms-2" href="views/register.php">Register</a>
+                        <a class="nav-link" href="#contact">CONTACT</a>
                     </li>
                 </ul>
+                <div class="d-flex align-items-center ms-4">
+                    <a href="views/login.php" class="text-light position-relative me-3 cart-icon">
+                        <i class="bi bi-cart3"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-badge">0</span>
+                    </a>
+                    <a href="views/login.php" class="btn btn-primary-custom btn-sm">LOGIN</a>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero Section with image slider -->
     <section class="hero">
-        <div class="container">
+        <!-- Hero Slides -->
+        <div class="hero-slide hero-slide-1 active"></div>
+        <div class="hero-slide hero-slide-2"></div>
+        <div class="hero-slide hero-slide-3"></div>
+
+        <div class="container" style="position: relative; z-index: 2;">
             <div class="row min-vh-100 align-items-center">
-                <div class="col-lg-6">
-                    <h1 class="display-4 fw-bold mb-4">Experience the Perfect Blend of Coffee & Bakery</h1>
-                    <p class="lead mb-4">Discover our handcrafted coffee and freshly baked goods, made with love and the finest ingredients.</p>
-                    <div class="d-flex gap-3">
-                        <a href="#menu" class="btn btn-primary btn-lg">View Menu</a>
-                        <a href="#contact" class="btn btn-outline-light btn-lg">Contact Us</a>
+                <div class="col-lg-6 animate__animated animate__fadeInLeft">
+                    <div class="hero-content p-4" style="background-color: rgba(0,0,0,0.5); border-radius: 10px;">
+                        <h1>PREMIUM COFFEE<br>& FRESH BAKERY</h1>
+                        <p class="mb-4">Experience the perfect blend of premium coffee and freshly baked goods, crafted with passion and the finest ingredients.</p>
+                        <div class="d-flex gap-3">
+                            <a href="#menu" class="btn btn-primary-custom">EXPLORE MENU</a>
+                            <a href="#about" class="btn btn-outline-light">LEARN MORE</a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Dot Navigation -->
+        <div class="dot-nav">
+            <div class="dot active" data-slide="0"></div>
+            <div class="dot" data-slide="1"></div>
+            <div class="dot" data-slide="2"></div>
+        </div>
     </section>
+
+    <!-- Contact Us Button -->
+    <div class="position-fixed end-0 top-50 translate-middle-y" style="z-index: 1000;">
+        <a href="#contact" class="btn btn-primary-custom py-2 px-3 rounded-start">
+            <i class="bi bi-envelope-fill me-2"></i>CONTACT
+        </a>
+    </div>
 
     <!-- Features Section -->
     <section class="features py-5">
@@ -111,7 +139,7 @@ try {
                     <div class="col-md-4">
                         <div class="product-card">
                             <?php if (!empty($product['image'])): ?>
-                                <img src="assets/images/products/<?= htmlspecialchars($product['image']) ?>" 
+                                <img src="assets/images/products/<?= htmlspecialchars($product['image']) ?>"
                                      alt="<?= htmlspecialchars($product['name']) ?>"
                                      class="product-image">
                             <?php endif; ?>
@@ -120,12 +148,25 @@ try {
                                 <p class="text-muted"><?= htmlspecialchars($product['description']) ?></p>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="price">₱<?= number_format($product['price'], 2) ?></span>
-                                    <a href="views/login.php" class="btn btn-primary">Order Now</a>
+                                    <a href="views/login.php" class="btn btn-primary-custom">Order Now</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+
+    <!-- Parallax Quote Section -->
+    <section class="parallax-section text-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <h2 class="display-4 mb-4">"Life begins after coffee"</h2>
+                    <p class="lead mb-4">Every cup tells a story. What's yours?</p>
+                    <a href="views/products.php" class="btn btn-secondary-custom btn-lg">Discover Our Menu</a>
+                </div>
             </div>
         </div>
     </section>
@@ -187,9 +228,40 @@ try {
                         <div class="mb-3">
                             <textarea class="form-control" rows="5" placeholder="Your Message" required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Send Message</button>
+                        <button type="submit" class="btn btn-accent-custom">Send Message</button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials py-5">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">What Our Customers Say</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="testimonial-card p-4 shadow-sm rounded">
+                        <div class="stars mb-3">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                        </div>
+                        <p class="mb-3">"The best coffee I've ever had! Their pastries are amazing too. This is my go-to spot every morning."</p>
+                        <div class="d-flex align-items-center">
+                            <div class="testimonial-avatar me-3">
+                                <i class="bi bi-person-circle fs-1"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">Maria Santos</h5>
+                                <small class="text-muted">Regular Customer</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Add 2 more testimonials with similar structure -->
             </div>
         </div>
     </section>
@@ -200,19 +272,20 @@ try {
             <div class="row">
                 <div class="col-lg-4">
                     <h3><i class="bi bi-cup-hot"></i> Brew & Bake</h3>
-                    <p>Experience the perfect blend of coffee and bakery in a warm, welcoming atmosphere.</p>
+                    <p>Experience the perfect blend of premium coffee and freshly baked goods in a modern, welcoming atmosphere.</p>
                 </div>
                 <div class="col-lg-4">
-                    <h4>Quick Links</h4>
+                    <h4>QUICK LINKS</h4>
                     <ul class="list-unstyled">
-                        <li><a href="#menu">Menu</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                        <li><a href="views/login.php">Login</a></li>
+                        <li><a href="#">HOME</a></li>
+                        <li><a href="#menu">MENU</a></li>
+                        <li><a href="#about">ABOUT</a></li>
+                        <li><a href="#contact">CONTACT</a></li>
+                        <li><a href="views/login.php">LOGIN</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-4">
-                    <h4>Follow Us</h4>
+                    <h4>FOLLOW US</h4>
                     <div class="social-links">
                         <a href="#"><i class="bi bi-facebook"></i></a>
                         <a href="#"><i class="bi bi-instagram"></i></a>
@@ -220,7 +293,7 @@ try {
                     </div>
                 </div>
             </div>
-            <hr>
+            <hr class="mt-4" style="border-color: rgba(255,255,255,0.1);">
             <div class="text-center">
                 <p class="mb-0">&copy; <?= date('Y') ?> Brew & Bake. All rights reserved.</p>
             </div>
@@ -243,9 +316,75 @@ try {
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Hero Slider functionality
+        const heroSlides = document.querySelectorAll('.hero-slide');
+        const dots = document.querySelectorAll('.dot-nav .dot');
+        let currentSlide = 0;
+        let slideInterval;
+
+        // Function to change slide
+        function changeSlide(index) {
+            // Remove active class from all slides and dots
+            heroSlides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            // Add active class to current slide and dot
+            heroSlides[index].classList.add('active');
+            dots[index].classList.add('active');
+
+            // Update current slide index
+            currentSlide = index;
+        }
+
+        // Auto slide change
+        function startSlideShow() {
+            slideInterval = setInterval(() => {
+                let nextSlide = (currentSlide + 1) % heroSlides.length;
+                changeSlide(nextSlide);
+            }, 5000); // Change slide every 5 seconds
+        }
+
+        // Initialize slideshow
+        startSlideShow();
+
+        // Dot navigation click event
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                // Clear the interval to prevent conflicts
+                clearInterval(slideInterval);
+
+                // Change to the clicked slide
+                changeSlide(index);
+
+                // Restart the slideshow
+                startSlideShow();
+            });
+        });
+
+        // Add scroll reveal effect
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const animateElements = document.querySelectorAll('.feature-card, .product-card, .testimonial-card');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate__animated', 'animate__fadeIn');
+                        observer.unobserve(entry.target);
+                    }
                 });
+            }, {threshold: 0.2});
+
+            animateElements.forEach(el => {
+                observer.observe(el);
             });
         });
     </script>

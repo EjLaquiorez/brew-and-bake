@@ -29,11 +29,11 @@ if (isset($_POST['login'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_role'] = $user['role'];
         }
-        
+
         // Role-based redirect
         switch ($user['role']) {
             case 'admin':
-                header("Location: ../dashboard/admin.php");
+                header("Location: ../dashboard/dashboard.php");
                 exit;
             case 'staff':
                 header("Location: ../dashboard/staff.php");
@@ -124,7 +124,7 @@ if (isset($_POST['login'])) {
                         </div>
 
                         <p class="text-center mb-0">
-                            Don't have an account? 
+                            Don't have an account?
                             <a href="register.php" class="text-decoration-none" style="color: var(--coffee-brown);">
                                 Sign up
                             </a>
@@ -145,7 +145,7 @@ if (isset($_POST['login'])) {
             // Toggle the password visibility
             const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
             password.setAttribute('type', type);
-            
+
             // Toggle the eye icon
             this.querySelector('i').classList.toggle('fa-eye');
             this.querySelector('i').classList.toggle('fa-eye-slash');

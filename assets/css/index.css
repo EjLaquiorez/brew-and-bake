@@ -1,18 +1,46 @@
 :root {
-    --coffee-brown: #6F4E37;
-    --coffee-light: #D2B48C;
-    --coffee-cream: #F5DEB3;
-    --coffee-dark: #3C2A21;
+    /* Earthy Color Palette */
+    --dark-green: #223030;     /* Dark green/almost black */
+    --rich-brown: #523D35;     /* Rich brown - main color */
+    --sage-green: #959D90;     /* Sage green */
+    --tan: #BBA58F;            /* Tan/beige */
+    --cream: #E8D9CD;          /* Cream */
+    --off-white: #EFEFE9;      /* Off-white */
+
+    /* Additional earthy colors */
+    --forest-green: #6B8E6B;   /* Forest green for success */
+    --terracotta: #A35D5D;     /* Terracotta for danger/alerts */
+    --slate-blue: #6E8A9C;     /* Slate blue for info */
+
+    /* Functional color assignments */
+    --primary: var(--rich-brown);
+    --secondary: var(--sage-green);
+    --dark: var(--dark-green);
+    --light: var(--off-white);
+    --accent: var(--tan);
+    --text-dark: var(--dark-green);
+    --text-light: var(--off-white);
 }
 
 /* General Styles */
 body {
     font-family: 'Poppins', sans-serif;
-    color: #333;
+    color: var(--text-dark);
+    background-color: var(--dark);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Oswald', sans-serif;
+}
+
+/* Background Animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .section-title {
-    color: var(--coffee-brown);
+    color: var(--primary);
     position: relative;
     padding-bottom: 15px;
 }
@@ -25,69 +53,270 @@ body {
     transform: translateX(-50%);
     width: 50px;
     height: 3px;
-    background-color: var(--coffee-light);
+    background-color: var(--secondary);
 }
 
 /* Navbar */
 .navbar {
-    background-color: transparent;
+    background-color: rgba(82, 61, 53, 0.95); /* Rich brown with transparency */
     transition: all 0.3s ease;
-    padding: 1rem 0;
+    padding: 0.75rem 0;
+    box-shadow: 0 2px 15px rgba(34, 48, 48, 0.2);
+    backdrop-filter: blur(10px);
 }
 
 .navbar.scrolled {
-    background-color: var(--coffee-dark);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: rgba(82, 61, 53, 0.98); /* Slightly more opaque when scrolled */
+    box-shadow: 0 4px 20px rgba(34, 48, 48, 0.3);
+    padding: 0.5rem 0;
 }
 
 .navbar-brand {
     font-size: 1.5rem;
-    font-weight: 600;
-    color: white !important;
-}
-
-.navbar-brand i {
-    color: var(--coffee-light);
-}
-
-.nav-link {
-    color: white !important;
-    font-weight: 500;
-    padding: 0.5rem 1rem !important;
+    font-weight: 700;
+    color: var(--light) !important;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
     transition: all 0.3s ease;
 }
 
-.nav-link:hover {
-    color: var(--coffee-light) !important;
+.navbar-brand:hover {
+    transform: translateY(-2px);
 }
 
-/* Hero Section */
-.hero {
-    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-                url('../images/hero-bg.jpg') center/cover no-repeat fixed;
-    color: white;
+.navbar-brand i {
+    color: var(--primary);
+    margin-right: 10px;
+    font-size: 1.8rem;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover i {
+    transform: rotate(10deg);
+}
+
+.nav-link {
+    color: var(--light) !important;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem !important;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
     position: relative;
 }
 
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 50%;
+    background-color: var(--primary);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+    width: 60%;
+}
+
+.nav-link:hover {
+    color: var(--primary) !important;
+}
+
+.navbar-nav .btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.navbar .btn-primary-custom {
+    padding: 0.4rem 1.25rem;
+    margin-left: 0.5rem;
+}
+
+.cart-icon {
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.cart-icon:hover {
+    color: var(--primary) !important;
+    transform: translateY(-2px);
+}
+
+.cart-badge {
+    background-color: var(--primary) !important;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+/* Hero Section with coffee image background */
+.hero {
+    color: var(--light);
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    z-index: 0;
+}
+
+.hero-slide.active {
+    opacity: 1;
+    z-index: 1;
+}
+
+/* Add a subtle animation for slide transitions */
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: scale(1.05); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.hero-slide.active {
+    animation: fadeInSlide 1s ease-in-out forwards;
+}
+
+.hero-slide-1 {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                url('../images/backgrounds/pic-1.jfif');
+    background-size: cover;
+    background-position: center;
+}
+
+.hero-slide-2 {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                url('../images/backgrounds/pic-2.jfif');
+    background-size: cover;
+    background-position: center;
+}
+
+.hero-slide-3 {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                url('../images/backgrounds/pic-3.jfif');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Dot Navigation */
+.dot-nav {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dot-nav .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    margin: 8px 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.dot-nav .dot::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.dot-nav .dot:hover::before {
+    opacity: 1;
+}
+
+.dot-nav .dot.active {
+    background-color: var(--primary);
+    transform: scale(1.2);
+}
+
+.dot-nav .dot.active::before {
+    opacity: 1;
+    border-color: var(--primary);
+}
+
+.hero-content {
+    backdrop-filter: blur(5px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .hero h1 {
-    font-weight: 700;
+    font-weight: 800;
     margin-bottom: 1.5rem;
+    font-size: 4rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    color: var(--light);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.hero .btn-primary {
-    background-color: var(--coffee-brown);
-    border-color: var(--coffee-brown);
+.hero p {
+    font-size: 1.1rem;
+    max-width: 600px;
+    color: var(--light);
+}
+
+.hero .btn-primary-custom {
+    background-color: var(--primary);
+    border-color: var(--primary);
     padding: 0.8rem 2rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1px;
 }
 
-.hero .btn-primary:hover {
-    background-color: var(--coffee-dark);
-    border-color: var(--coffee-dark);
+.hero .btn-primary-custom:hover {
+    background-color: #b08e6b;
+    border-color: #b08e6b;
+}
+
+.hero .btn-outline-light {
+    border: 2px solid var(--light);
+    padding: 0.8rem 2rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1px;
 }
 
 /* Features Section */
 .features {
-    background-color: #f8f9fa;
+    background: linear-gradient(rgba(211, 211, 211, 0.9), rgba(211, 211, 211, 0.9)),
+                url('../images/backgrounds/coffee-beans-closeup.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
 }
 
 .feature-card {
@@ -97,6 +326,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
+    border-bottom: 3px solid var(--accent);
 }
 
 .feature-card:hover {
@@ -106,18 +336,22 @@ body {
 
 .feature-card i {
     font-size: 2.5rem;
-    color: var(--coffee-brown);
+    color: var(--primary);
     margin-bottom: 1rem;
 }
 
 .feature-card h3 {
-    color: var(--coffee-dark);
+    color: var(--dark);
     margin-bottom: 1rem;
 }
 
 /* Products Section */
 .products {
-    background-color: white;
+    background: linear-gradient(rgba(211, 211, 211, 0.95), rgba(211, 211, 211, 0.95)),
+                url('../images/backgrounds/bakery-items.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
 }
 
 .product-card {
@@ -126,6 +360,7 @@ body {
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
+    border-left: 3px solid var(--secondary);
 }
 
 .product-card:hover {
@@ -144,28 +379,37 @@ body {
 }
 
 .product-info h3 {
-    color: var(--coffee-dark);
+    color: var(--dark);
     margin-bottom: 0.5rem;
 }
 
 .price {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--coffee-brown);
+    color: var(--primary);
 }
 
 /* About Section */
 .about {
-    background-color: #f8f9fa;
+    background: linear-gradient(rgba(211, 211, 211, 0.9), rgba(211, 211, 211, 0.9)),
+                url('../images/backgrounds/cafe-interior.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
 }
 
 .about img {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border: 3px solid var(--secondary);
 }
 
 /* Contact Section */
 .contact {
-    background-color: white;
+    background: linear-gradient(rgba(211, 211, 211, 0.95), rgba(211, 211, 211, 0.95)),
+                url('../images/backgrounds/bakery-items.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
 }
 
 .contact-info {
@@ -177,9 +421,10 @@ body {
 .info-item {
     text-align: center;
     padding: 1.5rem;
-    background: #f8f9fa;
+    background: white;
     border-radius: 10px;
     transition: all 0.3s ease;
+    border-top: 3px solid var(--accent);
 }
 
 .info-item:hover {
@@ -189,20 +434,21 @@ body {
 
 .info-item i {
     font-size: 2rem;
-    color: var(--coffee-brown);
+    color: var(--primary);
     margin-bottom: 1rem;
 }
 
 .info-item h3 {
-    color: var(--coffee-dark);
+    color: var(--dark);
     font-size: 1.2rem;
     margin-bottom: 0.5rem;
 }
 
 .contact-form {
-    background: #f8f9fa;
+    background: white;
     padding: 2rem;
     border-radius: 10px;
+    border-top: 3px solid var(--secondary);
 }
 
 .contact-form .form-control {
@@ -212,29 +458,36 @@ body {
 }
 
 .contact-form .form-control:focus {
-    border-color: var(--coffee-light);
-    box-shadow: 0 0 0 0.2rem rgba(210, 180, 140, 0.25);
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 0.2rem rgba(205, 133, 63, 0.25);
 }
 
 /* Footer */
 .footer {
-    background-color: var(--coffee-dark);
-    color: white;
+    background-color: var(--dark);
+    color: var(--light);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .footer h3, .footer h4 {
-    color: var(--coffee-light);
+    color: var(--primary);
     margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
 }
 
 .footer a {
-    color: white;
+    color: var(--light);
     text-decoration: none;
     transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
 }
 
 .footer a:hover {
-    color: var(--coffee-light);
+    color: var(--primary);
 }
 
 .social-links {
@@ -254,8 +507,159 @@ body {
 }
 
 .social-links a:hover {
-    background: var(--coffee-light);
-    color: var(--coffee-dark);
+    background: var(--primary);
+    color: var(--dark);
+}
+
+/* New styles to add */
+.special-offer {
+    background-color: var(--primary) !important;
+}
+
+/* Testimonials Section */
+.testimonials {
+    background: linear-gradient(rgba(211, 211, 211, 0.9), rgba(211, 211, 211, 0.9)),
+                url('../images/backgrounds/coffee-pouring.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.testimonial-card {
+    background: white;
+    transition: transform 0.3s ease;
+    height: 100%;
+    border-right: 3px solid var(--accent);
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+}
+
+.stars {
+    color: var(--secondary);
+}
+
+.testimonial-avatar {
+    color: var(--primary);
+}
+
+/* Animation delays for staggered effect */
+.feature-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+.feature-card:nth-child(2) {
+    animation-delay: 0.3s;
+}
+.feature-card:nth-child(3) {
+    animation-delay: 0.5s;
+}
+
+/* Make product cards more attractive */
+.product-card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+}
+
+/* Add a parallax effect to sections */
+.parallax-section {
+    background: linear-gradient(rgba(47, 44, 40, 0.7), rgba(139, 69, 19, 0.7)),
+                url('../images/backgrounds/coffee-beans-closeup.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: var(--light);
+    padding: 6rem 0;
+    position: relative;
+    animation: fadeIn 1.5s ease-in-out;
+}
+
+/* Add subtle texture overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Custom Button Styles */
+.btn-primary-custom {
+    background-color: var(--primary);
+    color: var(--dark);
+    border-color: var(--primary);
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-custom:hover {
+    background-color: #b08e6b;
+    color: var(--dark);
+    border-color: #b08e6b;
+    transform: translateY(-2px);
+}
+
+.btn-secondary-custom {
+    background-color: transparent;
+    color: var(--dark);
+    border: 2px solid var(--dark);
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary-custom:hover {
+    background-color: var(--dark);
+    color: var(--light);
+    border-color: var(--dark);
+    transform: translateY(-2px);
+}
+
+.btn-accent-custom {
+    background-color: var(--accent);
+    color: var(--light);
+    border-color: var(--accent);
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-accent-custom:hover {
+    background-color: #267349;
+    color: var(--light);
+    border-color: #267349;
+    transform: translateY(-2px);
+}
+
+/* Make content appear above the texture */
+.container {
+    position: relative;
+    z-index: 2;
 }
 
 /* Responsive Design */
@@ -270,11 +674,11 @@ body {
     .hero h1 {
         font-size: 2.5rem;
     }
-    
+
     .feature-card {
         margin-bottom: 1rem;
     }
-    
+
     .product-card {
         margin-bottom: 1rem;
     }
@@ -284,12 +688,12 @@ body {
     .hero h1 {
         font-size: 2rem;
     }
-    
+
     .navbar-brand {
         font-size: 1.25rem;
     }
-    
+
     .contact-form {
         padding: 1.5rem;
     }
-} 
+}

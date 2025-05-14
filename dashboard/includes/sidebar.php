@@ -28,8 +28,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link <?= $current_page === 'reports.php' ? 'active' : '' ?>" href="reports.php">
-                <i class="bi bi-graph-up"></i> Reports
+            <a class="nav-link <?= $current_page === 'analytics.php' ? 'active' : '' ?>" href="analytics.php">
+                <i class="bi bi-graph-up"></i> Analytics
             </a>
         </li>
         <li class="nav-item">
@@ -38,4 +38,4 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </a>
         </li>
     </ul>
-</div> 
+</div>
