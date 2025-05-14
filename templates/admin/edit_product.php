@@ -13,7 +13,7 @@ $product = $stmt->fetch();
 
 if (isset($_POST['update'])) {
     $name = $_POST['name'];
-    $category = $_POST['category'];
+    $category_id = $_POST['category_id'];
     $price = $_POST['price'];
     $description = $_POST['description'];
 
@@ -24,8 +24,8 @@ if (isset($_POST['update'])) {
         move_uploaded_file($_FILES['image']['tmp_name'], '../uploads/' . $_FILES['image']['name']);
     }
 
-    $update = $conn->prepare("UPDATE products SET name=?, description=?, category=?, price=?, image=? WHERE id=?");
-    $update->execute([$name, $description, $category, $price, $image, $id]);
+    $update = $conn->prepare("UPDATE products SET name=?, description=?, category_id=?, price=?, image=? WHERE id=?");
+    $update->execute([$name, $description, $category_id, $price, $image, $id]);
     header("Location: products.php");
 }
 ?>
@@ -35,11 +35,21 @@ if (isset($_POST['update'])) {
     <label for="name" class="form-label">Product Name</label>
     <input type="text" id="name" name="name" value="<?= $product['name'] ?>" class="form-control mb-2" placeholder="Enter product name" required>
 
-    <label for="category" class="form-label">Category</label>
-    <select id="category" name="category" class="form-control mb-2" required>
-        <option value="" disabled selected>Select category</option>
-        <option value="coffee" <?= $product['category'] === 'coffee' ? 'selected' : '' ?>>Coffee</option>
-        <option value="pastry" <?= $product['category'] === 'pastry' ? 'selected' : '' ?>>Pastry</option>
+    <label for="category_id" class="form-label">Category</label>
+    <select id="category_id" name="category_id" class="form-control mb-2" required>
+        <option value="" disabled>Select category</option>
+        <?php
+        // Fetch categories from database
+        try {
+            $categoryStmt = $conn->query("SELECT id, name FROM categories ORDER BY name");
+            while ($category = $categoryStmt->fetch(PDO::FETCH_ASSOC)) {
+                $selected = ($product['category_id'] == $category['id']) ? 'selected' : '';
+                echo '<option value="' . $category['id'] . '" ' . $selected . '>' . ucfirst(htmlspecialchars($category['name'])) . '</option>';
+            }
+        } catch (PDOException $e) {
+            echo '<option value="">Error loading categories</option>';
+        }
+        ?>
     </select>
 
     <label for="price" class="form-label">Price</label>

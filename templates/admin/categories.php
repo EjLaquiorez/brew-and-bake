@@ -393,12 +393,12 @@ unset($category);
                                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                                     <i class="bi bi-plus-lg me-2"></i> Add New Category
                                 </button>
-                                <a href="admin.php" class="btn btn-secondary">
+                                <a href="update_categories.php" class="btn btn-success">
+                                    <i class="bi bi-arrow-repeat me-2"></i> Update to Brew & Bake Menu
+                                </a>
+                                <a href="products.php" class="btn btn-secondary">
                                     <i class="bi bi-box-seam me-2"></i> Manage Products
                                 </a>
-                                <button class="btn btn-info">
-                                    <i class="bi bi-arrow-repeat me-2"></i> Reorganize Categories
-                                </button>
                                 <button class="btn btn-light">
                                     <i class="bi bi-download me-2"></i> Export Categories
                                 </button>

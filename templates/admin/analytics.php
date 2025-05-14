@@ -27,38 +27,45 @@ if (isset($_SESSION['error'])) {
 // Placeholder data for demonstration
 // In a real application, this would come from database queries
 
-// Monthly sales data for 2025
+// Monthly sales data for 2025 with realistic seasonal patterns
 $monthlySales = [
-    ['month' => 'Jan 2025', 'sales' => 12500],
-    ['month' => 'Feb 2025', 'sales' => 15000],
-    ['month' => 'Mar 2025', 'sales' => 18000],
-    ['month' => 'Apr 2025', 'sales' => 16500],
-    ['month' => 'May 2025', 'sales' => 21000],
-    ['month' => 'Jun 2024', 'sales' => 22500],
-    ['month' => 'Jul 2024', 'sales' => 25000],
-    ['month' => 'Aug 2024', 'sales' => 23000],
-    ['month' => 'Sep 2024', 'sales' => 24500],
-    ['month' => 'Oct 2024', 'sales' => 28000],
-    ['month' => 'Nov 2024', 'sales' => 32000],
-    ['month' => 'Dec 2024', 'sales' => 35000]
+    // Q1: Post-holiday slowdown, then gradual recovery
+    ['month' => 'Jan 2025', 'sales' => 18500],  // Post-holiday slowdown
+    ['month' => 'Feb 2025', 'sales' => 17200],  // Valentine's Day bump but still winter slump
+    ['month' => 'Mar 2025', 'sales' => 19800],  // Beginning of spring recovery
+
+    // Q2: Strong spring and early summer growth
+    ['month' => 'Apr 2025', 'sales' => 22500],  // Spring break boost
+    ['month' => 'May 2025', 'sales' => 24300],  // Graduation season
+    ['month' => 'Jun 2025', 'sales' => 27800],  // Summer vacation starts
+
+    // Q3: Peak summer season then back-to-school transition
+    ['month' => 'Jul 2025', 'sales' => 31500],  // Summer peak
+    ['month' => 'Aug 2025', 'sales' => 29700],  // Late summer
+    ['month' => 'Sep 2025', 'sales' => 26400],  // Back to school/work
+
+    // Q4: Holiday season build-up and peak
+    ['month' => 'Oct 2025', 'sales' => 28900],  // Fall season, Halloween
+    ['month' => 'Nov 2025', 'sales' => 32600],  // Pre-holiday shopping
+    ['month' => 'Dec 2025', 'sales' => 38500]   // Holiday peak season
 ];
 
-// Top selling products with Filipino names
+// Top selling products from Brew & Bake complete menu
 $topProducts = [
-    ['name' => 'Barako Coffee', 'category' => 'Coffee', 'sales' => 450, 'revenue' => 67500],
-    ['name' => 'Ube Cake', 'category' => 'Cakes', 'sales' => 320, 'revenue' => 112000],
-    ['name' => 'Ensaymada', 'category' => 'Pastries', 'sales' => 580, 'revenue' => 58000],
-    ['name' => 'Kapeng Mocha', 'category' => 'Coffee', 'sales' => 410, 'revenue' => 61500],
-    ['name' => 'Leche Flan Cake', 'category' => 'Cakes', 'sales' => 280, 'revenue' => 98000]
+    ['name' => 'Caramel Macchiato', 'category' => 'Coffee', 'sales' => 450, 'revenue' => 90000],
+    ['name' => 'Tiramisu', 'category' => 'Cake', 'sales' => 320, 'revenue' => 96000],
+    ['name' => 'Ube Cheese Pandesal', 'category' => 'Pastry', 'sales' => 580, 'revenue' => 34800],
+    ['name' => 'Matcha Latte', 'category' => 'Drink', 'sales' => 410, 'revenue' => 90200],
+    ['name' => 'Chocolate Lava Cake', 'category' => 'Cake', 'sales' => 280, 'revenue' => 89600]
 ];
 
 // Sales by category
 $salesByCategory = [
-    ['category' => 'Coffee', 'sales' => 1200, 'revenue' => 180000],
-    ['category' => 'Cakes', 'sales' => 850, 'revenue' => 297500],
-    ['category' => 'Pastries', 'sales' => 1450, 'revenue' => 145000],
-    ['category' => 'Sandwiches', 'sales' => 720, 'revenue' => 108000],
-    ['category' => 'Beverages', 'sales' => 950, 'revenue' => 95000]
+    ['category' => 'Coffee', 'sales' => 1200, 'revenue' => 204000],
+    ['category' => 'Drink', 'sales' => 850, 'revenue' => 153000],
+    ['category' => 'Cake', 'sales' => 950, 'revenue' => 285000],
+    ['category' => 'Pastry', 'sales' => 1050, 'revenue' => 126000],
+    ['category' => 'Dessert', 'sales' => 750, 'revenue' => 82500]
 ];
 
 // Customer demographics
@@ -417,7 +424,7 @@ $averageOrderValue = $totalSales > 0 ? $totalRevenue / $totalSales : 0;
                                     </div>
                                     <div class="insight-content">
                                         <h6 class="insight-title">Sales Growth</h6>
-                                        <p class="insight-text">Sales have increased by 15% compared to last month.</p>
+                                        <p class="insight-text">December sales increased by 18% compared to November, reflecting strong holiday season performance.</p>
                                     </div>
                                 </div>
 
@@ -427,7 +434,7 @@ $averageOrderValue = $totalSales > 0 ? $totalRevenue / $totalSales : 0;
                                     </div>
                                     <div class="insight-content">
                                         <h6 class="insight-title">Top Performer</h6>
-                                        <p class="insight-text">Barako Coffee is your best-selling product this month.</p>
+                                        <p class="insight-text">Ube Cheese Pandesal is your best-selling product by volume this month.</p>
                                     </div>
                                 </div>
 
@@ -438,6 +445,16 @@ $averageOrderValue = $totalSales > 0 ? $totalRevenue / $totalSales : 0;
                                     <div class="insight-content">
                                         <h6 class="insight-title">Peak Hours</h6>
                                         <p class="insight-text">Most orders are placed between 7-9 AM and 12-2 PM.</p>
+                                    </div>
+                                </div>
+
+                                <div class="insight-item">
+                                    <div class="insight-icon secondary">
+                                        <i class="bi bi-calendar-check"></i>
+                                    </div>
+                                    <div class="insight-content">
+                                        <h6 class="insight-title">Seasonal Trends</h6>
+                                        <p class="insight-text">Summer (July) and holiday season (December) show the highest sales volumes of the year.</p>
                                     </div>
                                 </div>
 

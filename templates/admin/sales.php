@@ -234,7 +234,7 @@ $totalTransactions = count($recentTransactions);
             <!-- First Row: Filter and Key Metrics -->
             <div class="row mb-4">
                 <!-- Filter Data -->
-                <div class="col-md-4 mb-4">
+                <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card fade-in h-100">
                         <div class="card-header">
                             <h5 class="card-title"><i class="bi bi-funnel"></i> Filter Data</h5>
@@ -257,10 +257,10 @@ $totalTransactions = count($recentTransactions);
                             <hr>
                             <div class="d-flex justify-content-between">
                                 <button class="btn btn-outline-primary">
-                                    <i class="bi bi-download me-2"></i> Export
+                                    <i class="bi bi-download me-md-2"></i> <span class="d-none d-md-inline">Export</span>
                                 </button>
                                 <button class="btn btn-outline-primary">
-                                    <i class="bi bi-printer me-2"></i> Print
+                                    <i class="bi bi-printer me-md-2"></i> <span class="d-none d-md-inline">Print</span>
                                 </button>
                             </div>
                         </div>
@@ -268,56 +268,56 @@ $totalTransactions = count($recentTransactions);
                 </div>
 
                 <!-- Key Metrics -->
-                <div class="col-md-8 mb-4">
+                <div class="col-lg-8 col-md-6 mb-4">
                     <div class="card fade-in h-100">
                         <div class="card-header">
                             <h5 class="card-title"><i class="bi bi-bar-chart"></i> Key Metrics</h5>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <div class="col-md-6 col-sm-6">
+                                <div class="col-xl-6 col-sm-6 col-6">
                                     <div class="stat-card primary">
                                         <div class="stat-icon">
                                             <i class="bi bi-currency-dollar"></i>
                                         </div>
                                         <div class="stat-content">
-                                            <h3 class="stat-value">₱<?= number_format($totalSales, 2) ?></h3>
+                                            <h3 class="stat-value fs-4 fs-md-3">₱<?= number_format($totalSales, 2) ?></h3>
                                             <p class="stat-label">Total Sales</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-md-6 col-sm-6">
+                                <div class="col-xl-6 col-sm-6 col-6">
                                     <div class="stat-card success">
                                         <div class="stat-icon">
                                             <i class="bi bi-bag"></i>
                                         </div>
                                         <div class="stat-content">
-                                            <h3 class="stat-value"><?= number_format($totalOrders) ?></h3>
+                                            <h3 class="stat-value fs-4 fs-md-3"><?= number_format($totalOrders) ?></h3>
                                             <p class="stat-label">Total Orders</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-md-6 col-sm-6">
+                                <div class="col-xl-6 col-sm-6 col-6">
                                     <div class="stat-card info">
                                         <div class="stat-icon">
                                             <i class="bi bi-cash-stack"></i>
                                         </div>
                                         <div class="stat-content">
-                                            <h3 class="stat-value">₱<?= number_format($averageOrderValue, 2) ?></h3>
+                                            <h3 class="stat-value fs-4 fs-md-3">₱<?= number_format($averageOrderValue, 2) ?></h3>
                                             <p class="stat-label">Avg. Order Value</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-md-6 col-sm-6">
+                                <div class="col-xl-6 col-sm-6 col-6">
                                     <div class="stat-card secondary">
                                         <div class="stat-icon">
                                             <i class="bi bi-credit-card"></i>
                                         </div>
                                         <div class="stat-content">
-                                            <h3 class="stat-value"><?= number_format($totalTransactions) ?></h3>
+                                            <h3 class="stat-value fs-4 fs-md-3"><?= number_format($totalTransactions) ?></h3>
                                             <p class="stat-label">Transactions</p>
                                         </div>
                                     </div>
@@ -331,17 +331,25 @@ $totalTransactions = count($recentTransactions);
             <!-- Second Row: Sales Trends and Payment Methods -->
             <div class="row mb-4">
                 <!-- Sales Trends -->
-                <div class="col-md-8 mb-4">
+                <div class="col-lg-8 col-md-12 mb-4">
                     <div class="card fade-in h-100">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-graph-up"></i> Daily Sales Trends</h5>
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                            <h5 class="card-title mb-2 mb-md-0"><i class="bi bi-graph-up"></i> Daily Sales Trends</h5>
                             <div class="card-actions">
-                                <button class="btn btn-sm btn-outline-primary">
+                                <button class="btn btn-sm btn-outline-primary me-1">
                                     <i class="bi bi-arrow-repeat"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-three-dots-vertical"></i>
-                                </button>
+                                <div class="dropdown d-inline-block">
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-download me-2"></i> Download Chart</a></li>
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i> Print Chart</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i> Chart Settings</a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body">
@@ -353,13 +361,23 @@ $totalTransactions = count($recentTransactions);
                 </div>
 
                 <!-- Payment Methods -->
-                <div class="col-md-4 mb-4">
+                <div class="col-lg-4 col-md-12 mb-4">
                     <div class="card fade-in h-100">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-credit-card"></i> Payment Methods</h5>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0"><i class="bi bi-credit-card"></i> Payment Methods</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-filter"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#">All Time</a></li>
+                                    <li><a class="dropdown-item" href="#">This Month</a></li>
+                                    <li><a class="dropdown-item" href="#">This Week</a></li>
+                                </ul>
+                            </div>
                         </div>
                         <div class="card-body">
-                            <div class="chart-container" style="height: 200px; min-height: 180px;">
+                            <div class="chart-container" style="height: 180px; min-height: 150px;">
                                 <canvas id="paymentChart"></canvas>
                             </div>
                             <div class="table-responsive mt-3">
@@ -367,8 +385,8 @@ $totalTransactions = count($recentTransactions);
                                     <thead>
                                         <tr>
                                             <th>Method</th>
-                                            <th>Amount</th>
-                                            <th>%</th>
+                                            <th class="text-end">Amount</th>
+                                            <th class="text-end">%</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -379,8 +397,8 @@ $totalTransactions = count($recentTransactions);
                                         ?>
                                             <tr>
                                                 <td><?= htmlspecialchars($method['method']) ?></td>
-                                                <td>₱<?= number_format($method['amount']) ?></td>
-                                                <td><?= $percentage ?>%</td>
+                                                <td class="text-end">₱<?= number_format($method['amount']) ?></td>
+                                                <td class="text-end"><?= $percentage ?>%</td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -394,13 +412,24 @@ $totalTransactions = count($recentTransactions);
             <!-- Third Row: Time of Day and Recent Transactions -->
             <div class="row mb-4">
                 <!-- Sales by Time of Day -->
-                <div class="col-md-4 mb-4">
+                <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card fade-in h-100">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-clock"></i> Sales by Time</h5>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0"><i class="bi bi-clock"></i> Sales by Time</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-calendar-week me-md-2"></i>
+                                    <span class="d-none d-md-inline">This Week</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#">Today</a></li>
+                                    <li><a class="dropdown-item" href="#">This Week</a></li>
+                                    <li><a class="dropdown-item" href="#">This Month</a></li>
+                                </ul>
+                            </div>
                         </div>
                         <div class="card-body">
-                            <div class="chart-container" style="height: 200px; min-height: 180px;">
+                            <div class="chart-container" style="height: 180px; min-height: 150px;">
                                 <canvas id="timeChart"></canvas>
                             </div>
                             <div class="mt-3">
@@ -424,11 +453,26 @@ $totalTransactions = count($recentTransactions);
                 </div>
 
                 <!-- Recent Transactions -->
-                <div class="col-md-8 mb-4">
+                <div class="col-lg-8 col-md-6 mb-4">
                     <div class="card fade-in h-100">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-receipt"></i> Recent Transactions</h5>
-                            <a href="orders.php" class="btn btn-sm btn-outline-primary">View All</a>
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                            <h5 class="card-title mb-2 mb-md-0"><i class="bi bi-receipt"></i> Recent Transactions</h5>
+                            <div class="d-flex gap-2">
+                                <div class="dropdown d-inline-block d-md-none">
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-filter"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#">All Transactions</a></li>
+                                        <li><a class="dropdown-item" href="#">Completed</a></li>
+                                        <li><a class="dropdown-item" href="#">Pending</a></li>
+                                    </ul>
+                                </div>
+                                <a href="orders.php" class="btn btn-sm btn-outline-primary d-flex align-items-center">
+                                    <i class="bi bi-eye me-md-2"></i>
+                                    <span class="d-none d-md-inline">View All</span>
+                                </a>
+                            </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -436,10 +480,10 @@ $totalTransactions = count($recentTransactions);
                                     <thead>
                                         <tr>
                                             <th>ID</th>
-                                            <th>Customer</th>
+                                            <th class="d-none d-md-table-cell">Customer</th>
                                             <th>Date</th>
                                             <th>Amount</th>
-                                            <th>Status</th>
+                                            <th class="text-end">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -448,7 +492,7 @@ $totalTransactions = count($recentTransactions);
                                                 <td>
                                                     <div class="fw-medium"><?= htmlspecialchars($transaction['id']) ?></div>
                                                 </td>
-                                                <td><?= htmlspecialchars($transaction['customer']) ?></td>
+                                                <td class="d-none d-md-table-cell"><?= htmlspecialchars($transaction['customer']) ?></td>
                                                 <td>
                                                     <div>
                                                         <div class="fw-medium"><?= date('M d', strtotime($transaction['date'])) ?></div>
@@ -458,7 +502,7 @@ $totalTransactions = count($recentTransactions);
                                                 <td>
                                                     <span class="fw-bold">₱<?= number_format($transaction['amount'], 2) ?></span>
                                                 </td>
-                                                <td>
+                                                <td class="text-end">
                                                     <span class="cell-badge success">
                                                         <?= ucfirst($transaction['status']) ?>
                                                     </span>
@@ -476,14 +520,25 @@ $totalTransactions = count($recentTransactions);
             <!-- Fourth Row: Sales Breakdown and Forecast -->
             <div class="row mb-4">
                 <!-- Sales Breakdown -->
-                <div class="col-md-6 mb-4">
+                <div class="col-lg-6 col-md-12 mb-4">
                     <div class="card fade-in h-100">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-pie-chart"></i> Sales Breakdown</h5>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0"><i class="bi bi-pie-chart"></i> Sales Breakdown</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-calendar3 me-md-2"></i>
+                                    <span class="d-none d-md-inline">This Month</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#">This Week</a></li>
+                                    <li><a class="dropdown-item" href="#">This Month</a></li>
+                                    <li><a class="dropdown-item" href="#">This Year</a></li>
+                                </ul>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <div class="col-md-6">
+                                <div class="col-md-6 col-sm-6">
                                     <div class="card bg-light border-0">
                                         <div class="card-body p-3">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -522,7 +577,7 @@ $totalTransactions = count($recentTransactions);
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 col-sm-6">
                                     <div class="card bg-light border-0">
                                         <div class="card-body p-3">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -567,10 +622,14 @@ $totalTransactions = count($recentTransactions);
                 </div>
 
                 <!-- Sales Forecast -->
-                <div class="col-md-6 mb-4">
+                <div class="col-lg-6 col-md-12 mb-4">
                     <div class="card fade-in h-100">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-calendar-check"></i> Sales Forecast</h5>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0"><i class="bi bi-calendar-check"></i> Sales Forecast</h5>
+                            <button class="btn btn-sm btn-outline-primary d-flex align-items-center">
+                                <i class="bi bi-file-earmark-text me-md-2"></i>
+                                <span class="d-none d-md-inline">Generate Report</span>
+                            </button>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-info">
@@ -586,7 +645,7 @@ $totalTransactions = count($recentTransactions);
                             </div>
 
                             <div class="row g-3 mt-2">
-                                <div class="col-md-6">
+                                <div class="col-md-6 col-sm-6">
                                     <div class="card bg-light border-0">
                                         <div class="card-body p-3">
                                             <div class="d-flex align-items-center">
@@ -597,13 +656,13 @@ $totalTransactions = count($recentTransactions);
                                                 </div>
                                                 <div>
                                                     <p class="text-muted mb-0">Next Month</p>
-                                                    <h5 class="mb-0">₱<?= number_format($totalSales * 1.15, 2) ?></h5>
+                                                    <h5 class="mb-0 fs-6 fs-md-5">₱<?= number_format($totalSales * 1.15, 2) ?></h5>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 col-sm-6">
                                     <div class="card bg-light border-0">
                                         <div class="card-body p-3">
                                             <div class="d-flex align-items-center">
@@ -614,7 +673,7 @@ $totalTransactions = count($recentTransactions);
                                                 </div>
                                                 <div>
                                                     <p class="text-muted mb-0">Projected Orders</p>
-                                                    <h5 class="mb-0"><?= number_format($totalOrders * 1.2) ?></h5>
+                                                    <h5 class="mb-0 fs-6 fs-md-5"><?= number_format($totalOrders * 1.2) ?></h5>
                                                 </div>
                                             </div>
                                         </div>
@@ -622,10 +681,12 @@ $totalTransactions = count($recentTransactions);
                                 </div>
                             </div>
 
-                            <div class="d-flex justify-content-end mt-3">
-                                <button class="btn btn-primary">
-                                    <i class="bi bi-file-earmark-text me-2"></i> Generate Report
-                                </button>
+                            <div class="mt-4 d-md-none">
+                                <div class="d-grid">
+                                    <button class="btn btn-primary">
+                                        <i class="bi bi-file-earmark-text me-2"></i> Generate Report
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

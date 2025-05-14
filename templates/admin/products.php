@@ -27,8 +27,10 @@ if (isset($_SESSION['error'])) {
 // Fetch products with error handling
 try {
     $stmt = $conn->prepare("
-        SELECT * FROM products
-        ORDER BY created_at DESC
+        SELECT p.*, c.name as category_name
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        ORDER BY p.created_at DESC
     ");
     $stmt->execute();
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -305,6 +307,7 @@ $recentProducts = array_slice($products, 0, 5);
                                             <th>Product</th>
                                             <th>Category</th>
                                             <th>Price</th>
+                                            <th>Stock</th>
                                             <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
@@ -331,11 +334,16 @@ $recentProducts = array_slice($products, 0, 5);
                                                 </td>
                                                 <td>
                                                     <span class="cell-badge primary">
-                                                        <?= htmlspecialchars($product['category']) ?>
+                                                        <?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?>
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <span class="fw-bold">₱<?= number_format($product['price'], 2) ?></span>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-bold <?= $product['stock'] < 10 ? 'text-warning' : '' ?>">
+                                                        <?= htmlspecialchars($product['stock']) ?>
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     <span class="cell-badge <?= $product['status'] === 'active' ? 'success' : 'warning' ?>">
@@ -451,10 +459,12 @@ $recentProducts = array_slice($products, 0, 5);
                     const productName = row.querySelector('.cell-title').textContent.toLowerCase();
                     const productDesc = row.querySelector('.cell-subtitle').textContent.toLowerCase();
                     const productCategory = row.querySelector('.cell-badge').textContent.toLowerCase();
+                    const productStock = row.querySelectorAll('td')[3].textContent.trim().toLowerCase();
 
                     if (productName.includes(searchValue) ||
                         productDesc.includes(searchValue) ||
-                        productCategory.includes(searchValue)) {
+                        productCategory.includes(searchValue) ||
+                        productStock.includes(searchValue)) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';

@@ -8,7 +8,7 @@ require_once "../includes/db.php";
 
 if (isset($_POST['save'])) {
     $name = trim($_POST['name']);
-    $category = $_POST['category'];
+    $category_id = $_POST['category_id'];
     $price = $_POST['price'];
     $description = trim($_POST['description']);
     $stock = isset($_POST['stock']) ? (int)$_POST['stock'] : 0;
@@ -25,8 +25,8 @@ if (isset($_POST['save'])) {
         move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $fileName);
     }
 
-    $stmt = $conn->prepare("INSERT INTO products (name, description, category, price, image, stock, status) VALUES (?, ?, ?, ?, ?, ?, 'active')");
-    $stmt->execute([$name, $description, $category, $price, $image, $stock]);
+    $stmt = $conn->prepare("INSERT INTO products (name, description, category_id, price, image, stock, status) VALUES (?, ?, ?, ?, ?, ?, 'active')");
+    $stmt->execute([$name, $description, $category_id, $price, $image, $stock]);
 
     $_SESSION['success'] = "✅ Product added successfully!";
     header("Location: products.php");
@@ -73,10 +73,19 @@ if (isset($_POST['save'])) {
                         <label class="form-label">
                             <i class="bi bi-grid"></i> Category
                         </label>
-                        <select name="category" class="form-select" required>
+                        <select name="category_id" class="form-select" required>
                             <option value="">Select category</option>
-                            <option value="coffee">Coffee</option>
-                            <option value="pastry">Pastry</option>
+                            <?php
+                            // Fetch categories from database
+                            try {
+                                $categoryStmt = $conn->query("SELECT id, name FROM categories ORDER BY name");
+                                while ($category = $categoryStmt->fetch(PDO::FETCH_ASSOC)) {
+                                    echo '<option value="' . $category['id'] . '">' . ucfirst(htmlspecialchars($category['name'])) . '</option>';
+                                }
+                            } catch (PDOException $e) {
+                                echo '<option value="">Error loading categories</option>';
+                            }
+                            ?>
                         </select>
                     </div>
                     <div class="mb-3">

@@ -8,16 +8,18 @@ $sort = isset($_GET['sort']) ? $_GET['sort'] : 'name_asc';
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
 // Build the query
-$query = "SELECT * FROM products WHERE status = 'active'";
+$query = "SELECT p.*, c.name as category_name FROM products p
+          LEFT JOIN categories c ON p.category_id = c.id
+          WHERE p.status = 'active'";
 $params = [];
 
 if (!empty($category)) {
-    $query .= " AND category = ?";
+    $query .= " AND category_id = ?";
     $params[] = $category;
 }
 
 if (!empty($search)) {
-    $query .= " AND (name LIKE ? OR description LIKE ?)";
+    $query .= " AND (p.name LIKE ? OR p.description LIKE ?)";
     $params[] = "%$search%";
     $params[] = "%$search%";
 }
@@ -25,16 +27,16 @@ if (!empty($search)) {
 // Add sorting
 switch ($sort) {
     case 'price_asc':
-        $query .= " ORDER BY price ASC";
+        $query .= " ORDER BY p.price ASC";
         break;
     case 'price_desc':
-        $query .= " ORDER BY price DESC";
+        $query .= " ORDER BY p.price DESC";
         break;
     case 'name_desc':
-        $query .= " ORDER BY name DESC";
+        $query .= " ORDER BY p.name DESC";
         break;
     default: // name_asc
-        $query .= " ORDER BY name ASC";
+        $query .= " ORDER BY p.name ASC";
 }
 
 try {
@@ -42,9 +44,16 @@ try {
     $stmt->execute($params);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Get unique categories for filter
-    $catStmt = $conn->query("SELECT DISTINCT category FROM products WHERE status = 'active' ORDER BY category");
-    $categories = $catStmt->fetchAll(PDO::FETCH_COLUMN);
+    // Get categories for filter
+    $catStmt = $conn->query("
+        SELECT c.id, c.name
+        FROM categories c
+        INNER JOIN products p ON c.id = p.category_id
+        WHERE p.status = 'active'
+        GROUP BY c.id, c.name
+        ORDER BY c.name
+    ");
+    $categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $products = [];
     $categories = [];
@@ -136,8 +145,8 @@ try {
                         <select name="category" class="form-select" onchange="this.form.submit()">
                             <option value="">All Categories</option>
                             <?php foreach ($categories as $cat): ?>
-                                <option value="<?= htmlspecialchars($cat) ?>" <?= $category === $cat ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars(ucfirst($cat)) ?>
+                                <option value="<?= htmlspecialchars($cat['id']) ?>" <?= $category == $cat['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars(ucfirst($cat['name'])) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -171,7 +180,7 @@ try {
                         <div class="col-md-4 col-lg-3">
                             <div class="product-card">
                                 <?php if (!empty($product['image'])): ?>
-                                    <img src="../assets/images/products/<?= htmlspecialchars($product['image']) ?>" 
+                                    <img src="../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
                                          alt="<?= htmlspecialchars($product['name']) ?>"
                                          class="product-image">
                                 <?php endif; ?>
@@ -179,7 +188,7 @@ try {
                                     <h3><?= htmlspecialchars($product['name']) ?></h3>
                                     <p class="text-muted"><?= htmlspecialchars($product['description']) ?></p>
                                     <div class="product-meta">
-                                        <span class="category"><?= htmlspecialchars(ucfirst($product['category'])) ?></span>
+                                        <span class="category"><?= htmlspecialchars(ucfirst($product['category_name'] ?? 'Uncategorized')) ?></span>
                                         <span class="price">₱<?= number_format($product['price'], 2) ?></span>
                                     </div>
                                     <?php if (isLoggedIn()): ?>
@@ -241,4 +250,4 @@ try {
         }
     </script>
 </body>
-</html> 
+</html>
