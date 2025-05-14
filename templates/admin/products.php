@@ -164,16 +164,7 @@ $recentProducts = array_slice($products, 0, 5);
         </div>
 
         <div class="sidebar-footer">
-            <div class="user-menu">
-                <div class="user-avatar">
-                    <?= substr($_SESSION['user']['name'] ?? 'A', 0, 1) ?>
-                </div>
-                <div class="user-info">
-                    <h6 class="user-name"><?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?></h6>
-                    <p class="user-role">Administrator</p>
-                </div>
-                <i class="bi bi-chevron-down user-menu-toggle"></i>
-            </div>
+            <?php include 'includes/sidebar-user-menu.php'; ?>
         </div>
     </aside>
 

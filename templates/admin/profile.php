@@ -4,9 +4,9 @@ require_once "../includes/auth.php";
 require_once "../includes/db.php";
 
 // Security check
-if (!isLoggedIn()) {
-    $_SESSION['error'] = "You must be logged in to access this page.";
-    header("Location: ../views/login.php");
+if (!isLoggedIn() || getCurrentUserRole() !== 'admin') {
+    $_SESSION['error'] = "Access denied. Admin privileges required.";
+    header("Location: ../../views/login.php");
     exit;
 }
 
@@ -24,61 +24,36 @@ if (isset($_SESSION['error'])) {
     unset($_SESSION['error']);
 }
 
-// Get user data
-$userId = $_SESSION['user']['id'] ?? 0;
+// Simulate user data
 $userData = [
-    'name' => $_SESSION['user']['name'] ?? 'Admin User',
-    'email' => $_SESSION['user']['email'] ?? 'admin@example.com',
-    'role' => $_SESSION['user']['role'] ?? 'admin',
-    'created_at' => $_SESSION['user']['created_at'] ?? date('Y-m-d H:i:s', strtotime('-1 year')),
-    'phone' => '09123456789', // Placeholder
-    'address' => '123 Main Street, Manila, Philippines', // Placeholder
+    'id' => 1,
+    'name' => 'Admin User',
+    'email' => 'admin@example.com',
+    'phone' => '09123456789',
+    'address' => '123 Main Street, Manila, Philippines',
+    'role' => 'admin',
+    'created_at' => '2024-01-15 10:30:00'
 ];
 
-// Handle profile update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_profile') {
-    $name = trim($_POST['name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $phone = trim($_POST['phone'] ?? '');
-    $address = trim($_POST['address'] ?? '');
+// Process form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action'])) {
+        if ($_POST['action'] === 'update_profile') {
+            // Process profile update
+            $userData['name'] = $_POST['name'];
+            $userData['email'] = $_POST['email'];
+            $userData['phone'] = $_POST['phone'];
+            $userData['address'] = $_POST['address'];
 
-    if (empty($name) || empty($email)) {
-        $errorMessage = "Name and email are required.";
-    } else {
-        try {
-            // In a real application, this would update the database
-            // For now, just update the session data
-            $_SESSION['user']['name'] = $name;
-            $_SESSION['user']['email'] = $email;
+            // Show success message
+            $successMessage = 'Profile updated successfully!';
+        } elseif ($_POST['action'] === 'change_password') {
+            // Process password change
+            // In a real app, validate current password and update with new password
 
-            // Update our local variable for display
-            $userData['name'] = $name;
-            $userData['email'] = $email;
-            $userData['phone'] = $phone;
-            $userData['address'] = $address;
-
-            $successMessage = "Profile updated successfully.";
-        } catch (Exception $e) {
-            $errorMessage = "Error updating profile: " . $e->getMessage();
+            // Show success message
+            $successMessage = 'Password changed successfully!';
         }
-    }
-}
-
-// Handle password change
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'change_password') {
-    $currentPassword = $_POST['current_password'] ?? '';
-    $newPassword = $_POST['new_password'] ?? '';
-    $confirmPassword = $_POST['confirm_password'] ?? '';
-
-    if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
-        $errorMessage = "All password fields are required.";
-    } elseif ($newPassword !== $confirmPassword) {
-        $errorMessage = "New passwords do not match.";
-    } elseif (strlen($newPassword) < 8) {
-        $errorMessage = "New password must be at least 8 characters long.";
-    } else {
-        // In a real application, this would verify the current password and update the database
-        $successMessage = "Password changed successfully.";
     }
 }
 ?>
@@ -187,16 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         </div>
 
         <div class="sidebar-footer">
-            <div class="user-menu">
-                <div class="user-avatar">
-                    <?= substr($userData['name'], 0, 1) ?>
-                </div>
-                <div class="user-info">
-                    <h6 class="user-name"><?= htmlspecialchars($userData['name']) ?></h6>
-                    <p class="user-role"><?= ucfirst($userData['role']) ?></p>
-                </div>
-                <i class="bi bi-chevron-down user-menu-toggle"></i>
-            </div>
+            <?php include 'includes/sidebar-user-menu.php'; ?>
         </div>
     </aside>
 
@@ -237,250 +203,296 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 </div>
             <?php endif; ?>
 
-            <!-- Profile Overview -->
-            <div class="row mb-5">
-                <div class="col-12 mb-4">
-                    <div class="card card-primary fade-in">
-                        <div class="card-body p-5">
-                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                                <div class="d-flex align-items-center mb-4 mb-md-0">
-                                    <div class="profile-avatar">
-                                        <?= substr($userData['name'], 0, 1) ?>
-                                    </div>
-                                    <div class="ms-4">
-                                        <h2 class="mb-1"><?= htmlspecialchars($userData['name']) ?></h2>
-                                        <p class="text-muted mb-0"><?= ucfirst($userData['role']) ?> • Member since <?= date('F Y', strtotime($userData['created_at'])) ?></p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#avatarModal">
-                                        <i class="bi bi-camera me-2"></i> Change Avatar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+            <div class="page-header mb-4">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h1 class="page-title">Profile</h1>
+                        <p class="text-muted">Manage your account settings and preferences</p>
                     </div>
                 </div>
             </div>
 
-            <div class="row mb-5">
-                <!-- Profile Information -->
-                <div class="col-lg-8 mb-4">
-                    <div class="card fade-in-left">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-person"></i> Profile Information</h5>
-                        </div>
+            <!-- Grid Layout -->
+            <div class="row mb-4">
+                <!-- First Row -->
+                <div class="col-md-4 mb-4">
+                    <!-- Profile Overview -->
+                    <div class="card card-primary fade-in h-100" style="border: none;">
                         <div class="card-body">
-                            <form action="profile.php" method="post">
-                                <input type="hidden" name="action" value="update_profile">
-
-                                <div class="row mb-4">
-                                    <div class="col-md-6 mb-3 mb-md-0">
-                                        <label for="name" class="form-label">Full Name</label>
-                                        <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($userData['name']) ?>" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="email" class="form-label">Email Address</label>
-                                        <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($userData['email']) ?>" required>
-                                    </div>
+                            <div class="d-flex flex-column align-items-center text-center">
+                                <div class="profile-avatar mb-3" style="width: 80px; height: 80px; font-size: 2rem; background-color: var(--color-primary);">
+                                    <?= substr($userData['name'], 0, 1) ?>
                                 </div>
-
-                                <div class="row mb-4">
-                                    <div class="col-md-6 mb-3 mb-md-0">
-                                        <label for="phone" class="form-label">Phone Number</label>
-                                        <input type="tel" class="form-control" id="phone" name="phone" value="<?= htmlspecialchars($userData['phone']) ?>">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="role" class="form-label">Role</label>
-                                        <input type="text" class="form-control" id="role" value="<?= ucfirst($userData['role']) ?>" readonly>
-                                    </div>
-                                </div>
-
-                                <div class="mb-4">
-                                    <label for="address" class="form-label">Address</label>
-                                    <textarea class="form-control" id="address" name="address" rows="3"><?= htmlspecialchars($userData['address']) ?></textarea>
-                                </div>
-
-                                <div class="d-flex justify-content-end">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-save me-2"></i> Save Changes
-                                    </button>
-                                </div>
-                            </form>
+                                <h4 class="mb-1"><?= htmlspecialchars($userData['name']) ?></h4>
+                                <p class="text-muted mb-2"><?= ucfirst($userData['role']) ?></p>
+                                <p class="text-muted small">Member since <?= date('F Y', strtotime($userData['created_at'])) ?></p>
+                                <button class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#avatarModal">
+                                    <i class="bi bi-camera me-2"></i> Change Avatar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Security Settings -->
-                <div class="col-lg-4 mb-4">
-                    <div class="card fade-in-right">
+                <div class="col-md-8 mb-4">
+                    <!-- Security Settings -->
+                    <div class="card fade-in-right h-100" style="border: none;">
                         <div class="card-header">
                             <h5 class="card-title"><i class="bi bi-shield-lock"></i> Security</h5>
                         </div>
                         <div class="card-body">
                             <form action="profile.php" method="post">
                                 <input type="hidden" name="action" value="change_password">
-
-                                <div class="mb-3">
-                                    <label for="current_password" class="form-label">Current Password</label>
-                                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="current_password" class="form-label">Current Password</label>
+                                        <input type="password" class="form-control form-control-sm" id="current_password" name="current_password" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="new_password" class="form-label">New Password</label>
+                                        <input type="password" class="form-control form-control-sm" id="new_password" name="new_password" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                                        <input type="password" class="form-control form-control-sm" id="confirm_password" name="confirm_password" required>
+                                    </div>
                                 </div>
-
-                                <div class="mb-3">
-                                    <label for="new_password" class="form-label">New Password</label>
-                                    <input type="password" class="form-control" id="new_password" name="new_password" required>
-                                </div>
-
-                                <div class="mb-4">
-                                    <label for="confirm_password" class="form-label">Confirm New Password</label>
-                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                                </div>
-
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary">
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-sm btn-primary">
                                         <i class="bi bi-key me-2"></i> Change Password
                                     </button>
                                 </div>
                             </form>
 
-                            <hr class="my-4">
+                            <hr class="my-3">
 
-                            <div class="mb-3">
-                                <h6 class="mb-3">Two-Factor Authentication</h6>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="twoFactorToggle">
-                                    <label class="form-check-label" for="twoFactorToggle">Enable 2FA</label>
-                                </div>
-                                <p class="text-muted small mt-2">Enhance your account security by enabling two-factor authentication.</p>
-                            </div>
-
-                            <div class="mb-3">
-                                <h6 class="mb-3">Login Sessions</h6>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <p class="mb-0 fw-medium">Active Sessions</p>
-                                        <p class="text-muted small">1 active session</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Two-Factor Authentication</h6>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="twoFactorToggle">
+                                        <label class="form-check-label" for="twoFactorToggle">Enable 2FA</label>
                                     </div>
-                                    <button class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-box-arrow-right me-1"></i> Logout All
-                                    </button>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Account Actions -->
-                    <div class="card mt-4 fade-in-right delay-200">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-gear"></i> Account Actions</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-3">
-                                <a href="../logout.php" class="btn btn-outline-primary">
-                                    <i class="bi bi-box-arrow-left me-2"></i> Logout
-                                </a>
-                                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deactivateModal">
-                                    <i class="bi bi-person-x me-2"></i> Deactivate Account
-                                </button>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6>Active Sessions</h6>
+                                            <p class="text-muted small">1 active session</p>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-box-arrow-right me-1"></i> Logout All
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Activity Log -->
-            <div class="row mb-5">
-                <div class="col-12 mb-4">
-                    <div class="card fade-in">
+            <!-- Second Row -->
+            <div class="row mb-4">
+                <div class="col-md-8 mb-4">
+                    <!-- Recent Activity -->
+                    <div class="card fade-in h-100" style="border: none;">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0"><i class="bi bi-clock-history"></i> Recent Activity</h5>
                             <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
                         </div>
                         <div class="card-body p-0">
-                            <div class="compact-activity-list">
+                            <div class="compact-activity-list" style="max-height: 250px;">
                                 <div class="activity-row">
-                                    <div class="activity-dot success"></div>
                                     <div class="activity-icon-sm success">
                                         <i class="bi bi-person"></i>
                                     </div>
                                     <div class="activity-content-compact">
-                                        <div class="d-flex justify-content-between">
-                                            <h6 class="activity-title-sm">Profile Updated</h6>
-                                            <span class="activity-time-sm">Today at 10:30 AM</span>
-                                        </div>
+                                        <h6 class="activity-title-sm">Profile Updated</h6>
                                         <p class="activity-text-sm">You updated your profile information.</p>
+                                        <span class="activity-time-sm">Today at 10:30 AM</span>
                                     </div>
                                 </div>
 
                                 <div class="activity-row">
-                                    <div class="activity-dot primary"></div>
                                     <div class="activity-icon-sm primary">
                                         <i class="bi bi-box-seam"></i>
                                     </div>
                                     <div class="activity-content-compact">
-                                        <div class="d-flex justify-content-between">
-                                            <h6 class="activity-title-sm">Product Added</h6>
-                                            <span class="activity-time-sm">Yesterday at 3:45 PM</span>
-                                        </div>
-                                        <p class="activity-text-sm">You added a new product "Chocolate Cake".</p>
+                                        <h6 class="activity-title-sm">Product Added</h6>
+                                        <p class="activity-text-sm">You added a new product "Ube Cake".</p>
+                                        <span class="activity-time-sm">Yesterday at 3:45 PM</span>
                                     </div>
                                 </div>
 
                                 <div class="activity-row">
-                                    <div class="activity-dot info"></div>
                                     <div class="activity-icon-sm info">
                                         <i class="bi bi-receipt"></i>
                                     </div>
                                     <div class="activity-content-compact">
-                                        <div class="d-flex justify-content-between">
-                                            <h6 class="activity-title-sm">Order Processed</h6>
-                                            <span class="activity-time-sm">June 14, 2023</span>
-                                        </div>
+                                        <h6 class="activity-title-sm">Order Processed</h6>
                                         <p class="activity-text-sm">You processed order #1002.</p>
+                                        <span class="activity-time-sm">May 14, 2025</span>
                                     </div>
                                 </div>
 
                                 <div class="activity-row">
-                                    <div class="activity-dot warning"></div>
                                     <div class="activity-icon-sm warning">
                                         <i class="bi bi-key"></i>
                                     </div>
                                     <div class="activity-content-compact">
-                                        <div class="d-flex justify-content-between">
-                                            <h6 class="activity-title-sm">Password Changed</h6>
-                                            <span class="activity-time-sm">June 10, 2023</span>
-                                        </div>
+                                        <h6 class="activity-title-sm">Password Changed</h6>
                                         <p class="activity-text-sm">You changed your account password.</p>
+                                        <span class="activity-time-sm">May 10, 2025</span>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <!-- Account Actions -->
+                    <div class="card fade-in-right h-100" style="border: none;">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-gear"></i> Account Actions</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <p class="mb-4">Manage your account settings and preferences</p>
+
+                                <div class="d-grid gap-3 mb-4">
+                                    <a href="../logout.php" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-left me-2"></i> Logout
+                                    </a>
+                                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+                                        <i class="bi bi-person-x me-2"></i> Deactivate Account
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto">
+                                <div class="alert alert-info mb-0">
+                                    <div class="d-flex">
+                                        <div class="me-3">
+                                            <i class="bi bi-info-circle fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="alert-heading">Need Help?</h6>
+                                            <p class="mb-0 small">Contact support for assistance with your account.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Third Row -->
+            <div class="row mb-4">
+                <!-- Profile Information (Two Yellow Boxes) -->
+                <div class="col-md-4 mb-4">
+                    <div class="card fade-in h-100" style="border: none;">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-person"></i> Personal Info</h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="profile.php" method="post" class="h-100 d-flex flex-column">
+                                <input type="hidden" name="action" value="update_profile">
+
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($userData['name']) ?>" required>
                                 </div>
 
-                                <div class="activity-row">
-                                    <div class="activity-dot danger"></div>
-                                    <div class="activity-icon-sm danger">
-                                        <i class="bi bi-trash"></i>
-                                    </div>
-                                    <div class="activity-content-compact">
-                                        <div class="d-flex justify-content-between">
-                                            <h6 class="activity-title-sm">Product Deleted</h6>
-                                            <span class="activity-time-sm">June 5, 2023</span>
-                                        </div>
-                                        <p class="activity-text-sm">You removed "Vanilla Latte" from the product list.</p>
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($userData['email']) ?>" required>
                                 </div>
 
-                                <div class="activity-row">
-                                    <div class="activity-dot secondary"></div>
-                                    <div class="activity-icon-sm secondary">
-                                        <i class="bi bi-tag"></i>
-                                    </div>
-                                    <div class="activity-content-compact">
-                                        <div class="d-flex justify-content-between">
-                                            <h6 class="activity-title-sm">Category Added</h6>
-                                            <span class="activity-time-sm">June 2, 2023</span>
-                                        </div>
-                                        <p class="activity-text-sm">You created a new category "Seasonal Specials".</p>
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" value="<?= htmlspecialchars($userData['phone']) ?>">
                                 </div>
+
+                                <div class="mt-auto text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save me-2"></i> Save Personal Info
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card fade-in h-100" style="border: none;">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-geo-alt"></i> Address & Role</h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="profile.php" method="post" class="h-100 d-flex flex-column">
+                                <input type="hidden" name="action" value="update_profile">
+
+                                <div class="mb-3">
+                                    <label for="role" class="form-label">Role</label>
+                                    <input type="text" class="form-control" id="role" value="<?= ucfirst($userData['role']) ?>" readonly>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Address</label>
+                                    <textarea class="form-control" id="address" name="address" rows="5"><?= htmlspecialchars($userData['address']) ?></textarea>
+                                </div>
+
+                                <div class="mt-auto text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save me-2"></i> Save Address
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <!-- Preferences -->
+                    <div class="card fade-in-right h-100" style="border: none;">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-sliders"></i> Preferences</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Notification Settings</h6>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                                    <label class="form-check-label" for="emailNotifications">Email Notifications</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="orderUpdates" checked>
+                                    <label class="form-check-label" for="orderUpdates">Order Updates</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="productAlerts">
+                                    <label class="form-check-label" for="productAlerts">Product Alerts</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Display Settings</h6>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="darkMode">
+                                    <label class="form-check-label" for="darkMode">Dark Mode</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="compactView">
+                                    <label class="form-check-label" for="compactView">Compact View</label>
+                                </div>
+                            </div>
+
+                            <div class="text-end mt-4">
+                                <button type="button" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i> Save Preferences
+                                </button>
                             </div>
                         </div>
                     </div>

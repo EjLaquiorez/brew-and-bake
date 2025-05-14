@@ -212,16 +212,7 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
         </div>
 
         <div class="sidebar-footer">
-            <div class="user-menu">
-                <div class="user-avatar">
-                    <?= substr($_SESSION['user']['name'] ?? 'A', 0, 1) ?>
-                </div>
-                <div class="user-info">
-                    <h6 class="user-name"><?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?></h6>
-                    <p class="user-role">Administrator</p>
-                </div>
-                <i class="bi bi-chevron-down user-menu-toggle"></i>
-            </div>
+            <?php include 'includes/sidebar-user-menu.php'; ?>
         </div>
     </aside>
 
@@ -590,16 +581,16 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                             <div class="col-md-6">
                                 <h6 class="text-muted mb-2">Order Information</h6>
                                 <p class="mb-1"><strong>Order ID:</strong> #${orderId}</p>
-                                <p class="mb-1"><strong>Date:</strong> June 15, 2023</p>
+                                <p class="mb-1"><strong>Date:</strong> May 15, 2025</p>
                                 <p class="mb-1"><strong>Status:</strong> <span class="cell-badge success">Completed</span></p>
                                 <p class="mb-0"><strong>Payment Method:</strong> Credit Card</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="text-muted mb-2">Customer Information</h6>
-                                <p class="mb-1"><strong>Name:</strong> John Doe</p>
-                                <p class="mb-1"><strong>Email:</strong> john.doe@example.com</p>
+                                <p class="mb-1"><strong>Name:</strong> Juan Dela Cruz</p>
+                                <p class="mb-1"><strong>Email:</strong> juan.delacruz@example.com</p>
                                 <p class="mb-1"><strong>Phone:</strong> +63 912 345 6789</p>
-                                <p class="mb-0"><strong>Address:</strong> 123 Main St, Manila, Philippines</p>
+                                <p class="mb-0"><strong>Address:</strong> 123 Rizal Ave, Makati City, Philippines</p>
                             </div>
                         </div>
 
@@ -616,19 +607,19 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>Chocolate Cake</td>
+                                        <td>Ube Cake</td>
                                         <td>₱350.00</td>
                                         <td>1</td>
                                         <td class="text-end">₱350.00</td>
                                     </tr>
                                     <tr>
-                                        <td>Cappuccino</td>
+                                        <td>Barako Coffee</td>
                                         <td>₱150.00</td>
                                         <td>2</td>
                                         <td class="text-end">₱300.00</td>
                                     </tr>
                                     <tr>
-                                        <td>Croissant</td>
+                                        <td>Ensaymada</td>
                                         <td>₱100.00</td>
                                         <td>2</td>
                                         <td class="text-end">₱200.00</td>
@@ -652,7 +643,7 @@ $totalRevenue = array_sum(array_column($orders, 'total'));
                         </div>
 
                         <h6 class="text-muted mb-3">Order Notes</h6>
-                        <p class="mb-0">Please deliver to the front desk. Thank you!</p>
+                        <p class="mb-0">Pakihatid po sa lobby. Maraming salamat po!</p>
                     </div>
                 `;
             }, 1000);

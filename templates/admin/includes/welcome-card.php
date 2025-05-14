@@ -45,7 +45,7 @@ $page_description = $page_descriptions[$current_page] ?? '';
                     </div>
                     <div class="text-end mt-3 mt-md-0">
                         <h4 class="mb-1 font-medium" id="currentTime"></h4>
-                        <p class="text-muted mb-0"><?= date('l, F j, Y') ?></p>
+                        <p class="text-muted mb-0">Wednesday, May 14, 2025</p>
                     </div>
                 </div>
             </div>
@@ -61,11 +61,11 @@ function updateTime() {
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const seconds = now.getSeconds().toString().padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    
+
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
-    
-    document.getElementById('currentTime').textContent = 
+
+    document.getElementById('currentTime').textContent =
         hours + ':' + minutes + ':' + seconds + ' ' + ampm;
 }
 

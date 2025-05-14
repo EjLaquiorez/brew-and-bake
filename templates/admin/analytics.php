@@ -27,29 +27,29 @@ if (isset($_SESSION['error'])) {
 // Placeholder data for demonstration
 // In a real application, this would come from database queries
 
-// Monthly sales data
+// Monthly sales data for 2025
 $monthlySales = [
-    ['month' => 'Jan', 'sales' => 12500],
-    ['month' => 'Feb', 'sales' => 15000],
-    ['month' => 'Mar', 'sales' => 18000],
-    ['month' => 'Apr', 'sales' => 16500],
-    ['month' => 'May', 'sales' => 21000],
-    ['month' => 'Jun', 'sales' => 22500],
-    ['month' => 'Jul', 'sales' => 25000],
-    ['month' => 'Aug', 'sales' => 23000],
-    ['month' => 'Sep', 'sales' => 24500],
-    ['month' => 'Oct', 'sales' => 28000],
-    ['month' => 'Nov', 'sales' => 32000],
-    ['month' => 'Dec', 'sales' => 35000]
+    ['month' => 'Jan 2025', 'sales' => 12500],
+    ['month' => 'Feb 2025', 'sales' => 15000],
+    ['month' => 'Mar 2025', 'sales' => 18000],
+    ['month' => 'Apr 2025', 'sales' => 16500],
+    ['month' => 'May 2025', 'sales' => 21000],
+    ['month' => 'Jun 2024', 'sales' => 22500],
+    ['month' => 'Jul 2024', 'sales' => 25000],
+    ['month' => 'Aug 2024', 'sales' => 23000],
+    ['month' => 'Sep 2024', 'sales' => 24500],
+    ['month' => 'Oct 2024', 'sales' => 28000],
+    ['month' => 'Nov 2024', 'sales' => 32000],
+    ['month' => 'Dec 2024', 'sales' => 35000]
 ];
 
-// Top selling products
+// Top selling products with Filipino names
 $topProducts = [
-    ['name' => 'Cappuccino', 'category' => 'Coffee', 'sales' => 450, 'revenue' => 67500],
-    ['name' => 'Chocolate Cake', 'category' => 'Cakes', 'sales' => 320, 'revenue' => 112000],
-    ['name' => 'Croissant', 'category' => 'Pastries', 'sales' => 580, 'revenue' => 58000],
-    ['name' => 'Latte', 'category' => 'Coffee', 'sales' => 410, 'revenue' => 61500],
-    ['name' => 'Cheesecake', 'category' => 'Cakes', 'sales' => 280, 'revenue' => 98000]
+    ['name' => 'Barako Coffee', 'category' => 'Coffee', 'sales' => 450, 'revenue' => 67500],
+    ['name' => 'Ube Cake', 'category' => 'Cakes', 'sales' => 320, 'revenue' => 112000],
+    ['name' => 'Ensaymada', 'category' => 'Pastries', 'sales' => 580, 'revenue' => 58000],
+    ['name' => 'Kapeng Mocha', 'category' => 'Coffee', 'sales' => 410, 'revenue' => 61500],
+    ['name' => 'Leche Flan Cake', 'category' => 'Cakes', 'sales' => 280, 'revenue' => 98000]
 ];
 
 // Sales by category
@@ -181,16 +181,7 @@ $averageOrderValue = $totalSales > 0 ? $totalRevenue / $totalSales : 0;
         </div>
 
         <div class="sidebar-footer">
-            <div class="user-menu">
-                <div class="user-avatar">
-                    <?= substr($_SESSION['user']['name'] ?? 'A', 0, 1) ?>
-                </div>
-                <div class="user-info">
-                    <h6 class="user-name"><?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?></h6>
-                    <p class="user-role">Administrator</p>
-                </div>
-                <i class="bi bi-chevron-down user-menu-toggle"></i>
-            </div>
+            <?php include 'includes/sidebar-user-menu.php'; ?>
         </div>
     </aside>
 
@@ -436,7 +427,7 @@ $averageOrderValue = $totalSales > 0 ? $totalRevenue / $totalSales : 0;
                                     </div>
                                     <div class="insight-content">
                                         <h6 class="insight-title">Top Performer</h6>
-                                        <p class="insight-text">Cappuccino is your best-selling product this month.</p>
+                                        <p class="insight-text">Barako Coffee is your best-selling product this month.</p>
                                     </div>
                                 </div>
 
