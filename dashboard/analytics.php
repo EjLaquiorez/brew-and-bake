@@ -196,32 +196,8 @@ $averageOrderValue = $totalSales > 0 ? $totalRevenue / $totalSales : 0;
 
     <!-- Main Content -->
     <main class="admin-main">
-        <!-- Topbar -->
-        <header class="admin-topbar">
-            <div class="topbar-left">
-                <button class="menu-toggle">
-                    <i class="bi bi-list"></i>
-                </button>
-                <h1 class="page-title">Analytics</h1>
-            </div>
-            <div class="topbar-right">
-                <div class="topbar-icon">
-                    <i class="bi bi-bell"></i>
-                    <span class="topbar-badge">3</span>
-                </div>
-                <div class="topbar-icon">
-                    <i class="bi bi-envelope"></i>
-                    <span class="topbar-badge">5</span>
-                </div>
-                <div class="topbar-profile">
-                    <div class="topbar-avatar">
-                        <?= substr($_SESSION['user']['name'] ?? 'A', 0, 1) ?>
-                    </div>
-                    <span class="topbar-user d-none d-md-block"><?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?></span>
-                    <i class="bi bi-chevron-down topbar-dropdown"></i>
-                </div>
-            </div>
-        </header>
+        <!-- Include Topbar -->
+        <?php include 'includes/topbar.php'; ?>
 
         <!-- Content Area -->
         <div class="admin-content">
@@ -492,34 +468,9 @@ $averageOrderValue = $totalSales > 0 ? $totalRevenue / $totalSales : 0;
     </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php include 'includes/footer-scripts.php'; ?>
 <script>
-    // Mobile menu toggle
     document.addEventListener('DOMContentLoaded', function() {
-        const menuToggle = document.querySelector('.menu-toggle');
-        const sidebar = document.querySelector('.admin-sidebar');
-        const sidebarClose = document.querySelector('.sidebar-close');
-
-        if (menuToggle) {
-            menuToggle.addEventListener('click', function() {
-                sidebar.classList.add('show');
-            });
-        }
-
-        if (sidebarClose) {
-            sidebarClose.addEventListener('click', function() {
-                sidebar.classList.remove('show');
-            });
-        }
-
-        // Auto-hide alerts after 5 seconds
-        const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            }, 5000);
-        });
 
         // Sales Chart
         const salesCtx = document.getElementById('salesChart').getContext('2d');
