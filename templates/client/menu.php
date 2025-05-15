@@ -136,46 +136,7 @@ function getCategoryImage($categoryName) {
     <link rel="stylesheet" href="../../assets/css/menu.css?v=<?= time() ?>">
 </head>
 <body>
-    <!-- Header -->
-    <header class="site-header">
-        <div class="container">
-            <div class="header-inner">
-                <div class="logo">
-                    <a href="client.php">
-                        <i class="bi bi-cup-hot"></i> Brew & Bake
-                    </a>
-                </div>
-                <nav class="main-nav">
-                    <ul>
-                        <li><a href="menu.php" class="active">MENU</a></li>
-                        <li><a href="rewards.php">REWARDS</a></li>
-                        <li><a href="gift-cards.php">GIFT CARDS</a></li>
-                    </ul>
-                </nav>
-                <div class="header-actions">
-                    <a href="cart.php" class="cart-icon">
-                        <i class="bi bi-cart"></i>
-                        <?php if (!empty($_SESSION['cart'])): ?>
-                            <span class="cart-count"><?= count($_SESSION['cart']) ?></span>
-                        <?php endif; ?>
-                    </a>
-                    <div class="user-menu">
-                        <a href="profile.php" class="user-icon">
-                            <i class="bi bi-person-circle"></i>
-                        </a>
-                        <div class="user-dropdown">
-                            <ul>
-                                <li><a href="client.php">Dashboard</a></li>
-                                <li><a href="orders.php">My Orders</a></li>
-                                <li><a href="profile.php">Profile</a></li>
-                                <li><a href="../includes/logout.php">Sign Out</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+   
 
     <!-- Menu Navigation -->
     <div class="menu-nav">
