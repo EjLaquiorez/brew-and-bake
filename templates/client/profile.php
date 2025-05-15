@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>My Orders - Brew & Bake</title>
+    <title>Account Settings - Brew & Bake</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -181,6 +181,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             color: var(--color-gray-700);
         }
 
+        .form-control {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--color-gray-300);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 0.25rem rgba(17, 24, 39, 0.1);
+        }
+
+        .form-text {
+            color: var(--color-gray-600);
+            font-size: 0.875rem;
+        }
+
         .btn-primary {
             background-color: var(--color-primary);
             border-color: var(--color-primary);
@@ -194,16 +211,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             border-color: var(--color-primary-dark);
         }
 
+        .btn-outline-secondary {
+            color: var(--color-gray-700);
+            border-color: var(--color-gray-300);
+            padding: 0.5rem 1.25rem;
+            font-weight: 500;
+            border-radius: 8px;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: var(--color-gray-100);
+            color: var(--color-gray-900);
+        }
+
         .alert {
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1.5rem;
         }
 
-        .badge {
-            padding: 0.35em 0.65em;
-            font-weight: 600;
-            border-radius: 6px;
+        /* Password strength indicator */
+        .password-strength {
+            margin-top: 0.5rem;
+        }
+
+        .password-strength .progress {
+            height: 4px;
+            margin-bottom: 0.25rem;
+            background-color: #f0f0f0;
+        }
+
+        .password-strength .form-text {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        /* Form validation */
+        .is-valid {
+            border-color: #28a745 !important;
+        }
+
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .text-success {
+            color: #28a745 !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        /* Profile picture section */
+        .profile-picture {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-picture-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--color-white);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1rem;
+        }
+
+        .profile-picture-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: var(--color-gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--color-gray-500);
+            margin: 0 auto 1rem;
         }
 
         /* Header and menu navigation styling */
@@ -302,6 +388,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             background-color: var(--color-primary-dark);
             color: var(--color-white);
         }
+
+        /* Responsive adjustments */
+        @media (max-width: 767.98px) {
+            .account-title {
+                font-size: 1.5rem;
+            }
+
+            .card-header h2 {
+                font-size: 1.125rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -338,7 +435,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         <div class="container">
             <ul class="menu-tabs">
                 <li><a href="client.php">Menu</a></li>
-                <li><a href="profile.php" class="active">My Orders</a></li>
+                <li><a href="orders.php">My Orders</a></li>
+                <li><a href="profile.php" class="active">Account Settings</a></li>
             </ul>
         </div>
     </div>
@@ -346,179 +444,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     <!-- User Dropdown Menu -->
     <div class="user-dropdown">
         <ul>
-            <li><a href="profile.php" class="active">My Orders</a></li>
+            <li><a href="profile.php" class="active">Account Settings</a></li>
+            <li><a href="orders.php">My Orders</a></li>
             <li><a href="../includes/logout.php">Logout</a></li>
         </ul>
     </div>
 
     <!-- Main Content -->
-    <div class="container">
-        <section class="account-section">
-            <?php if ($successMessage): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <?= htmlspecialchars($successMessage) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($errorMessage): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <?= htmlspecialchars($errorMessage) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
-
+    <main class="account-section">
+        <div class="container">
+            <!-- Page Header -->
             <div class="account-header">
-                <h1 class="account-title">My Orders</h1>
-                <p class="account-subtitle">View and track your order history</p>
+                <h1 class="account-title">Account Settings</h1>
+                <p class="account-subtitle">Manage your profile and security settings</p>
             </div>
+
+            <?php if (!empty($successMessage)): ?>
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill me-2"></i> <?= htmlspecialchars($successMessage) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($errorMessage)): ?>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= htmlspecialchars($errorMessage) ?>
+                </div>
+            <?php endif; ?>
 
             <div class="row">
-                <!-- Order History -->
-                <div class="col-12">
+                <div class="col-lg-4 mb-4">
+                    <!-- Profile Picture Card -->
                     <div class="card">
                         <div class="card-header">
-                            <h2><i class="bi bi-bag"></i> Order History</h2>
+                            <h2><i class="bi bi-person-circle"></i> Profile Picture</h2>
                         </div>
                         <div class="card-body">
-                            <?php
-                            // Fetch user's orders
-                            try {
-                                // Check if orders table exists
-                                $stmt = $conn->prepare("SHOW TABLES LIKE 'orders'");
-                                $stmt->execute();
-                                $tableExists = $stmt->rowCount() > 0;
-
-                                if ($tableExists) {
-                                    $stmt = $conn->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC");
-                                    $stmt->execute([$userId]);
-                                    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                                } else {
-                                    // Placeholder data for demonstration
-                                    $orders = [
-                                        [
-                                            'id' => 1001,
-                                            'total' => 850.00,
-                                            'status' => 'completed',
-                                            'created_at' => '2025-06-15 14:30:45',
-                                            'items' => 3
-                                        ],
-                                        [
-                                            'id' => 1002,
-                                            'total' => 1250.75,
-                                            'status' => 'processing',
-                                            'created_at' => '2025-06-16 09:15:22',
-                                            'items' => 5
-                                        ],
-                                        [
-                                            'id' => 1003,
-                                            'total' => 450.50,
-                                            'status' => 'pending',
-                                            'created_at' => '2025-06-16 16:45:10',
-                                            'items' => 2
-                                        ]
-                                    ];
-                                }
-                            } catch (PDOException $e) {
-                                $errorMessage = "Error fetching orders: " . $e->getMessage();
-                                $orders = [];
-                            }
-                            ?>
-
-                            <?php if (count($orders) > 0): ?>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Order #</th>
-                                                <th>Date</th>
-                                                <th>Total</th>
-                                                <th>Status</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($orders as $order): ?>
-                                                <tr>
-                                                    <td>
-                                                        <span class="fw-bold">#<?= htmlspecialchars($order['id']) ?></span>
-                                                    </td>
-                                                    <td>
-                                                        <div>
-                                                            <div class="fw-medium"><?= date('M d, Y', strtotime($order['created_at'])) ?></div>
-                                                            <div class="text-muted small"><?= date('h:i A', strtotime($order['created_at'])) ?></div>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <span class="fw-bold">₱<?= number_format($order['total'], 2) ?></span>
-                                                    </td>
-                                                    <td>
-                                                        <?php
-                                                            $statusClass = '';
-                                                            switch ($order['status']) {
-                                                                case 'completed': $statusClass = 'success'; break;
-                                                                case 'processing': $statusClass = 'info'; break;
-                                                                case 'cancelled': $statusClass = 'danger'; break;
-                                                                default: $statusClass = 'warning';
-                                                            }
-                                                        ?>
-                                                        <span class="badge bg-<?= $statusClass ?>">
-                                                            <?= ucfirst(htmlspecialchars($order['status'])) ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <a href="#" class="btn btn-sm btn-primary view-order" data-order-id="<?= $order['id'] ?>">
-                                                            <i class="bi bi-eye"></i> View
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php else: ?>
-                                <div class="text-center py-5">
-                                    <div class="mb-3">
-                                        <i class="bi bi-bag-x" style="font-size: 3rem; color: var(--color-gray-400);"></i>
+                            <div class="profile-picture">
+                                <?php if (!empty($user['profile_picture'])): ?>
+                                    <img src="../../assets/images/users/<?= htmlspecialchars($user['profile_picture']) ?>" alt="Profile Picture" class="profile-picture-img">
+                                <?php else: ?>
+                                    <div class="profile-picture-placeholder">
+                                        <i class="bi bi-person"></i>
                                     </div>
-                                    <h3 class="text-muted">No Orders Yet</h3>
-                                    <p class="text-muted">You haven't placed any orders yet.</p>
-                                    <a href="client.php" class="btn btn-primary mt-3">
-                                        <i class="bi bi-cup-hot"></i> Browse Menu
-                                    </a>
-                                </div>
-                            <?php endif; ?>
+                                <?php endif; ?>
+                                <p class="text-muted mb-3">Upload a new profile picture</p>
+                                <form method="POST" enctype="multipart/form-data" action="upload_profile_picture.php">
+                                    <div class="mb-3">
+                                        <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" name="upload_picture">
+                                        <i class="bi bi-upload me-2"></i> Upload Picture
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Order Details Modal -->
-                <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="order-details-content">
-                                    <!-- Order details will be loaded here -->
-                                    <div class="text-center py-4">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
+                <div class="col-lg-8">
+                    <!-- Profile Information Card -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h2><i class="bi bi-person-vcard"></i> Profile Information</h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="">
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label for="name" class="form-label">Full Name</label>
+                                        <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($user['name'] ?? '') ?>" required>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
+                                    <div class="form-text">Optional: Add your phone number for delivery updates</div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="address" class="form-label">Delivery Address</label>
+                                    <textarea class="form-control" id="address" name="address" rows="3"><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
+                                    <div class="form-text">Optional: Add your delivery address for faster checkout</div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary" name="update_profile">
+                                        <i class="bi bi-check-circle me-2"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Security Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="bi bi-shield-lock"></i> Security</h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="" id="passwordForm">
+                                <div class="mb-3">
+                                    <label for="current_password" class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new_password" class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                    <div class="password-strength">
+                                        <div class="progress">
+                                            <div class="progress-bar" id="password-strength-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small class="form-text" id="password-strength-text">Password strength: Too weak</small>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary" name="change_password">
+                                        <i class="bi bi-key me-2"></i> Change Password
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-    </div>
+        </div>
+    </main>
+
 
     <!-- Footer -->
     <footer class="site-footer">
@@ -570,8 +627,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Toggle user dropdown
         document.addEventListener('DOMContentLoaded', function() {
+            // Toggle user dropdown
             const userIcon = document.querySelector('.user-icon');
             const userDropdown = document.querySelector('.user-dropdown');
 
@@ -612,118 +669,135 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 });
             }
 
-            // Order details modal
-            const orderModal = document.getElementById('orderDetailsModal');
-            if (orderModal) {
-                const modal = new bootstrap.Modal(orderModal);
+            // Password strength checker
+            const newPasswordInput = document.getElementById('new_password');
+            const confirmPasswordInput = document.getElementById('confirm_password');
+            const passwordStrengthBar = document.getElementById('password-strength-bar');
+            const passwordStrengthText = document.getElementById('password-strength-text');
+            const passwordForm = document.getElementById('passwordForm');
 
-                // View order button click
-                document.querySelectorAll('.view-order').forEach(button => {
-                    button.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const orderId = this.getAttribute('data-order-id');
-                        const modalContent = document.querySelector('.order-details-content');
+            if (newPasswordInput && passwordStrengthBar && passwordStrengthText) {
+                newPasswordInput.addEventListener('input', function() {
+                    const password = this.value;
+                    const strength = checkPasswordStrength(password);
 
-                        // Show modal with loading spinner
-                        modal.show();
+                    // Update progress bar
+                    passwordStrengthBar.style.width = strength.score + '%';
+                    passwordStrengthBar.setAttribute('aria-valuenow', strength.score);
 
-                        // Simulate loading order details (in a real app, this would be an AJAX call)
-                        setTimeout(() => {
-                            // Sample order details HTML
-                            const orderDetails = `
-                                <div class="order-header mb-4">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h4 class="mb-0">Order #${orderId}</h4>
-                                        <span class="badge bg-success">Completed</span>
-                                    </div>
-                                    <p class="text-muted mb-0">Placed on June 15, 2025 at 2:30 PM</p>
-                                </div>
+                    // Update color
+                    passwordStrengthBar.className = 'progress-bar';
+                    if (strength.score < 25) {
+                        passwordStrengthBar.classList.add('bg-danger');
+                    } else if (strength.score < 50) {
+                        passwordStrengthBar.classList.add('bg-warning');
+                    } else if (strength.score < 75) {
+                        passwordStrengthBar.classList.add('bg-info');
+                    } else {
+                        passwordStrengthBar.classList.add('bg-success');
+                    }
 
-                                <div class="order-items mb-4">
-                                    <h5 class="border-bottom pb-2 mb-3">Order Items</h5>
-                                    <div class="order-item d-flex justify-content-between align-items-center mb-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-3">
-                                                <i class="bi bi-cup-hot fs-3"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0">Kapeng Barako</h6>
-                                                <p class="text-muted mb-0">Large, Hot</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <p class="mb-0">₱150.00 × 2</p>
-                                            <p class="fw-bold mb-0">₱300.00</p>
-                                        </div>
-                                    </div>
-                                    <div class="order-item d-flex justify-content-between align-items-center mb-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-3">
-                                                <i class="bi bi-cake2 fs-3"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0">Ube Cheese Pandesal</h6>
-                                                <p class="text-muted mb-0">Box of 6</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <p class="mb-0">₱250.00 × 1</p>
-                                            <p class="fw-bold mb-0">₱250.00</p>
-                                        </div>
-                                    </div>
-                                    <div class="order-item d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-3">
-                                                <i class="bi bi-cup fs-3"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0">Tablea Hot Chocolate</h6>
-                                                <p class="text-muted mb-0">Medium, Extra Sweet</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <p class="mb-0">₱180.00 × 1</p>
-                                            <p class="fw-bold mb-0">₱180.00</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="order-summary mb-4">
-                                    <h5 class="border-bottom pb-2 mb-3">Order Summary</h5>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>Subtotal</span>
-                                        <span>₱730.00</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>Delivery Fee</span>
-                                        <span>₱120.00</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between fw-bold">
-                                        <span>Total</span>
-                                        <span>₱850.00</span>
-                                    </div>
-                                </div>
-
-                                <div class="delivery-info">
-                                    <h5 class="border-bottom pb-2 mb-3">Delivery Information</h5>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <p class="text-muted mb-1">Delivery Address</p>
-                                            <p class="mb-0">123 Coffee Street, Manila, Philippines</p>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <p class="text-muted mb-1">Contact Number</p>
-                                            <p class="mb-0">+63 912 345 6789</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-
-                            // Update modal content
-                            modalContent.innerHTML = orderDetails;
-                        }, 1000);
-                    });
+                    // Update text
+                    passwordStrengthText.textContent = 'Password strength: ' + strength.message;
                 });
+            }
+
+            // Password confirmation validation
+            if (confirmPasswordInput && newPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function() {
+                    if (this.value === newPasswordInput.value) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                    }
+                });
+            }
+
+            // Password form validation
+            if (passwordForm) {
+                passwordForm.addEventListener('submit', function(e) {
+                    const currentPassword = document.getElementById('current_password').value;
+                    const newPassword = newPasswordInput.value;
+                    const confirmPassword = confirmPasswordInput.value;
+
+                    // Basic validation
+                    if (!currentPassword || !newPassword || !confirmPassword) {
+                        e.preventDefault();
+                        alert('All password fields are required.');
+                        return false;
+                    }
+
+                    if (newPassword !== confirmPassword) {
+                        e.preventDefault();
+                        alert('New passwords do not match.');
+                        return false;
+                    }
+
+                    if (newPassword.length < 8) {
+                        e.preventDefault();
+                        alert('New password must be at least 8 characters long.');
+                        return false;
+                    }
+
+                    const strength = checkPasswordStrength(newPassword);
+                    if (strength.score < 40) {
+                        if (!confirm('Your password is weak. Are you sure you want to use it?')) {
+                            e.preventDefault();
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+            }
+
+            // Function to check password strength
+            function checkPasswordStrength(password) {
+                // Initialize score
+                let score = 0;
+                let message = 'Too weak';
+
+                // No password, no score
+                if (!password) {
+                    return { score: 0, message: 'Too weak' };
+                }
+
+                // Award points for length
+                if (password.length >= 8) {
+                    score += 20;
+                }
+                if (password.length >= 12) {
+                    score += 10;
+                }
+
+                // Award points for complexity
+                if (/[a-z]/.test(password)) {
+                    score += 10; // Has lowercase
+                }
+                if (/[A-Z]/.test(password)) {
+                    score += 15; // Has uppercase
+                }
+                if (/[0-9]/.test(password)) {
+                    score += 15; // Has number
+                }
+                if (/[^a-zA-Z0-9]/.test(password)) {
+                    score += 20; // Has special character
+                }
+
+                // Determine message based on score
+                if (score >= 80) {
+                    message = 'Very strong';
+                } else if (score >= 60) {
+                    message = 'Strong';
+                } else if (score >= 40) {
+                    message = 'Moderate';
+                } else if (score >= 20) {
+                    message = 'Weak';
+                }
+
+                return { score, message };
             }
         });
     </script>
