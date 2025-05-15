@@ -128,6 +128,41 @@ function getCategoryImage($categoryName) {
             border-color: var(--color-secondary);
         }
 
+        /* Custom Alert Styling - Minimalist */
+        .custom-alert {
+            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            letter-spacing: 0.01em;
+            animation: fadeIn 0.2s ease-out;
+            border: none;
+            text-align: center;
+        }
+
+        .custom-alert.alert-success {
+            background-color: #f8f9fa;
+            color: var(--color-secondary);
+            border-bottom: 1px solid var(--color-secondary);
+        }
+
+        .custom-alert.alert-danger {
+            background-color: #f8f9fa;
+            color: #dc3545;
+            border-bottom: 1px solid #dc3545;
+        }
+
+        .custom-alert.alert-warning {
+            background-color: #f8f9fa;
+            color: #ffc107;
+            border-bottom: 1px solid #ffc107;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         /* Header styling */
         .site-header {
             background-color: var(--color-primary);
@@ -686,7 +721,7 @@ function getCategoryImage($categoryName) {
                         <p class="text-muted">Sign in to continue to your account</p>
                     </div>
 
-                    <div id="loginAlert"></div>
+                    <div id="loginAlert" class="mt-2 mb-3"></div>
 
                     <form id="loginForm" method="POST">
                         <div class="mb-4">
@@ -763,7 +798,7 @@ function getCategoryImage($categoryName) {
                         <p class="text-muted">Join our community today</p>
                     </div>
 
-                    <div id="registerAlert"></div>
+                    <div id="registerAlert" class="mt-2 mb-3"></div>
 
                     <form id="registerForm" method="POST">
                         <div class="row mb-3">
@@ -1007,7 +1042,9 @@ function getCategoryImage($categoryName) {
                         } else {
                             // Show error message
                             document.getElementById('loginAlert').innerHTML =
-                                `<div class="alert alert-danger">${data.message}</div>`;
+                                `<div class="custom-alert alert-danger">
+                                    ${data.message}
+                                </div>`;
                         }
                     })
                     .catch(error => {
@@ -1034,18 +1071,24 @@ function getCategoryImage($categoryName) {
                         if (data.success) {
                             // Show success message and switch to login modal
                             document.getElementById('registerAlert').innerHTML =
-                                `<div class="alert alert-success">${data.message}</div>`;
+                                `<div class="custom-alert alert-success">
+                                    ${data.message}
+                                </div>`;
 
                             setTimeout(() => {
                                 registerModal.hide();
                                 document.getElementById('loginAlert').innerHTML =
-                                    `<div class="alert alert-success">${data.message}</div>`;
+                                    `<div class="custom-alert alert-success">
+                                        ${data.message}
+                                    </div>`;
                                 loginModal.show();
                             }, 2000);
                         } else {
                             // Show error message
                             document.getElementById('registerAlert').innerHTML =
-                                `<div class="alert alert-danger">${data.message}</div>`;
+                                `<div class="custom-alert alert-danger">
+                                    ${data.message}
+                                </div>`;
                         }
                     })
                     .catch(error => {
