@@ -163,6 +163,39 @@ function getCategoryImage($categoryName) {
             to { opacity: 1; }
         }
 
+        /* Password strength indicator */
+        .password-strength {
+            margin-top: 0.5rem;
+        }
+
+        .password-strength .progress {
+            height: 4px;
+            margin-bottom: 0.25rem;
+            background-color: #f0f0f0;
+        }
+
+        .password-strength .form-text {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        /* Form validation */
+        .is-valid {
+            border-color: #28a745 !important;
+        }
+
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .text-success {
+            color: #28a745 !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
         /* Header styling */
         .site-header {
             background-color: var(--color-primary);
@@ -406,20 +439,44 @@ function getCategoryImage($categoryName) {
                     </ul>
                 </nav>
                 <div class="header-actions">
-                    <a href="templates/views/login.php" class="cart-icon">
-                        <i class="bi bi-cart"></i>
-                    </a>
-                    <div class="user-menu">
-                        <a href="#" class="user-icon">
-                            <i class="bi bi-person-circle"></i>
+                    <?php if ($isLoggedIn): ?>
+                        <a href="<?= $userRole === 'client' ? 'templates/client/cart.php' : '#' ?>" class="cart-icon">
+                            <i class="bi bi-cart"></i>
                         </a>
-                        <div class="user-dropdown">
-                            <ul>
-                                <li><a href="templates/views/login.php">Login</a></li>
-                                <li><a href="templates/views/register.php">Register</a></li>
-                            </ul>
+                        <div class="user-menu">
+                            <a href="#" class="user-icon">
+                                <i class="bi bi-person-circle"></i>
+                            </a>
+                            <div class="user-dropdown">
+                                <ul>
+                                    <?php if ($userRole === 'admin'): ?>
+                                        <li><a href="templates/admin/dashboard.php">Admin Dashboard</a></li>
+                                    <?php elseif ($userRole === 'staff'): ?>
+                                        <li><a href="templates/staff/staff.php">Staff Dashboard</a></li>
+                                    <?php else: ?>
+                                        <li><a href="templates/client/client.php">My Account</a></li>
+                                        <li><a href="templates/client/orders.php">My Orders</a></li>
+                                    <?php endif; ?>
+                                    <li><a href="templates/includes/logout.php">Logout</a></li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
+                    <?php else: ?>
+                        <a href="#" class="cart-icon" id="loginCartLink">
+                            <i class="bi bi-cart"></i>
+                        </a>
+                        <div class="user-menu">
+                            <a href="#" class="user-icon">
+                                <i class="bi bi-person-circle"></i>
+                            </a>
+                            <div class="user-dropdown">
+                                <ul>
+                                    <li><a href="#" class="login-link">Login</a></li>
+                                    <li><a href="#" class="register-link">Register</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -524,7 +581,11 @@ function getCategoryImage($categoryName) {
                                     <h3 class="product-title"><?= htmlspecialchars($product['name']) ?></h3>
                                     <p class="product-category"><?= htmlspecialchars(ucfirst($product['category_name'] ?? 'Uncategorized')) ?></p>
                                     <div class="product-price">₱<?= number_format($product['price'], 2) ?></div>
-                                    <a href="templates/views/login.php" class="add-to-cart-btn">Order Now</a>
+                                    <?php if ($isLoggedIn && $userRole === 'client'): ?>
+                                        <a href="templates/client/cart.php?add=<?= $product['id'] ?>" class="add-to-cart-btn">Order Now</a>
+                                    <?php else: ?>
+                                        <a href="#" class="add-to-cart-btn login-required">Order Now</a>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -552,7 +613,11 @@ function getCategoryImage($categoryName) {
                                             <h3 class="product-title"><?= htmlspecialchars($product['name']) ?></h3>
                                             <p class="product-category"><?= htmlspecialchars(ucfirst($category['name'])) ?></p>
                                             <div class="product-price">₱<?= number_format($product['price'], 2) ?></div>
-                                            <a href="templates/views/login.php" class="add-to-cart-btn">Order Now</a>
+                                            <?php if ($isLoggedIn && $userRole === 'client'): ?>
+                                                <a href="templates/client/cart.php?add=<?= $product['id'] ?>" class="add-to-cart-btn">Order Now</a>
+                                            <?php else: ?>
+                                                <a href="#" class="add-to-cart-btn login-required">Order Now</a>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -688,8 +753,19 @@ function getCategoryImage($categoryName) {
                         <ul>
                             <li><a href="index.php">Home</a></li>
                             <li><a href="#featured">Featured</a></li>
-                            <li><a href="templates/views/login.php">Login</a></li>
-                            <li><a href="templates/views/register.php">Register</a></li>
+                            <?php if ($isLoggedIn): ?>
+                                <?php if ($userRole === 'admin'): ?>
+                                    <li><a href="templates/admin/dashboard.php">Admin Dashboard</a></li>
+                                <?php elseif ($userRole === 'staff'): ?>
+                                    <li><a href="templates/staff/staff.php">Staff Dashboard</a></li>
+                                <?php else: ?>
+                                    <li><a href="templates/client/client.php">My Account</a></li>
+                                <?php endif; ?>
+                                <li><a href="templates/includes/logout.php">Logout</a></li>
+                            <?php else: ?>
+                                <li><a href="#" class="login-link">Login</a></li>
+                                <li><a href="#" class="register-link">Register</a></li>
+                            <?php endif; ?>
                         </ul>
                     </div>
                 </div>
@@ -721,15 +797,25 @@ function getCategoryImage($categoryName) {
                         <p class="text-muted">Sign in to continue to your account</p>
                     </div>
 
-                    <div id="loginAlert" class="mt-2 mb-3"></div>
-
                     <form id="loginForm" method="POST">
+                        <div id="loginAlert" class="mt-2 mb-3">
+                            <?php if (isset($_SESSION['verification_success']) && $_SESSION['verification_success']): ?>
+                            <div class="custom-alert alert-success mb-3">
+                                <i class="bi bi-check-circle me-2"></i> Your email has been verified successfully! You can now log in.
+                            </div>
+                            <?php unset($_SESSION['verification_success']); ?>
+                            <?php endif; ?>
+                        </div>
+
                         <div class="mb-4">
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <i class="bi bi-envelope"></i>
                                 </span>
-                                <input type="email" name="email" class="form-control" placeholder="Email address" required autofocus>
+                                <input type="email" name="email" class="form-control" placeholder="Email address"
+                                    value="<?= isset($_SESSION['verification_email']) ? htmlspecialchars($_SESSION['verification_email']) : '' ?>"
+                                    required autofocus>
+                                <?php if (isset($_SESSION['verification_email'])) unset($_SESSION['verification_email']); ?>
                             </div>
                         </div>
 
@@ -746,7 +832,7 @@ function getCategoryImage($categoryName) {
                         </div>
 
                         <div class="mb-4 form-check">
-                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
                             <label class="form-check-label remember-me" for="remember">Remember me</label>
                         </div>
 
@@ -809,17 +895,49 @@ function getCategoryImage($categoryName) {
                                 <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
                             </div>
                         </div>
+                        <!-- Note: First and last names will be combined into a single 'name' field in the database -->
 
                         <div class="mb-3">
                             <input type="email" name="email" class="form-control" placeholder="Email Address" required>
                         </div>
 
                         <div class="mb-3">
-                            <input type="password" name="password" id="reg_password" class="form-control" placeholder="Password" required>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input type="password" name="password" id="reg_password" class="form-control" placeholder="Password (min. 8 characters)" required>
+                                <button class="btn btn-outline-secondary" type="button" id="toggleRegPassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength mt-2" id="password-strength">
+                                <div class="progress" style="height: 5px;">
+                                    <div class="progress-bar" id="password-strength-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <small class="form-text text-muted mt-1" id="password-strength-text">Password strength: Too weak</small>
+                                <small class="form-text text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle-fill me-1"></i> For a strong password, include:
+                                    <ul class="mb-0 ps-4 mt-1">
+                                        <li>At least 8 characters</li>
+                                        <li>Uppercase letters (A-Z)</li>
+                                        <li>Lowercase letters (a-z)</li>
+                                        <li>Numbers (0-9) or special characters (@#$!)</li>
+                                    </ul>
+                                </small>
+                            </div>
                         </div>
 
                         <div class="mb-4">
-                            <input type="password" name="confirm_password" class="form-control" placeholder="Confirm Password" required>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input type="password" name="confirm_password" id="reg_confirm_password" class="form-control" placeholder="Confirm Password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="mb-4 form-check">
@@ -988,6 +1106,39 @@ function getCategoryImage($categoryName) {
                 });
             });
 
+            // Handle login-required links
+            document.querySelectorAll('.login-required').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loginModal.show();
+                });
+            });
+
+            // Handle login link in dropdown
+            document.querySelectorAll('.login-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loginModal.show();
+                });
+            });
+
+            // Handle register link in dropdown
+            document.querySelectorAll('.register-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    registerModal.show();
+                });
+            });
+
+            // Handle cart icon click when not logged in
+            const loginCartLink = document.getElementById('loginCartLink');
+            if (loginCartLink) {
+                loginCartLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loginModal.show();
+                });
+            }
+
             // Switch between login and register modals
             if (showRegisterModalLink) {
                 showRegisterModalLink.addEventListener('click', function(e) {
@@ -1009,7 +1160,7 @@ function getCategoryImage($categoryName) {
                 });
             }
 
-            // Toggle password visibility
+            // Toggle password visibility for login form
             if (togglePasswordBtn && passwordField) {
                 togglePasswordBtn.addEventListener('click', function() {
                     const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -1021,11 +1172,225 @@ function getCategoryImage($categoryName) {
                 });
             }
 
+            // Toggle password visibility for registration form
+            const toggleRegPasswordBtn = document.getElementById('toggleRegPassword');
+            const regPasswordField = document.getElementById('reg_password');
+            if (toggleRegPasswordBtn && regPasswordField) {
+                toggleRegPasswordBtn.addEventListener('click', function() {
+                    const type = regPasswordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    regPasswordField.setAttribute('type', type);
+
+                    // Toggle the eye icon
+                    this.querySelector('i').classList.toggle('bi-eye');
+                    this.querySelector('i').classList.toggle('bi-eye-slash');
+                });
+
+                // Password strength indicator
+                regPasswordField.addEventListener('input', function() {
+                    const password = this.value;
+                    const strengthBar = document.getElementById('password-strength-bar');
+                    const strengthText = document.getElementById('password-strength-text');
+
+                    // Calculate password strength
+                    let strength = 0;
+
+                    // Length check
+                    if (password.length >= 8) {
+                        strength += 25;
+                    }
+
+                    // Contains lowercase letters
+                    if (password.match(/[a-z]+/)) {
+                        strength += 25;
+                    }
+
+                    // Contains uppercase letters
+                    if (password.match(/[A-Z]+/)) {
+                        strength += 25;
+                    }
+
+                    // Contains numbers or special characters
+                    if (password.match(/[0-9]+/) || password.match(/[$@#&!]+/)) {
+                        strength += 25;
+                    }
+
+                    // Update the strength bar
+                    strengthBar.style.width = strength + '%';
+                    strengthBar.setAttribute('aria-valuenow', strength);
+
+                    // Update color based on strength
+                    if (strength < 25) {
+                        strengthBar.className = 'progress-bar bg-danger';
+                        strengthText.textContent = 'Password strength: Too weak';
+                    } else if (strength < 50) {
+                        strengthBar.className = 'progress-bar bg-warning';
+                        strengthText.textContent = 'Password strength: Weak';
+                    } else if (strength < 75) {
+                        strengthBar.className = 'progress-bar bg-info';
+                        strengthText.textContent = 'Password strength: Medium';
+                    } else {
+                        strengthBar.className = 'progress-bar bg-success';
+                        strengthText.textContent = 'Password strength: Strong';
+                    }
+                });
+            }
+
+            // Toggle confirm password visibility for registration form
+            const toggleConfirmPasswordBtn = document.getElementById('toggleConfirmPassword');
+            const confirmPasswordField = document.getElementById('reg_confirm_password');
+            if (toggleConfirmPasswordBtn && confirmPasswordField) {
+                toggleConfirmPasswordBtn.addEventListener('click', function() {
+                    const type = confirmPasswordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    confirmPasswordField.setAttribute('type', type);
+
+                    // Toggle the eye icon
+                    this.querySelector('i').classList.toggle('bi-eye');
+                    this.querySelector('i').classList.toggle('bi-eye-slash');
+                });
+
+                // Check if passwords match in real-time
+                confirmPasswordField.addEventListener('input', function() {
+                    const password = document.getElementById('reg_password').value;
+                    const confirmPassword = this.value;
+
+                    // Add feedback element if it doesn't exist
+                    let feedbackElement = document.getElementById('password-match-feedback');
+                    if (!feedbackElement) {
+                        feedbackElement = document.createElement('div');
+                        feedbackElement.id = 'password-match-feedback';
+                        feedbackElement.className = 'form-text mt-1';
+                        this.parentNode.parentNode.appendChild(feedbackElement);
+                    }
+
+                    // Check if passwords match
+                    if (confirmPassword === '') {
+                        feedbackElement.textContent = '';
+                        feedbackElement.className = 'form-text mt-1';
+                        this.classList.remove('is-valid', 'is-invalid');
+                    } else if (password === confirmPassword) {
+                        feedbackElement.textContent = 'Passwords match';
+                        feedbackElement.className = 'form-text text-success mt-1';
+                        this.classList.add('is-valid');
+                        this.classList.remove('is-invalid');
+                    } else {
+                        feedbackElement.textContent = 'Passwords do not match';
+                        feedbackElement.className = 'form-text text-danger mt-1';
+                        this.classList.add('is-invalid');
+                        this.classList.remove('is-valid');
+                    }
+                });
+            }
+
             // Handle login form submission
             const loginForm = document.getElementById('loginForm');
             if (loginForm) {
+                // Function to handle test email button
+                function setupTestEmailButton(button) {
+                    if (!button) return;
+
+                    button.addEventListener('click', function() {
+                        const email = this.getAttribute('data-email');
+                        const token = this.getAttribute('data-token');
+                        const name = this.getAttribute('data-name');
+                        const statusEl = this.nextElementSibling;
+
+                        // Disable button and show loading
+                        this.disabled = true;
+                        this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Sending...';
+                        statusEl.innerHTML = '<span class="text-muted">Sending verification email...</span>';
+
+                        // Send AJAX request to test email
+                        const formData = new FormData();
+                        formData.append('email', email);
+                        formData.append('token', token);
+                        formData.append('name', name);
+
+                        fetch('templates/includes/test_email.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                statusEl.innerHTML = `<span class="text-success"><i class="bi bi-check-circle me-1"></i> ${data.message}</span>`;
+                                this.innerHTML = '<i class="bi bi-envelope-check me-1"></i> Email Sent';
+                                this.classList.remove('btn-outline-secondary');
+                                this.classList.add('btn-success');
+                            } else {
+                                statusEl.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i> ${data.message}</span>`;
+                                this.innerHTML = '<i class="bi bi-envelope me-1"></i> Test Email Verification';
+                                this.disabled = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i> An error occurred. Please try again.</span>';
+                            this.innerHTML = '<i class="bi bi-envelope me-1"></i> Test Email Verification';
+                            this.disabled = false;
+                        });
+                    });
+                }
+
+                // Function to create verification UI
+                function createVerificationUI(data, formId) {
+                    const email = document.getElementById(formId).email.value;
+                    let name = 'User';
+
+                    if (formId === 'registerForm') {
+                        name = `${document.getElementById(formId).first_name.value} ${document.getElementById(formId).last_name.value}`;
+                    }
+
+                    return `<div class="mt-3 p-3 border rounded verification-container" style="background-color: #f8f9fa; border-color: #dee2e6 !important;">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-envelope-check me-2" style="font-size: 1.25rem; color: var(--color-primary);"></i>
+                            <h6 class="mb-0 fw-bold">Email Verification Required</h6>
+                        </div>
+                        <p class="mb-3 small">Please verify your email address to activate your account.</p>
+
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <a href="${data.verification_link}" class="btn btn-primary w-100 mb-2" style="background-color: var(--color-primary); border-color: var(--color-primary);">
+                                    <i class="bi bi-check-circle me-2"></i> Verify My Account
+                                </a>
+
+                                ${data.test_email ? `
+                                <button type="button" class="btn btn-outline-secondary w-100 test-email-btn-${formId === 'loginForm' ? 'login' : 'register'}"
+                                        data-email="${email}"
+                                        data-token="${data.verification_link.split('token=')[1]}"
+                                        data-name="${name}">
+                                    <i class="bi bi-envelope me-2"></i> Send Verification Email
+                                </button>
+                                <div class="email-status-${formId === 'loginForm' ? 'login' : 'register'} mt-2 small"></div>
+                                ` : ''}
+                            </div>
+
+                            ${data.qr_code ? `
+                            <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
+                                <p class="mb-2 small text-muted text-center">Or scan this QR code:</p>
+                                <img src="${data.qr_code}" alt="Verification QR Code" class="img-fluid" style="max-width: 120px;">
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>`;
+                }
+
+                // Handle form submission
                 loginForm.addEventListener('submit', function(e) {
                     e.preventDefault();
+
+                    // Clear previous alerts
+                    const alertEl = document.getElementById('loginAlert');
+                    // Preserve any server-side messages
+                    const serverMessages = alertEl.querySelectorAll('.custom-alert.alert-success');
+                    if (serverMessages.length === 0) {
+                        alertEl.innerHTML = '';
+                    }
+
+                    // Add loading indicator
+                    const loadingDiv = document.createElement('div');
+                    loadingDiv.className = 'custom-alert alert-warning';
+                    loadingDiv.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> Logging in...';
+                    alertEl.appendChild(loadingDiv);
 
                     const formData = new FormData(this);
 
@@ -1034,21 +1399,105 @@ function getCategoryImage($categoryName) {
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.success) {
-                            // Redirect based on user role
-                            window.location.href = data.redirect;
+                            // Clear any existing alerts
+                            alertEl.innerHTML = '';
+
+                            // Show success message before redirect
+                            const successDiv = document.createElement('div');
+                            successDiv.className = 'custom-alert alert-success';
+                            successDiv.innerHTML = `<i class="bi bi-check-circle me-2"></i> ${data.message}`;
+                            alertEl.appendChild(successDiv);
+
+                            // Redirect after a short delay
+                            setTimeout(() => {
+                                window.location.href = data.redirect;
+                            }, 1000);
                         } else {
+                            // Clear any existing alerts
+                            alertEl.innerHTML = '';
+
                             // Show error message
-                            document.getElementById('loginAlert').innerHTML =
-                                `<div class="custom-alert alert-danger">
-                                    ${data.message}
-                                </div>`;
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'custom-alert alert-danger';
+                            errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i> ${data.message}`;
+                            alertEl.appendChild(errorDiv);
+
+                            // If verification link is provided, show verification UI
+                            if (data.verification_link) {
+                                // Create a more prominent verification UI
+                                const verificationDiv = document.createElement('div');
+                                verificationDiv.className = 'mt-3 p-3 border rounded verification-container';
+                                verificationDiv.style.backgroundColor = '#f8f9fa';
+                                verificationDiv.style.borderColor = '#dc3545 !important';
+                                verificationDiv.style.borderWidth = '2px';
+
+                                // Add content to the verification div
+                                verificationDiv.innerHTML = `
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 1.25rem; color: #dc3545;"></i>
+                                        <h6 class="mb-0 fw-bold">Please verify your email address</h6>
+                                    </div>
+                                    <p class="mb-3 small">Your account has been created but not yet verified. Please verify your email address to log in.</p>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-8">
+                                            <a href="${data.verification_link}" class="btn btn-primary w-100 mb-2" style="background-color: var(--color-primary); border-color: var(--color-primary);">
+                                                <i class="bi bi-check-circle me-2"></i> Verify My Account
+                                            </a>
+
+                                            ${data.test_email ? `
+                                            <button type="button" class="btn btn-outline-secondary w-100 test-email-btn-login"
+                                                    data-email="${document.getElementById('loginForm').email.value}"
+                                                    data-token="${data.verification_link.split('token=')[1]}"
+                                                    data-name="User">
+                                                <i class="bi bi-envelope me-2"></i> Send Verification Email
+                                            </button>
+                                            <div class="email-status-login mt-2 small"></div>
+                                            ` : ''}
+                                        </div>
+
+                                        ${data.qr_code ? `
+                                        <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
+                                            <p class="mb-2 small text-muted text-center">Or scan this QR code:</p>
+                                            <img src="${data.qr_code}" alt="Verification QR Code" class="img-fluid" style="max-width: 120px;">
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                `;
+
+                                alertEl.appendChild(verificationDiv);
+
+                                // Automatically open the verification link in a new tab
+                                setTimeout(() => {
+                                    window.open(data.verification_link, '_blank');
+                                }, 1000);
+                            }
+
+                            // Setup test email button if present
+                            setTimeout(() => {
+                                setupTestEmailButton(document.querySelector('.test-email-btn-login'));
+                            }, 100);
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
+
+                        // Clear any existing alerts
+                        alertEl.innerHTML = '';
+
+                        // Show error message
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'custom-alert alert-danger';
+                        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i> A network error occurred. Please check your connection and try again.';
+                        alertEl.appendChild(errorDiv);
                     });
                 });
             }
@@ -1059,40 +1508,168 @@ function getCategoryImage($categoryName) {
                 registerForm.addEventListener('submit', function(e) {
                     e.preventDefault();
 
-                    const formData = new FormData(this);
+                    // Clear previous alerts
+                    const alertEl = document.getElementById('registerAlert');
+
+                    // Client-side validation
+                    const firstName = this.first_name.value.trim();
+                    const lastName = this.last_name.value.trim();
+                    const email = this.email.value.trim();
+                    const password = this.password.value;
+                    const confirmPassword = this.confirm_password.value;
+                    const terms = this.terms && this.terms.checked;
+
+                    // Validation errors
+                    let errors = [];
+
+                    // Check required fields
+                    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+                        errors.push('All fields are required.');
+                    }
+
+                    // Validate email
+                    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        errors.push('Please enter a valid email address.');
+                    }
+
+                    // Validate password match
+                    if (password && confirmPassword && password !== confirmPassword) {
+                        errors.push('Passwords do not match.');
+                    }
+
+                    // Validate password strength
+                    if (password) {
+                        if (password.length < 8) {
+                            errors.push('Password must be at least 8 characters long.');
+                        } else {
+                            // Calculate password strength
+                            let strength = 0;
+                            if (password.length >= 8) strength += 25;
+                            if (/[a-z]/.test(password)) strength += 25;
+                            if (/[A-Z]/.test(password)) strength += 25;
+                            if (/[0-9]/.test(password) || /[^a-zA-Z0-9]/.test(password)) strength += 25;
+
+                            if (strength < 50) {
+                                errors.push('Please use a stronger password with uppercase letters, numbers, or special characters.');
+                            }
+                        }
+                    }
+
+                    // Check terms agreement
+                    if (!terms) {
+                        errors.push('You must agree to the Terms of Service and Privacy Policy.');
+                    }
+
+                    // Show first error if any
+                    if (errors.length > 0) {
+                        alertEl.innerHTML = `<div class="custom-alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i> ${errors[0]}
+                        </div>`;
+                        return;
+                    }
+
+                    // Clear previous alerts
+                    alertEl.innerHTML = '';
+
+                    // Show loading indicator
+                    const loadingDiv = document.createElement('div');
+                    loadingDiv.className = 'custom-alert alert-warning';
+                    loadingDiv.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> Creating your account...';
+                    alertEl.appendChild(loadingDiv);
 
                     // Send AJAX request to register handler
                     fetch('templates/includes/register_handler.php', {
                         method: 'POST',
-                        body: formData
+                        body: new FormData(this)
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.success) {
-                            // Show success message and switch to login modal
-                            document.getElementById('registerAlert').innerHTML =
-                                `<div class="custom-alert alert-success">
-                                    ${data.message}
-                                </div>`;
+                            // Clear any existing alerts
+                            alertEl.innerHTML = '';
 
+                            // Show success message
+                            const successDiv = document.createElement('div');
+                            successDiv.className = 'custom-alert alert-success';
+
+                            // Customize the success message
+                            let successMessage = 'Registration successful!';
+                            if (data.verification_link && data.email_sent) {
+                                successMessage = 'Registration successful! A verification email has been sent.';
+                            }
+
+                            successDiv.innerHTML = `<i class="bi bi-check-circle me-2"></i> ${successMessage}`;
+                            alertEl.appendChild(successDiv);
+
+                            // If verification link is provided and email was sent automatically
+                            if (data.verification_link && data.email_sent) {
+                                // Automatically open the verification link in a new tab after a delay
+                                setTimeout(() => {
+                                    window.open(data.verification_link, '_blank');
+                                }, 1500);
+                            }
+
+                            // Reset the form
+                            this.reset();
+
+                            // Switch to login modal after delay
                             setTimeout(() => {
                                 registerModal.hide();
-                                document.getElementById('loginAlert').innerHTML =
-                                    `<div class="custom-alert alert-success">
-                                        ${data.message}
-                                    </div>`;
+
+                                const loginAlertEl = document.getElementById('loginAlert');
+                                loginAlertEl.innerHTML = '';
+
+                                // Create a single, clear message for the login modal
+                                const successDiv = document.createElement('div');
+                                successDiv.className = 'custom-alert alert-success';
+
+                                if (data.verification_link && data.email_sent) {
+                                    // If email was sent, show a message about verification
+                                    successDiv.innerHTML = `
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        Registration successful! A verification email has been sent to your address.
+                                        <br><br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Please verify your email before logging in.
+                                        </small>
+                                    `;
+                                } else {
+                                    // Simple success message
+                                    successDiv.innerHTML = '<i class="bi bi-check-circle me-2"></i> Registration successful!';
+                                }
+
+                                loginAlertEl.appendChild(successDiv);
+
                                 loginModal.show();
-                            }, 2000);
+                            }, 3000);
                         } else {
+                            // Clear any existing alerts
+                            alertEl.innerHTML = '';
+
                             // Show error message
-                            document.getElementById('registerAlert').innerHTML =
-                                `<div class="custom-alert alert-danger">
-                                    ${data.message}
-                                </div>`;
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'custom-alert alert-danger';
+                            errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i> ${data.message}`;
+                            alertEl.appendChild(errorDiv);
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
+
+                        // Clear any existing alerts
+                        alertEl.innerHTML = '';
+
+                        // Show error message
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'custom-alert alert-danger';
+                        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i> A network error occurred. Please check your connection and try again.';
+                        alertEl.appendChild(errorDiv);
                     });
                 });
             }
