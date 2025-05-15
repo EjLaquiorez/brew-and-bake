@@ -29,17 +29,16 @@
 
 /* Navbar */
 .navbar {
-    background-color: rgba(82, 61, 53, 0.95); /* Rich brown with transparency */
+    background-color: #111827 !important; /* Dark gray theme */
     transition: all 0.3s ease;
     padding: 0.75rem 0;
-    box-shadow: 0 2px 15px rgba(34, 48, 48, 0.2);
-    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
     z-index: 1000;
 }
 
 .navbar.scrolled {
-    background-color: rgba(82, 61, 53, 0.98); /* Slightly more opaque when scrolled */
-    box-shadow: 0 4px 20px rgba(34, 48, 48, 0.3);
+    background-color: #111827 !important; /* Dark gray theme */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     padding: 0.5rem 0;
 }
 
@@ -58,7 +57,7 @@
 }
 
 .navbar-brand i {
-    color: var(--primary);
+    color: var(--secondary);
     margin-right: 10px;
     font-size: 1.8rem;
     transition: all 0.3s ease;
@@ -103,7 +102,7 @@
 
 /* Dropdown menu styling */
 .dropdown-menu {
-    background-color: rgba(82, 61, 53, 0.95);
+    background-color: #111827;
     border: none;
     border-radius: 0.5rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -156,24 +155,24 @@
 /* Mobile navigation */
 @media (max-width: 992px) {
     .navbar-collapse {
-        background-color: rgba(82, 61, 53, 0.98);
+        background-color: #111827;
         padding: 1rem;
         border-radius: 0.5rem;
         margin-top: 0.5rem;
     }
-    
+
     .nav-link {
         padding: 0.75rem 1rem !important;
         border-radius: 0.25rem;
     }
-    
+
     .nav-link:hover,
     .nav-link.active {
         background-color: rgba(255, 255, 255, 0.1);
     }
-    
+
     .dropdown-menu {
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: rgba(17, 24, 39, 0.9);
         margin-top: 0;
     }
 }

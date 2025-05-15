@@ -1,36 +1,66 @@
 :root {
-    /* Earthy Color Palette */
-    --dark-green: #223030;     /* Dark green/almost black */
-    --rich-brown: #523D35;     /* Rich brown - main color */
-    --sage-green: #959D90;     /* Sage green */
-    --tan: #BBA58F;            /* Tan/beige */
-    --cream: #E8D9CD;          /* Cream */
-    --off-white: #EFEFE9;      /* Off-white */
+    /* Color System */
+    --color-primary: #111827;        /* Sophisticated dark gray */
+    --color-primary-light: #1f2937;  /* Lighter dark gray */
+    --color-primary-dark: #030712;   /* Darker gray, almost black */
+    --color-secondary: #d4a373;      /* Warm gold accent */
+    --color-accent: #8B5A2B;         /* Coffee brown accent */
 
-    /* Additional earthy colors */
-    --forest-green: #6B8E6B;   /* Forest green for success */
-    --terracotta: #A35D5D;     /* Terracotta for danger/alerts */
-    --slate-blue: #6E8A9C;     /* Slate blue for info */
+    /* Neutral Colors */
+    --color-white: #ffffff;
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-300: #d1d5db;
+    --color-gray-400: #9ca3af;
+    --color-gray-500: #6b7280;
+    --color-gray-600: #4b5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1f2937;
+    --color-gray-900: #111827;
+    --color-black: #000000;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-full: 9999px;
 
     /* Functional color assignments */
-    --primary: var(--rich-brown);
-    --secondary: var(--sage-green);
-    --dark: var(--dark-green);
-    --light: var(--off-white);
-    --accent: var(--tan);
-    --text-dark: var(--dark-green);
-    --text-light: var(--off-white);
+    --primary: var(--color-primary);
+    --secondary: var(--color-secondary);
+    --dark: var(--color-primary-dark);
+    --light: var(--color-white);
+    --accent: var(--color-accent);
+    --text-dark: var(--color-primary);
+    --text-light: var(--color-white);
 }
 
 /* General Styles */
 body {
     font-family: 'Poppins', sans-serif;
-    color: var(--text-dark);
-    background-color: var(--dark);
+    color: var(--color-gray-300);
+    background-color: var(--color-primary-dark);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Oswald', sans-serif;
+    color: var(--color-white);
+    font-weight: 600;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
 }
 
 /* Background Animation */
@@ -40,41 +70,46 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .section-title {
-    color: var(--primary);
     position: relative;
-    padding-bottom: 15px;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    color: var(--color-white);
+    display: inline-block;
 }
 
 .section-title::after {
     content: '';
     position: absolute;
     bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background-color: var(--color-secondary);
+}
+
+.text-center .section-title::after {
     left: 50%;
     transform: translateX(-50%);
-    width: 50px;
-    height: 3px;
-    background-color: var(--secondary);
 }
 
 /* Navbar */
 .navbar {
-    background-color: rgba(82, 61, 53, 0.95); /* Rich brown with transparency */
+    background-color: #111827 !important;
     transition: all 0.3s ease;
     padding: 0.75rem 0;
-    box-shadow: 0 2px 15px rgba(34, 48, 48, 0.2);
-    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
 }
 
 .navbar.scrolled {
-    background-color: rgba(82, 61, 53, 0.98); /* Slightly more opaque when scrolled */
-    box-shadow: 0 4px 20px rgba(34, 48, 48, 0.3);
+    background-color: #111827 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     padding: 0.5rem 0;
 }
 
 .navbar-brand {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--light) !important;
+    color: var(--color-white) !important;
     letter-spacing: 1px;
     display: flex;
     align-items: center;
@@ -86,7 +121,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .navbar-brand i {
-    color: var(--primary);
+    color: var(--color-secondary);
     margin-right: 10px;
     font-size: 1.8rem;
     transition: all 0.3s ease;
@@ -97,7 +132,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-link {
-    color: var(--light) !important;
+    color: var(--color-gray-300) !important;
     font-weight: 500;
     padding: 0.5rem 1.25rem !important;
     transition: all 0.3s ease;
@@ -114,7 +149,7 @@ h1, h2, h3, h4, h5, h6 {
     height: 2px;
     bottom: 0;
     left: 50%;
-    background-color: var(--primary);
+    background-color: var(--color-secondary);
     transition: all 0.3s ease;
     transform: translateX(-50%);
 }
@@ -124,12 +159,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-link:hover {
-    color: var(--primary) !important;
+    color: var(--color-white) !important;
 }
 
 .navbar-nav .btn {
     padding: 0.5rem 1.25rem;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -139,27 +174,30 @@ h1, h2, h3, h4, h5, h6 {
 .navbar .btn-primary-custom {
     padding: 0.4rem 1.25rem;
     margin-left: 0.5rem;
+    border: 2px solid var(--color-secondary);
 }
 
 .cart-icon {
     font-size: 1.2rem;
     transition: all 0.3s ease;
+    color: var(--color-white);
 }
 
 .cart-icon:hover {
-    color: var(--primary) !important;
+    color: var(--color-secondary) !important;
     transform: translateY(-2px);
 }
 
 .cart-badge {
-    background-color: var(--primary) !important;
+    background-color: var(--color-secondary) !important;
+    color: var(--color-primary);
     font-size: 0.65rem;
     font-weight: 600;
 }
 
-/* Hero Section with coffee image background */
+/* Hero Section */
 .hero {
-    color: var(--light);
+    color: var(--color-white);
     position: relative;
     min-height: 100vh;
     overflow: hidden;
@@ -194,21 +232,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-slide-1 {
-    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
                 url('../images/backgrounds/pic-1.jfif');
     background-size: cover;
     background-position: center;
 }
 
 .hero-slide-2 {
-    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
                 url('../images/backgrounds/pic-2.jfif');
     background-size: cover;
     background-position: center;
 }
 
 .hero-slide-3 {
-    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
                 url('../images/backgrounds/pic-3.jfif');
     background-size: cover;
     background-position: center;
@@ -256,19 +294,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dot-nav .dot.active {
-    background-color: var(--primary);
+    background-color: var(--color-secondary);
     transform: scale(1.2);
 }
 
 .dot-nav .dot.active::before {
     opacity: 1;
-    border-color: var(--primary);
+    border-color: var(--color-secondary);
 }
 
 .hero-content {
     backdrop-filter: blur(5px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(17, 24, 39, 0.7) !important;
+    border-radius: var(--radius-lg);
 }
 
 .hero h1 {
@@ -278,100 +318,136 @@ h1, h2, h3, h4, h5, h6 {
     text-transform: uppercase;
     letter-spacing: 1px;
     line-height: 1.1;
-    color: var(--light);
+    color: var(--color-white);
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .hero p {
     font-size: 1.1rem;
     max-width: 600px;
-    color: var(--light);
+    color: var(--color-gray-300);
 }
 
 .hero .btn-primary-custom {
-    background-color: var(--primary);
-    border-color: var(--primary);
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: 2px solid var(--color-secondary);
     padding: 0.8rem 2rem;
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.hero .btn-primary-custom::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background-color: var(--color-secondary);
+    transition: width 0.3s ease;
+    z-index: -1;
 }
 
 .hero .btn-primary-custom:hover {
-    background-color: #b08e6b;
-    border-color: #b08e6b;
+    color: var(--color-primary);
+    transform: translateY(-3px);
+}
+
+.hero .btn-primary-custom:hover::before {
+    width: 100%;
 }
 
 .hero .btn-outline-light {
-    border: 2px solid var(--light);
+    border: 2px solid var(--color-white);
     padding: 0.8rem 2rem;
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.hero .btn-outline-light:hover {
+    background-color: var(--color-white);
+    color: var(--color-primary);
+    transform: translateY(-3px);
 }
 
 /* Features Section */
 .features {
-    background: linear-gradient(rgba(211, 211, 211, 0.9), rgba(211, 211, 211, 0.9)),
-                url('../images/backgrounds/coffee-beans-closeup.jpg');
-    background-size: cover;
-    background-position: center;
+    background-color: var(--color-primary-light);
     position: relative;
+    padding: 5rem 0;
 }
 
 .feature-card {
     text-align: center;
-    padding: 2rem;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    padding: 2.5rem 2rem;
+    background: var(--color-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
     transition: all 0.3s ease;
-    border-bottom: 3px solid var(--accent);
+    border-bottom: 3px solid var(--color-secondary);
+    height: 100%;
 }
 
 .feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
 }
 
 .feature-card i {
     font-size: 2.5rem;
-    color: var(--primary);
-    margin-bottom: 1rem;
+    color: var(--color-secondary);
+    margin-bottom: 1.5rem;
 }
 
 .feature-card h3 {
-    color: var(--dark);
+    color: var(--color-white);
     margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.feature-card p {
+    color: var(--color-gray-400);
 }
 
 /* Products Section */
 .products {
-    background: linear-gradient(rgba(211, 211, 211, 0.95), rgba(211, 211, 211, 0.95)),
-                url('../images/backgrounds/bakery-items.jpg');
-    background-size: cover;
-    background-position: center;
+    background-color: var(--color-primary);
     position: relative;
+    padding: 5rem 0;
 }
 
 .product-card {
-    background: white;
-    border-radius: 10px;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-md);
     transition: all 0.3s ease;
-    border-left: 3px solid var(--secondary);
+    border-left: 3px solid var(--color-secondary);
+    height: 100%;
 }
 
 .product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
 }
 
 .product-image {
     width: 100%;
-    height: 200px;
+    height: 220px;
     object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.1);
 }
 
 .product-info {
@@ -379,37 +455,50 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .product-info h3 {
-    color: var(--dark);
-    margin-bottom: 0.5rem;
+    color: var(--color-white);
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.product-info p {
+    color: var(--color-gray-400);
 }
 
 .price {
     font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--primary);
+    font-weight: 700;
+    color: var(--color-secondary);
 }
 
 /* About Section */
 .about {
-    background: linear-gradient(rgba(211, 211, 211, 0.9), rgba(211, 211, 211, 0.9)),
-                url('../images/backgrounds/cafe-interior.jpg');
-    background-size: cover;
-    background-position: center;
+    background-color: var(--color-primary-light);
     position: relative;
+    padding: 5rem 0;
 }
 
 .about img {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border: 3px solid var(--secondary);
+    box-shadow: var(--shadow-lg);
+    border: 3px solid var(--color-secondary);
+    border-radius: var(--radius-lg);
+}
+
+.about p {
+    color: var(--color-gray-300);
+    margin-bottom: 1.5rem;
+}
+
+.about .lead {
+    font-size: 1.25rem;
+    color: var(--color-gray-200);
+    margin-bottom: 1.5rem;
 }
 
 /* Contact Section */
 .contact {
-    background: linear-gradient(rgba(211, 211, 211, 0.95), rgba(211, 211, 211, 0.95)),
-                url('../images/backgrounds/bakery-items.jpg');
-    background-size: cover;
-    background-position: center;
+    background-color: var(--color-primary);
     position: relative;
+    padding: 5rem 0;
 }
 
 .contact-info {
@@ -420,74 +509,114 @@ h1, h2, h3, h4, h5, h6 {
 
 .info-item {
     text-align: center;
-    padding: 1.5rem;
-    background: white;
-    border-radius: 10px;
+    padding: 2rem;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-lg);
     transition: all 0.3s ease;
-    border-top: 3px solid var(--accent);
+    border-top: 3px solid var(--color-secondary);
 }
 
 .info-item:hover {
     transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-md);
 }
 
 .info-item i {
     font-size: 2rem;
-    color: var(--primary);
+    color: var(--color-secondary);
     margin-bottom: 1rem;
 }
 
 .info-item h3 {
-    color: var(--dark);
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     margin-bottom: 0.5rem;
+    color: var(--color-white);
+}
+
+.info-item p {
+    color: var(--color-gray-400);
 }
 
 .contact-form {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    border-top: 3px solid var(--secondary);
+    background: var(--color-primary-light);
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
 }
 
-.contact-form .form-control {
-    border: 2px solid #eee;
-    padding: 0.8rem;
-    border-radius: 8px;
+.form-control {
+    background-color: var(--color-primary);
+    border: 1px solid var(--color-gray-700);
+    color: var(--color-white);
+    padding: 0.75rem 1rem;
 }
 
-.contact-form .form-control:focus {
-    border-color: var(--secondary);
-    box-shadow: 0 0 0 0.2rem rgba(205, 133, 63, 0.25);
+.form-control:focus {
+    background-color: var(--color-primary);
+    border-color: var(--color-secondary);
+    color: var(--color-white);
+    box-shadow: none;
+}
+
+.form-control::placeholder {
+    color: var(--color-gray-500);
 }
 
 /* Footer */
 .footer {
-    background-color: var(--dark);
-    color: var(--light);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: var(--color-primary-dark);
+    color: var(--color-gray-400);
+    padding: 4rem 0 2rem;
 }
 
-.footer h3, .footer h4 {
-    color: var(--primary);
+.footer h3 {
+    color: var(--color-white);
     margin-bottom: 1.5rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
     font-weight: 600;
 }
 
-.footer a {
-    color: var(--light);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-    letter-spacing: 0.5px;
+.footer h3 i {
+    color: var(--color-secondary);
+    margin-right: 0.5rem;
 }
 
-.footer a:hover {
-    color: var(--primary);
+.footer h4 {
+    color: var(--color-white);
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.75rem;
+}
+
+.footer h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background-color: var(--color-secondary);
+}
+
+.footer p {
+    margin-bottom: 1.5rem;
+}
+
+.footer ul li {
+    margin-bottom: 0.75rem;
+}
+
+.footer ul li a {
+    color: var(--color-gray-400);
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.footer ul li a:hover {
+    color: var(--color-secondary);
+    transform: translateX(5px);
 }
 
 .social-links {
@@ -496,19 +625,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .social-links a {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     width: 40px;
     height: 40px;
-    background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
+    background-color: var(--color-primary);
+    color: var(--color-gray-400);
     transition: all 0.3s ease;
 }
 
 .social-links a:hover {
-    background: var(--primary);
-    color: var(--dark);
+    background-color: var(--color-secondary);
+    color: var(--color-primary);
+    transform: translateY(-3px);
 }
 
 /* New styles to add */
@@ -518,30 +649,41 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Testimonials Section */
 .testimonials {
-    background: linear-gradient(rgba(211, 211, 211, 0.9), rgba(211, 211, 211, 0.9)),
-                url('../images/backgrounds/coffee-pouring.jpg');
-    background-size: cover;
-    background-position: center;
+    background-color: var(--color-primary-light);
     position: relative;
+    padding: 5rem 0;
 }
 
 .testimonial-card {
-    background: white;
-    transition: transform 0.3s ease;
+    background: var(--color-primary);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    transition: all 0.3s ease;
+    border-right: 3px solid var(--color-secondary);
     height: 100%;
-    border-right: 3px solid var(--accent);
 }
 
 .testimonial-card:hover {
     transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
 }
 
 .stars {
-    color: var(--secondary);
+    color: var(--color-secondary);
 }
 
 .testimonial-avatar {
-    color: var(--primary);
+    color: var(--color-secondary);
+}
+
+.testimonial-name {
+    color: var(--color-white);
+    font-weight: 600;
+}
+
+.testimonial-title {
+    color: var(--color-gray-400);
+    font-size: 0.875rem;
 }
 
 /* Animation delays for staggered effect */
@@ -574,17 +716,29 @@ h1, h2, h3, h4, h5, h6 {
     width: 100%;
 }
 
-/* Add a parallax effect to sections */
+/* Parallax Section */
 .parallax-section {
-    background: linear-gradient(rgba(47, 44, 40, 0.7), rgba(139, 69, 19, 0.7)),
+    background: linear-gradient(rgba(17, 24, 39, 0.8), rgba(17, 24, 39, 0.8)),
                 url('../images/backgrounds/coffee-beans-closeup.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    color: var(--light);
+    color: var(--color-white);
     padding: 6rem 0;
     position: relative;
-    animation: fadeIn 1.5s ease-in-out;
+}
+
+.parallax-section h2 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--color-white);
+}
+
+.parallax-section p {
+    font-size: 1.25rem;
+    color: var(--color-gray-300);
+    margin-bottom: 2rem;
 }
 
 /* Add subtle texture overlay */
@@ -603,57 +757,75 @@ body::before {
 
 /* Custom Button Styles */
 .btn-primary-custom {
-    background-color: var(--primary);
-    color: var(--dark);
-    border-color: var(--primary);
-    border-radius: 4px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: 2px solid var(--color-secondary);
+    border-radius: var(--radius-md);
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 1px;
+    padding: 0.75rem 2rem;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn-primary-custom::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background-color: var(--color-secondary);
+    transition: width 0.3s ease;
+    z-index: -1;
 }
 
 .btn-primary-custom:hover {
-    background-color: #b08e6b;
-    color: var(--dark);
-    border-color: #b08e6b;
-    transform: translateY(-2px);
+    color: var(--color-primary);
+    transform: translateY(-3px);
+}
+
+.btn-primary-custom:hover::before {
+    width: 100%;
 }
 
 .btn-secondary-custom {
     background-color: transparent;
-    color: var(--dark);
-    border: 2px solid var(--dark);
-    border-radius: 4px;
+    color: var(--color-white);
+    border: 2px solid var(--color-secondary);
+    border-radius: var(--radius-md);
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 1px;
+    padding: 0.75rem 2rem;
     transition: all 0.3s ease;
 }
 
 .btn-secondary-custom:hover {
-    background-color: var(--dark);
-    color: var(--light);
-    border-color: var(--dark);
-    transform: translateY(-2px);
+    background-color: var(--color-secondary);
+    color: var(--color-primary);
+    transform: translateY(-3px);
 }
 
 .btn-accent-custom {
-    background-color: var(--accent);
-    color: var(--light);
-    border-color: var(--accent);
-    border-radius: 4px;
+    background-color: var(--color-accent);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-md);
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 1px;
+    padding: 0.75rem 2rem;
     transition: all 0.3s ease;
 }
 
 .btn-accent-custom:hover {
-    background-color: #267349;
-    color: var(--light);
-    border-color: #267349;
-    transform: translateY(-2px);
+    background-color: var(--color-secondary);
+    color: var(--color-primary);
+    transform: translateY(-3px);
 }
 
 /* Make content appear above the texture */
