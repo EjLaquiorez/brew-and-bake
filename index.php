@@ -579,12 +579,19 @@ function getCategoryImage($categoryName) {
                                 </div>
                                 <div class="product-info">
                                     <h3 class="product-title"><?= htmlspecialchars($product['name']) ?></h3>
-                                    <p class="product-category"><?= htmlspecialchars(ucfirst($product['category_name'] ?? 'Uncategorized')) ?></p>
-                                    <div class="product-price">₱<?= number_format($product['price'], 2) ?></div>
+                                    <p class="text-muted"><?= htmlspecialchars(substr($product['description'] ?? '', 0, 60)) . (isset($product['description']) && strlen($product['description']) > 60 ? '...' : '') ?></p>
+                                    <div class="product-meta">
+                                        <span class="category"><?= htmlspecialchars(ucfirst($product['category_name'] ?? 'Uncategorized')) ?></span>
+                                        <span class="price">₱<?= number_format($product['price'], 2) ?></span>
+                                    </div>
                                     <?php if ($isLoggedIn && $userRole === 'client'): ?>
-                                        <a href="templates/client/cart.php?add=<?= $product['id'] ?>" class="add-to-cart-btn">Order Now</a>
+                                        <a href="templates/client/cart.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
+                                            <i class="bi bi-cart-plus"></i> Order Now
+                                        </a>
                                     <?php else: ?>
-                                        <a href="#" class="add-to-cart-btn login-required">Order Now</a>
+                                        <a href="#" class="btn btn-primary w-100 login-required">
+                                            <i class="bi bi-cart-plus"></i> Order Now
+                                        </a>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -611,12 +618,19 @@ function getCategoryImage($categoryName) {
                                         </div>
                                         <div class="product-info">
                                             <h3 class="product-title"><?= htmlspecialchars($product['name']) ?></h3>
-                                            <p class="product-category"><?= htmlspecialchars(ucfirst($category['name'])) ?></p>
-                                            <div class="product-price">₱<?= number_format($product['price'], 2) ?></div>
+                                            <p class="text-muted"><?= htmlspecialchars(substr($product['description'] ?? '', 0, 60)) . (isset($product['description']) && strlen($product['description']) > 60 ? '...' : '') ?></p>
+                                            <div class="product-meta">
+                                                <span class="category"><?= htmlspecialchars(ucfirst($category['name'])) ?></span>
+                                                <span class="price">₱<?= number_format($product['price'], 2) ?></span>
+                                            </div>
                                             <?php if ($isLoggedIn && $userRole === 'client'): ?>
-                                                <a href="templates/client/cart.php?add=<?= $product['id'] ?>" class="add-to-cart-btn">Order Now</a>
+                                                <a href="templates/client/cart.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
+                                                    <i class="bi bi-cart-plus"></i> Order Now
+                                                </a>
                                             <?php else: ?>
-                                                <a href="#" class="add-to-cart-btn login-required">Order Now</a>
+                                                <a href="#" class="btn btn-primary w-100 login-required">
+                                                    <i class="bi bi-cart-plus"></i> Order Now
+                                                </a>
                                             <?php endif; ?>
                                         </div>
                                     </div>
