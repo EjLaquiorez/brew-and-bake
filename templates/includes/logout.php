@@ -32,7 +32,7 @@ session_start();
 $_SESSION['logout_message'] = "You have been successfully logged out.";
 session_write_close();
 
-// Redirect to login page
-header("Location: ../../views/login.php");
+// Redirect to home page
+header("Location: ../../index.php");
 exit;
 ?>

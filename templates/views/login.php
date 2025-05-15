@@ -33,13 +33,13 @@ if (isset($_POST['login'])) {
         // Role-based redirect
         switch ($user['role']) {
             case 'admin':
-                header("Location: ../admin/dashboard.php");
+                header("Location: /brew-and-bake/templates/admin/dashboard.php");
                 exit;
             case 'staff':
-                header("Location: ../staff/staff.php");
+                header("Location: /brew-and-bake/templates/staff/staff.php");
                 exit;
             case 'client':
-                header("Location: ../client/client.php");
+                header("Location: /brew-and-bake/templates/client/client.php");
                 exit;
             default:
                 $alert = "<div class='alert alert-warning'>Invalid user role.</div>";

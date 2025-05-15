@@ -61,13 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Role-based redirect
                 switch ($user['role']) {
                     case 'admin':
-                        $response['redirect'] = '../admin/dashboard.php';
+                        $response['redirect'] = '/brew-and-bake/templates/admin/dashboard.php';
                         break;
                     case 'staff':
-                        $response['redirect'] = '../staff/staff.php';
+                        $response['redirect'] = '/brew-and-bake/templates/staff/staff.php';
                         break;
                     case 'client':
-                        $response['redirect'] = '../client/client.php';
+                        $response['redirect'] = '/brew-and-bake/templates/client/client.php';
                         break;
                     default:
                         $response['success'] = false;

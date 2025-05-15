@@ -27,7 +27,7 @@ if (isset($_SESSION['error'])) {
 // Get categories
 try {
     $stmt = $conn->query("
-        SELECT * FROM categories 
+        SELECT * FROM categories
         ORDER BY name ASC
     ");
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -41,7 +41,7 @@ $productsByCategory = [];
 foreach ($categories as $category) {
     try {
         $stmt = $conn->prepare("
-            SELECT * FROM products 
+            SELECT * FROM products
             WHERE category_id = ? AND status = 'active'
             ORDER BY name ASC
         ");
@@ -73,7 +73,7 @@ try {
 function getCategoryImage($categoryName) {
     $defaultImage = "category-default.jpg";
     $categoryName = strtolower($categoryName);
-    
+
     switch ($categoryName) {
         case 'coffee':
             return "hot-coffee.jpg";
@@ -85,6 +85,36 @@ function getCategoryImage($categoryName) {
             return "cold-coffee.jpg";
         case 'dessert':
             return "dessert.jpg";
+        case 'beverage':
+        case 'beverages':
+            return "cold-coffee.jpg";
+        case 'sandwiches':
+            return "sandwich.jpg";
+        case 'pastries':
+            return "pastry.jpg";
+        case 'cakes':
+            return "cake.jpg";
+        case 'hot tea':
+            return "hot-tea.jpg";
+        case 'cold tea':
+            return "cold-tea.jpg";
+        case 'refreshers':
+            return "refreshers.jpg";
+        case 'frappuccino':
+        case 'blended beverage':
+            return "frappuccino.jpg";
+        case 'iced energy':
+            return "iced-energy.jpg";
+        case 'hot chocolate':
+            return "hot-chocolate.jpg";
+        case 'bottled beverages':
+            return "bottled-beverages.jpg";
+        case 'breakfast':
+            return "breakfast.jpg";
+        case 'bakery':
+            return "bakery.jpg";
+        case 'treats':
+            return "treats.jpg";
         default:
             return $defaultImage;
     }
@@ -166,29 +196,37 @@ function getCategoryImage($categoryName) {
             <aside class="menu-sidebar">
                 <h2>Drinks</h2>
                 <ul class="category-nav">
-                    <?php foreach ($categories as $category): ?>
-                        <?php if (in_array(strtolower($category['name']), ['coffee', 'drink'])): ?>
-                            <li><a href="#category-<?= $category['id'] ?>"><?= htmlspecialchars(ucfirst($category['name'])) ?></a></li>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                    <li><a href="#hot-coffee">Hot Coffee</a></li>
-                    <li><a href="#cold-coffee">Cold Coffee</a></li>
-                    <li><a href="#hot-tea">Hot Tea</a></li>
-                    <li><a href="#cold-tea">Cold Tea</a></li>
-                    <li><a href="#refreshers">Refreshers</a></li>
-                    <li><a href="#frappuccino">Frappuccino</a></li>
+                    <?php
+                    // Define drink categories
+                    $drinkCategories = ['coffee', 'drink', 'beverage', 'beverages', 'hot tea', 'cold tea', 'refreshers',
+                                       'frappuccino', 'blended beverage', 'iced energy', 'hot chocolate',
+                                       'bottled beverages'];
+
+                    foreach ($categories as $category):
+                        if (in_array(strtolower($category['name']), $drinkCategories)):
+                    ?>
+                        <li><a href="#category-<?= $category['id'] ?>"><?= htmlspecialchars(ucfirst($category['name'])) ?></a></li>
+                    <?php
+                        endif;
+                    endforeach;
+                    ?>
                 </ul>
 
                 <h2>Food</h2>
                 <ul class="category-nav">
-                    <?php foreach ($categories as $category): ?>
-                        <?php if (in_array(strtolower($category['name']), ['cake', 'pastry', 'dessert'])): ?>
-                            <li><a href="#category-<?= $category['id'] ?>"><?= htmlspecialchars(ucfirst($category['name'])) ?></a></li>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                    <li><a href="#breakfast">Breakfast</a></li>
-                    <li><a href="#bakery">Bakery</a></li>
-                    <li><a href="#treats">Treats</a></li>
+                    <?php
+                    // Define food categories
+                    $foodCategories = ['cake', 'cakes', 'pastry', 'pastries', 'dessert', 'sandwiches',
+                                      'breakfast', 'bakery', 'treats'];
+
+                    foreach ($categories as $category):
+                        if (in_array(strtolower($category['name']), $foodCategories)):
+                    ?>
+                        <li><a href="#category-<?= $category['id'] ?>"><?= htmlspecialchars(ucfirst($category['name'])) ?></a></li>
+                    <?php
+                        endif;
+                    endforeach;
+                    ?>
                 </ul>
             </aside>
 
@@ -200,42 +238,16 @@ function getCategoryImage($categoryName) {
                 <section class="menu-section">
                     <h2 class="section-title">Drinks</h2>
                     <div class="menu-grid">
-                        <a href="#hot-coffee" class="menu-item">
-                            <div class="menu-item-image">
-                                <img src="../../assets/images/categories/hot-coffee.jpg" alt="Hot Coffee">
-                            </div>
-                            <h3 class="menu-item-title">Hot Coffee</h3>
-                        </a>
-                        <a href="#cold-coffee" class="menu-item">
-                            <div class="menu-item-image">
-                                <img src="../../assets/images/categories/cold-coffee.jpg" alt="Cold Coffee">
-                            </div>
-                            <h3 class="menu-item-title">Cold Coffee</h3>
-                        </a>
-                        <a href="#hot-tea" class="menu-item">
-                            <div class="menu-item-image">
-                                <img src="../../assets/images/categories/hot-tea.jpg" alt="Hot Tea">
-                            </div>
-                            <h3 class="menu-item-title">Hot Tea</h3>
-                        </a>
-                        <a href="#cold-tea" class="menu-item">
-                            <div class="menu-item-image">
-                                <img src="../../assets/images/categories/cold-tea.jpg" alt="Cold Tea">
-                            </div>
-                            <h3 class="menu-item-title">Cold Tea</h3>
-                        </a>
-                        <a href="#refreshers" class="menu-item">
-                            <div class="menu-item-image">
-                                <img src="../../assets/images/categories/refreshers.jpg" alt="Refreshers">
-                            </div>
-                            <h3 class="menu-item-title">Refreshers</h3>
-                        </a>
-                        <a href="#frappuccino" class="menu-item">
-                            <div class="menu-item-image">
-                                <img src="../../assets/images/categories/frappuccino.jpg" alt="Frappuccino">
-                            </div>
-                            <h3 class="menu-item-title">Frappuccino</h3>
-                        </a>
+                        <?php foreach ($categories as $category): ?>
+                            <?php if (in_array(strtolower($category['name']), $drinkCategories)): ?>
+                                <a href="#category-<?= $category['id'] ?>" class="menu-item">
+                                    <div class="menu-item-image">
+                                        <img src="../../assets/images/categories/<?= getCategoryImage($category['name']) ?>" alt="<?= htmlspecialchars(ucfirst($category['name'])) ?>">
+                                    </div>
+                                    <h3 class="menu-item-title"><?= htmlspecialchars(ucfirst($category['name'])) ?></h3>
+                                </a>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
                     </div>
                 </section>
 
@@ -244,7 +256,7 @@ function getCategoryImage($categoryName) {
                     <h2 class="section-title">Food</h2>
                     <div class="menu-grid">
                         <?php foreach ($categories as $category): ?>
-                            <?php if (in_array(strtolower($category['name']), ['cake', 'pastry', 'dessert'])): ?>
+                            <?php if (in_array(strtolower($category['name']), $foodCategories)): ?>
                                 <a href="#category-<?= $category['id'] ?>" class="menu-item">
                                     <div class="menu-item-image">
                                         <img src="../../assets/images/categories/<?= getCategoryImage($category['name']) ?>" alt="<?= htmlspecialchars(ucfirst($category['name'])) ?>">
@@ -341,12 +353,12 @@ function getCategoryImage($categoryName) {
         document.addEventListener('DOMContentLoaded', function() {
             const userIcon = document.querySelector('.user-icon');
             const userDropdown = document.querySelector('.user-dropdown');
-            
+
             userIcon.addEventListener('click', function(e) {
                 e.preventDefault();
                 userDropdown.classList.toggle('show');
             });
-            
+
             document.addEventListener('click', function(e) {
                 if (!e.target.closest('.user-menu')) {
                     userDropdown.classList.remove('show');
