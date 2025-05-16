@@ -9,6 +9,7 @@
     --color-primary-light: #1f2937;  /* Lighter dark gray */
     --color-primary-dark: #030712;   /* Darker gray, almost black */
     --color-secondary: #d4a373;      /* Warm gold accent */
+    --color-secondary-rgb: 212, 163, 115; /* RGB values for secondary color */
     --color-accent: #8B5A2B;         /* Coffee brown accent */
 
     /* Neutral Colors */
@@ -104,6 +105,12 @@ img {
     color: var(--color-white);
 }
 
+.logo-img {
+    height: 40px;
+    width: auto;
+    margin-right: 0.75rem;
+}
+
 .logo i {
     margin-right: 0.5rem;
     color: var(--color-secondary);
@@ -188,7 +195,7 @@ img {
     width: 200px;
     padding: 0.5rem 0;
     display: none;
-    z-index: 10;
+    z-index: 15;
 }
 
 .user-dropdown.show {
@@ -215,6 +222,7 @@ img {
 .menu-nav {
     background-color: var(--color-primary-light);
     border-bottom: 1px solid var(--color-primary-dark);
+
 }
 
 .menu-tabs {
@@ -394,7 +402,7 @@ img {
 }
 
 .menu-item-image {
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     width: 100%;
     aspect-ratio: 1;
@@ -402,13 +410,16 @@ img {
     border: 2px solid var(--color-white);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+    background-color: var(--color-primary);
 }
 
 .menu-item-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.5s ease;
+    padding: 1rem;
+    background-color: var(--color-primary);
 }
 
 .menu-item:hover .menu-item-image {
@@ -493,6 +504,7 @@ img {
     overflow: hidden;
     position: relative;
     flex-shrink: 0; /* Prevent image from shrinking */
+    background-color: var(--color-gray-800);
 }
 
 .product-image::after {
@@ -509,8 +521,16 @@ img {
 .product-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.5s ease;
+    padding: 0.5rem;
+}
+
+/* Style for generic category images used as product placeholders */
+.generic-product-image {
+    opacity: 0.7;
+    filter: grayscale(20%);
+    padding: 1rem !important;
 }
 
 .product-card:hover .product-image img {
@@ -523,9 +543,24 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--color-gray-100);
+    background-color: var(--color-gray-800);
     color: var(--color-gray-400);
     font-size: 1.5rem;
+}
+
+/* Category placeholder styles */
+.category-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-gray-800);
+    color: var(--color-white);
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 1rem;
 }
 
 .product-info {
@@ -683,11 +718,21 @@ img {
     color: var(--color-white);
     margin-bottom: 1rem;
     flex: 1 1 100%;
+    display: flex;
+    align-items: center;
+}
+
+.footer-logo-img {
+    height: 40px;
+    width: auto;
+    margin-right: 0.75rem;
+    filter: brightness(1.2);
 }
 
 .footer-logo i {
     color: var(--color-secondary);
     margin-right: 0.5rem;
+    font-size: 1.8rem;
 }
 
 .footer-links {

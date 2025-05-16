@@ -50,50 +50,48 @@ try {
 
 // Helper function to get category image
 function getCategoryImage($categoryName) {
-    $defaultImage = "category-default.jpg";
+    $defaultImage = "coffee.png"; // Default to coffee.png if no match
     $categoryName = strtolower($categoryName);
 
     switch ($categoryName) {
         case 'coffee':
-            return "hot-coffee.jpg";
+            return "coffee.png";
         case 'cake':
-            return "cake.jpg";
+        case 'cakes':
+            return "cake.png";
         case 'pastry':
-            return "pastry.jpg";
-        case 'drink':
-            return "cold-coffee.jpg";
-        case 'dessert':
-            return "dessert.jpg";
+        case 'pastries':
+            return "pastries.png";
         case 'beverage':
         case 'beverages':
-            return "cold-coffee.jpg";
+        case 'drink':
+        case 'drinks':
+            return "beverage.png";
+        // For other categories, we'll use the available images as fallbacks
+        case 'dessert':
+        case 'bakery':
+        case 'treats':
+            return "cake.png";
+        case 'sandwich':
         case 'sandwiches':
-            return "sandwich.jpg";
-        case 'pastries':
-            return "pastry.jpg";
-        case 'cakes':
-            return "cake.jpg";
+            return "sandwich.png";
+        case 'breakfast':
         case 'hot tea':
-            return "hot-tea.jpg";
         case 'cold tea':
-            return "cold-tea.jpg";
         case 'refreshers':
-            return "refreshers.jpg";
         case 'frappuccino':
         case 'blended beverage':
-            return "frappuccino.jpg";
         case 'iced energy':
-            return "iced-energy.jpg";
         case 'hot chocolate':
-            return "hot-chocolate.jpg";
         case 'bottled beverages':
-            return "bottled-beverages.jpg";
-        case 'breakfast':
-            return "breakfast.jpg";
-        case 'bakery':
-            return "bakery.jpg";
-        case 'treats':
-            return "treats.jpg";
+            // For any other drink-related category, use beverage.png
+            if (strpos($categoryName, 'tea') !== false ||
+                strpos($categoryName, 'drink') !== false ||
+                strpos($categoryName, 'beverage') !== false) {
+                return "beverage.png";
+            }
+            // For any other food-related category, use pastries.png
+            return "pastries.png";
         default:
             return $defaultImage;
     }
@@ -228,20 +226,21 @@ function getCategoryImage($categoryName) {
 
         /* Header styling */
         .site-header {
-            background-color: var(--color-primary);
+            background-color: #111827;
             position: relative;
-            z-index: 101; /* Higher than menu-nav */
+            z-index: 49; /* Lower than menu-nav */
+            padding: 0.75rem 0;
         }
 
         /* Make menu-nav sticky */
         .menu-nav {
             position: sticky;
             top: 0;
-            z-index: 100;
-            box-shadow: var(--shadow-md);
+            z-index: 50; /* Lower than dropdown menus but higher than regular content */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
-            background-color: var(--color-white);
-            border-bottom: 1px solid var(--color-gray-200);
+            background-color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         /* Add padding to body to prevent content jump */
@@ -271,39 +270,7 @@ function getCategoryImage($categoryName) {
             color: var(--color-secondary);
         }
 
-        /* Main navigation */
-        .main-nav ul {
-            display: flex;
-            gap: 2rem;
-            margin: 0;
-            padding: 0;
-        }
-
-        .main-nav a {
-            font-weight: 600;
-            font-size: 0.875rem;
-            letter-spacing: 0.05em;
-            padding: 0.5rem 0;
-            position: relative;
-            color: var(--color-gray-300);
-            transition: color 0.3s ease;
-        }
-
-        .main-nav a:hover,
-        .main-nav a.active {
-            color: var(--color-white);
-        }
-
-        .main-nav a.active::after,
-        .main-nav a:hover::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: var(--color-secondary);
-        }
+        /* Main navigation styles removed */
 
         /* Header actions */
         .header-actions {
@@ -312,10 +279,165 @@ function getCategoryImage($categoryName) {
             gap: 1.5rem;
         }
 
+        /* Cart styling */
+        .cart-menu {
+            position: relative;
+        }
+
         .cart-icon {
             position: relative;
             font-size: 1.25rem;
-            color: var(--color-white);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #f59e0b;
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 350px;
+            background-color: #1e293b;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 0;
+            z-index: 150; /* Higher than menu-nav and user-dropdown */
+            display: none;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .cart-dropdown.show {
+            display: block;
+        }
+
+        .cart-dropdown-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #334155;
+            background-color: #1e293b;
+        }
+
+        .cart-dropdown-header h6 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #f8fafc;
+        }
+
+        .cart-dropdown-items {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 0;
+            background-color: #1e293b;
+        }
+
+        .cart-dropdown-loading {
+            padding: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cart-dropdown-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cart-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            background-color: #334155;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+            color: #f8fafc;
+        }
+
+        .cart-item-price {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cart-item-quantity {
+            background-color: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #f8fafc;
+        }
+
+        .cart-dropdown-footer {
+            padding: 12px 15px;
+            border-top: 1px solid #334155;
+            background-color: #1e293b;
+        }
+
+        .cart-dropdown-link {
+            color: #f8fafc;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .cart-dropdown-link:hover {
+            color: #f59e0b;
+            text-decoration: underline;
+        }
+
+        .cart-empty {
+            padding: 30px 15px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .cart-empty i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #64748b;
+        }
+
+        .cart-empty p {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
         }
 
         .user-menu {
@@ -323,22 +445,25 @@ function getCategoryImage($categoryName) {
         }
 
         .user-icon {
+            color: #ffffff;
             font-size: 1.25rem;
-            cursor: pointer;
-            color: var(--color-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
         }
 
         .user-dropdown {
             position: absolute;
             top: 100%;
             right: 0;
-            background-color: var(--color-primary-light);
-            box-shadow: var(--shadow-md);
-            border-radius: var(--radius-md);
+            background-color: #1e293b;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
             width: 200px;
             padding: 0.5rem 0;
             display: none;
-            z-index: 10;
+            z-index: 100; /* Higher than menu-nav but lower than cart-dropdown */
         }
 
         .user-dropdown.show {
@@ -348,27 +473,33 @@ function getCategoryImage($categoryName) {
         .user-dropdown ul {
             padding: 0;
             margin: 0;
+            list-style: none;
         }
 
         .user-dropdown li a {
             display: block;
             padding: 0.75rem 1rem;
             transition: background-color 0.3s ease;
-            color: var(--color-gray-300);
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
-        .user-dropdown li a:hover {
-            background-color: var(--color-primary-dark);
-            color: var(--color-white);
+        .user-dropdown li a:hover,
+        .user-dropdown li a.active {
+            background-color: #334155;
+            color: #ffffff;
         }
 
-        /* Starbucks-style menu tabs */
+        /* Menu tabs styling */
         .menu-tabs {
             display: flex;
             padding: 0;
             margin: 0;
             max-width: 1200px;
             margin: 0 auto;
+            list-style: none;
         }
 
         .menu-tabs li {
@@ -377,22 +508,23 @@ function getCategoryImage($categoryName) {
 
         .menu-tabs a {
             font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--color-gray-700);
+            font-weight: 500;
+            color: #4b5563;
             padding: 1rem 1.5rem;
             display: block;
             position: relative;
             transition: color 0.3s ease;
+            text-decoration: none;
             text-transform: capitalize;
         }
 
         .menu-tabs a:hover {
-            color: var(--color-primary);
+            color: #111827;
         }
 
         .menu-tabs a.active {
-            color: var(--color-primary);
-            font-weight: 700;
+            color: #111827;
+            font-weight: 600;
         }
 
         .menu-tabs a.active::after {
@@ -401,14 +533,30 @@ function getCategoryImage($categoryName) {
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 4px;
-            background-color: var(--color-secondary);
-            border-radius: 4px 4px 0 0;
+            height: 3px;
+            background-color: #f59e0b;
+            border-radius: 2px 2px 0 0;
         }
 
         /* Add scroll class for menu-nav */
         .menu-nav.scrolled {
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Button styling */
+        .btn-primary {
+            background-color: #f59e0b;
+            border-color: #f59e0b;
+            padding: 0.5rem 1.25rem;
+            font-weight: 500;
+            border-radius: 8px;
+            color: #111827;
+        }
+
+        .btn-primary:hover {
+            background-color: #d97706;
+            border-color: #d97706;
+            color: #111827;
         }
 
         /* Container for menu content */
@@ -452,74 +600,16 @@ function getCategoryImage($categoryName) {
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="site-header">
-        <div class="container">
-            <div class="header-inner">
-                <div class="logo">
-                    <a href="../../index.php">
-                        <i class="bi bi-cup-hot"></i> Brew & Bake
-                    </a>
-                </div>
-                <nav class="main-nav">
-                    <ul>
-                        <li><a href="#" class="active">MENU</a></li>
-                        <li><a href="#about">ABOUT</a></li>
-                        <li><a href="#contact">CONTACT</a></li>
-                    </ul>
-                </nav>
-                <div class="header-actions">
-                    <?php if ($isLoggedIn): ?>
-                        <a href="<?= $userRole === 'client' ? 'cart.php' : '#' ?>" class="cart-icon">
-                            <i class="bi bi-cart"></i>
-                        </a>
-                        <div class="user-menu">
-                            <a href="#" class="user-icon">
-                                <i class="bi bi-person-circle"></i>
-                            </a>
-                            <div class="user-dropdown">
-                                <ul>
-                                    <?php if ($userRole === 'admin'): ?>
-                                        <li><a href="../../templates/admin/dashboard.php">Admin Dashboard</a></li>
-                                    <?php elseif ($userRole === 'staff'): ?>
-                                        <li><a href="../../templates/staff/staff.php">Staff Dashboard</a></li>
-                                    <?php else: ?>
-                                        <li><a href="profile.php">Account Settings</a></li>
-                                        <li><a href="orders.php">My Orders</a></li>
-                                    <?php endif; ?>
-                                    <li><a href="../includes/logout.php">Logout</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <a href="#" class="cart-icon" id="loginCartLink">
-                            <i class="bi bi-cart"></i>
-                        </a>
-                        <div class="user-menu">
-                            <a href="#" class="user-icon">
-                                <i class="bi bi-person-circle"></i>
-                            </a>
-                            <div class="user-dropdown">
-                                <ul>
-                                    <li><a href="#" class="login-link">Login</a></li>
-                                    <li><a href="#" class="register-link">Register</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Include Header -->
+    <?php include_once "../includes/header.php"; ?>
 
     <!-- Menu Navigation -->
     <div class="menu-nav">
         <div class="container">
             <ul class="menu-tabs">
-                <li><a href="#menu-section" class="active">Menu</a></li>
-                <li><a href="#featured">Featured</a></li>
-                <li><a href="#about">About Us</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="client.php" class="active">Menu</a></li>
+                <li><a href="orders.php">My Orders</a></li>
+                <li><a href="profile.php">Account Settings</a></li>
             </ul>
         </div>
     </div>
@@ -551,7 +641,7 @@ function getCategoryImage($categoryName) {
                 <ul class="category-nav">
                     <?php
                     // Define food categories
-                    $foodCategories = ['cake', 'cakes', 'pastry', 'pastries', 'dessert', 'sandwiches',
+                    $foodCategories = ['cake', 'cakes', 'pastry', 'pastries', 'dessert', 'sandwich', 'sandwiches',
                                       'breakfast', 'bakery', 'treats'];
 
                     foreach ($categories as $category):
@@ -626,7 +716,7 @@ function getCategoryImage($categoryName) {
                                         <span class="price">₱<?= number_format($product['price'], 2) ?></span>
                                     </div>
                                     <?php if ($isLoggedIn && $userRole === 'client'): ?>
-                                        <a href="cart.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
+                                        <a href="orders.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
                                             <i class="bi bi-cart-plus"></i> Order Now
                                         </a>
                                     <?php else: ?>
@@ -665,7 +755,7 @@ function getCategoryImage($categoryName) {
                                                 <span class="price">₱<?= number_format($product['price'], 2) ?></span>
                                             </div>
                                             <?php if ($isLoggedIn && $userRole === 'client'): ?>
-                                                <a href="cart.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
+                                                <a href="orders.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
                                                     <i class="bi bi-cart-plus"></i> Order Now
                                                 </a>
                                             <?php else: ?>
@@ -891,7 +981,7 @@ function getCategoryImage($categoryName) {
                             <label class="form-check-label remember-me" for="remember">Remember me</label>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 mb-4" style="background-color: var(--color-primary); border-color: var(--color-secondary);">
+                        <button type="submit" class="btn btn-primary w-100 mb-4" style="background-color: #f59e0b; border-color: #f59e0b; color: #111827;">
                             <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
                         </button>
 
@@ -1002,7 +1092,7 @@ function getCategoryImage($categoryName) {
                             </label>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 mb-4" style="background-color: var(--color-primary); border-color: var(--color-secondary);">
+                        <button type="submit" class="btn btn-primary w-100 mb-4" style="background-color: #f59e0b; border-color: #f59e0b; color: #111827;">
                             <i class="bi bi-person-plus me-2"></i> Create Account
                         </button>
 
@@ -1018,27 +1108,13 @@ function getCategoryImage($categoryName) {
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+    $root_path = '../../';
+    include_once "../../templates/includes/footer-scripts.php";
+    ?>
     <script>
-        // User dropdown toggle
         document.addEventListener('DOMContentLoaded', function() {
-            const userIcon = document.querySelector('.user-icon');
-            const userDropdown = document.querySelector('.user-dropdown');
             const menuNav = document.querySelector('.menu-nav');
-
-            // User dropdown toggle
-            if (userIcon) {
-                userIcon.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    userDropdown.classList.toggle('show');
-                });
-
-                document.addEventListener('click', function(e) {
-                    if (!e.target.closest('.user-menu')) {
-                        userDropdown.classList.remove('show');
-                    }
-                });
-            }
 
             // Scroll effect for sticky menu navigation
             window.addEventListener('scroll', function() {
@@ -1112,6 +1188,11 @@ function getCategoryImage($categoryName) {
                     }
                 });
             });
+
+            // Fetch cart items using AJAX
+            if (typeof loadCartItems === 'function') {
+                loadCartItems();
+            }
 
             // Add scroll reveal effect for product cards
             const animateElements = document.querySelectorAll('.product-card, .menu-item');

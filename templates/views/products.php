@@ -130,6 +130,66 @@ try {
                                     <img src="../../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
                                          alt="<?= htmlspecialchars($product['name']) ?>"
                                          class="product-image">
+                                <?php else: ?>
+                                    <?php
+                                    // Get category name for the product
+                                    $categoryName = strtolower($product['category'] ?? '');
+
+                                    // Use the getCategoryImage function for consistency
+                                    function getCategoryImage($categoryName) {
+                                        $defaultImage = "coffee.png"; // Default to coffee.png if no match
+                                        $categoryName = strtolower($categoryName);
+
+                                        switch ($categoryName) {
+                                            case 'coffee':
+                                                return "coffee.png";
+                                            case 'cake':
+                                            case 'cakes':
+                                                return "cake.png";
+                                            case 'pastry':
+                                            case 'pastries':
+                                                return "pastries.png";
+                                            case 'beverage':
+                                            case 'beverages':
+                                            case 'drink':
+                                            case 'drinks':
+                                                return "beverage.png";
+                                            // For other categories, we'll use the available images as fallbacks
+                                            case 'dessert':
+                                            case 'bakery':
+                                            case 'treats':
+                                                return "cake.png";
+                                            case 'sandwiches':
+                                            case 'breakfast':
+                                            case 'hot tea':
+                                            case 'cold tea':
+                                            case 'refreshers':
+                                            case 'frappuccino':
+                                            case 'blended beverage':
+                                            case 'iced energy':
+                                            case 'hot chocolate':
+                                            case 'bottled beverages':
+                                                // For any other drink-related category, use beverage.png
+                                                if (strpos($categoryName, 'tea') !== false ||
+                                                    strpos($categoryName, 'drink') !== false ||
+                                                    strpos($categoryName, 'beverage') !== false) {
+                                                    return "beverage.png";
+                                                }
+                                                // For any other food-related category, use pastries.png
+                                                return "pastries.png";
+                                            default:
+                                                return $defaultImage;
+                                        }
+                                    }
+
+                                    $categoryImage = getCategoryImage($categoryName);
+
+                                    if (!empty($categoryImage)):
+                                    ?>
+                                        <img src="../../assets/images/categories/<?= $categoryImage ?>"
+                                             alt="<?= htmlspecialchars($product['name']) ?>"
+                                             class="product-image generic-product-image">
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 <div class="product-info">
                                     <h3><?= htmlspecialchars($product['name']) ?></h3>

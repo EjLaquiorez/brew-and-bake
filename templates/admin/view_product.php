@@ -36,14 +36,14 @@ $productId = $_GET['id'];
 // Fetch product details with error handling
 try {
     $stmt = $conn->prepare("
-        SELECT p.*, c.name as category_name 
+        SELECT p.*, c.name as category_name
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.id = ?
     ");
     $stmt->execute([$productId]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$product) {
         $_SESSION['error'] = "Product not found.";
         header("Location: products.php");
@@ -234,10 +234,37 @@ $createdDate = !empty($product['created_at']) ? date('F j, Y, g:i a', strtotime(
                                          class="product-detail-image"
                                          alt="<?= htmlspecialchars($product['name']) ?>">
                                 <?php else: ?>
-                                    <div class="product-no-image">
-                                        <i class="bi bi-image"></i>
-                                        <p>No Image Available</p>
-                                    </div>
+                                    <?php
+                                    // Get category name for the product
+                                    $categoryName = strtolower($product['category_name'] ?? '');
+
+                                    // Determine which category image to use
+                                    $categoryImage = '';
+                                    if ($categoryName == 'coffee') {
+                                        $categoryImage = 'coffee.png';
+                                    } elseif ($categoryName == 'cake' || $categoryName == 'cakes') {
+                                        $categoryImage = 'cake.png';
+                                    } elseif ($categoryName == 'pastry' || $categoryName == 'pastries') {
+                                        $categoryImage = 'pastries.png';
+                                    } elseif ($categoryName == 'beverage' || $categoryName == 'beverages') {
+                                        $categoryImage = 'beverage.png';
+                                    }
+
+                                    if (!empty($categoryImage)):
+                                    ?>
+                                        <img src="../../assets/images/categories/<?= $categoryImage ?>"
+                                             class="product-detail-image generic-product-image"
+                                             alt="<?= htmlspecialchars($product['name']) ?>">
+                                        <div class="generic-image-notice">
+                                            <i class="bi bi-info-circle"></i>
+                                            <p>Generic category image shown</p>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="product-no-image">
+                                            <i class="bi bi-image"></i>
+                                            <p>No Image Available</p>
+                                        </div>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -248,7 +275,7 @@ $createdDate = !empty($product['created_at']) ? date('F j, Y, g:i a', strtotime(
                     <div class="card h-100">
                         <div class="card-body">
                             <h4 class="product-title"><?= htmlspecialchars($product['name']) ?></h4>
-                            
+
                             <div class="product-meta mb-4">
                                 <span class="product-id">ID: <?= htmlspecialchars($product['id']) ?></span>
                                 <span class="product-category">
@@ -260,7 +287,7 @@ $createdDate = !empty($product['created_at']) ? date('F j, Y, g:i a', strtotime(
                                     <?= ucfirst($product['status']) ?>
                                 </span>
                             </div>
-                            
+
                             <div class="product-price-stock mb-4">
                                 <div class="product-price">
                                     <h5>Price</h5>
@@ -276,12 +303,12 @@ $createdDate = !empty($product['created_at']) ? date('F j, Y, g:i a', strtotime(
                                     </p>
                                 </div>
                             </div>
-                            
+
                             <div class="product-description mb-4">
                                 <h5>Description</h5>
                                 <p><?= nl2br(htmlspecialchars($product['description'])) ?></p>
                             </div>
-                            
+
                             <div class="product-metadata">
                                 <h5>Additional Information</h5>
                                 <div class="metadata-item">

@@ -91,15 +91,9 @@ $availableRewards = [
                         <i class="bi bi-cup-hot"></i> Brew & Bake
                     </a>
                 </div>
-                <nav class="main-nav">
-                    <ul>
-                        <li><a href="menu.php">MENU</a></li>
-                        <li><a href="rewards.php" class="active">REWARDS</a></li>
-                        <li><a href="gift-cards.php">GIFT CARDS</a></li>
-                    </ul>
-                </nav>
+                <!-- Main navigation removed -->
                 <div class="header-actions">
-                    <a href="cart.php" class="cart-icon">
+                    <a href="orders.php" class="cart-icon">
                         <i class="bi bi-cart"></i>
                         <?php if (!empty($_SESSION['cart'])): ?>
                             <span class="cart-count"><?= count($_SESSION['cart']) ?></span>
@@ -164,7 +158,7 @@ $availableRewards = [
                             <div class="progress-bar" role="progressbar" style="width: <?= min(100, ($rewardsPoints / $nextLevelPoints) * 100) ?>%"></div>
                         </div>
                         <p class="text-center"><?= $rewardsPoints ?> / <?= $nextLevelPoints ?> points to Platinum Level</p>
-                        
+
                         <div class="rewards-benefits mt-4">
                             <h4>Your Benefits</h4>
                             <ul class="benefits-list">
@@ -282,12 +276,12 @@ $availableRewards = [
         document.addEventListener('DOMContentLoaded', function() {
             const userIcon = document.querySelector('.user-icon');
             const userDropdown = document.querySelector('.user-dropdown');
-            
+
             userIcon.addEventListener('click', function(e) {
                 e.preventDefault();
                 userDropdown.classList.toggle('show');
             });
-            
+
             document.addEventListener('click', function(e) {
                 if (!e.target.closest('.user-menu')) {
                     userDropdown.classList.remove('show');

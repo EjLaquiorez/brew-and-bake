@@ -17,86 +17,26 @@ try {
     $categories = [];
 }
 
-// Get products by category
-$productsByCategory = [];
-foreach ($categories as $category) {
-    try {
-        $stmt = $conn->prepare("
-            SELECT * FROM products
-            WHERE category_id = ? AND status = 'active'
-            ORDER BY name ASC
-        ");
-        $stmt->execute([$category['id']]);
-        $productsByCategory[$category['id']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        $productsByCategory[$category['id']] = [];
-    }
-}
-
-// Get featured products
-try {
-    $stmt = $conn->query("
-        SELECT p.*, c.name as category_name
-        FROM products p
-        LEFT JOIN categories c ON p.category_id = c.id
-        WHERE p.status = 'active'
-        ORDER BY RAND()
-        LIMIT 6
-    ");
-    $featuredProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $featuredProducts = [];
-}
-
 // Helper function to get category image
 function getCategoryImage($categoryName) {
     $defaultImage = "category-default.jpg";
     $categoryName = strtolower($categoryName);
 
-    switch ($categoryName) {
-        case 'coffee':
-            return "hot-coffee.jpg";
-        case 'cake':
-            return "cake.jpg";
-        case 'pastry':
-            return "pastry.jpg";
-        case 'drink':
-            return "cold-coffee.jpg";
-        case 'dessert':
-            return "dessert.jpg";
-        case 'beverage':
-        case 'beverages':
-            return "cold-coffee.jpg";
-        case 'sandwiches':
-            return "sandwich.jpg";
-        case 'pastries':
-            return "pastry.jpg";
-        case 'cakes':
-            return "cake.jpg";
-        case 'hot tea':
-            return "hot-tea.jpg";
-        case 'cold tea':
-            return "cold-tea.jpg";
-        case 'refreshers':
-            return "refreshers.jpg";
-        case 'frappuccino':
-        case 'blended beverage':
-            return "frappuccino.jpg";
-        case 'iced energy':
-            return "iced-energy.jpg";
-        case 'hot chocolate':
-            return "hot-chocolate.jpg";
-        case 'bottled beverages':
-            return "bottled-beverages.jpg";
-        case 'breakfast':
-            return "breakfast.jpg";
-        case 'bakery':
-            return "bakery.jpg";
-        case 'treats':
-            return "treats.jpg";
-        default:
-            return $defaultImage;
+    // Check for available PNG images in categories folder
+    if ($categoryName == 'coffee') {
+        return "coffee.png";
+    } elseif ($categoryName == 'cake' || $categoryName == 'cakes') {
+        return "cake.png";
+    } elseif ($categoryName == 'pastry' || $categoryName == 'pastries') {
+        return "pastries.png";
+    } elseif ($categoryName == 'beverage' || $categoryName == 'beverages') {
+        return "beverage.png";
+    } elseif ($categoryName == 'sandwich' || $categoryName == 'sandwiches') {
+        return "sandwich.png";
     }
+
+    // Return default image if no match
+    return $defaultImage;
 }
 ?>
 
@@ -105,52 +45,507 @@ function getCategoryImage($categoryName) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>Brew & Bake - Premium Coffee House</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/menu.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="assets/css/menu.css">
+    <link rel="preload" href="assets/images/backgrounds/cafe-interior.jpg" as="image">
     <style>
-        /* Login Modal Styling */
-        .modal-content {
-            border: none;
-            border-radius: 12px;
+        /* Simple Landing Page Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--color-gray-700);
+            overflow-x: hidden;
+        }
+
+        .hero-section {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('assets/images/backgrounds/pic-2.jfif');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            padding: 2rem;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .btn-primary-custom {
+            background-color: var(--color-secondary);
+            border: 2px solid var(--color-secondary);
+            color: var(--color-primary-dark);
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: transparent;
+            color: var(--color-secondary);
+        }
+
+        .btn-outline-light {
+            border: 2px solid white;
+            color: white;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-outline-light:hover {
+            background-color: white;
+            color: var(--color-primary-dark);
+        }
+
+        .category-section {
+            padding: 5rem 0;
+            background-color: var(--color-gray-50);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--color-secondary);
+        }
+
+        /* Menu Grid Layout */
+        .menu-grid-container {
+            margin-bottom: 2rem;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            grid-auto-flow: dense;
+        }
+
+        .menu-grid .category-item {
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .menu-grid .category-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-grid .category-item:nth-child(5n+1) {
+            grid-column: span 1;
+        }
+
+        .menu-grid .category-item:nth-child(5n+3) {
+            grid-row: span 1;
+        }
+
+        .category-card {
+            background-color: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-card:hover .category-img img {
+            transform: scale(1.05);
+        }
+
+        .category-img {
+            height: 200px;
+            background: linear-gradient(145deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .category-img::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .category-card:hover .category-img::after {
+            opacity: 1;
+        }
+
+        .category-img img {
+            max-height: 80%;
+            max-width: 80%;
+            object-fit: contain;
+            transition: transform 0.5s ease;
+            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+        }
+
+        .category-info {
+            padding: 1.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: space-between;
+            background: white;
+            position: relative;
+        }
+
+        .category-info::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 4px;
+            transform-origin: center;
+            transform: translateX(-50%) rotate(45deg);
+            z-index: 1;
+        }
+
+        .category-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--color-primary);
+            font-size: 1.25rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .category-description {
+            color: var(--color-gray-600);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .category-meta {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .category-meta .meta-item {
+            display: flex;
+            align-items: center;
+            margin: 0 0.5rem;
+            color: var(--color-gray-600);
+            font-size: 0.85rem;
+        }
+
+        .category-meta .meta-item i {
+            margin-right: 0.25rem;
+            color: var(--color-secondary);
+        }
+
+        .category-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--color-secondary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .footer {
+            background-color: var(--color-primary-dark);
+            color: var(--color-gray-300);
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .footer-logo i {
+            color: var(--color-secondary);
+            margin-right: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .social-links {
+            margin: 1.5rem 0;
+        }
+
+        .social-links a {
+            color: var(--color-gray-300);
+            font-size: 1.5rem;
+            margin: 0 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: var(--color-secondary);
+        }
+
+        .copyright {
+            font-size: 0.9rem;
+            margin-top: 2rem;
+        }
+
+        /* Header Styles */
+        .site-header {
+            background-color: var(--color-primary);
+            padding: 1rem 0;
+            position: absolute;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo a {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .logo i {
+            color: var(--color-secondary);
+            margin-right: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .header-actions a {
+            color: white;
+            font-size: 1.2rem;
+            margin-left: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .header-actions a:hover {
+            color: var(--color-secondary);
+        }
+
+        /* About Section Styles */
+        .about-section {
+            background-color: var(--color-white);
+        }
+
+        .about-image img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            background-color: var(--color-gray-200);
+        }
+
+        .about-content {
+            padding: 2rem;
+        }
+
+        .about-content .section-title::after {
+            left: 0;
+            transform: none;
+        }
+
+        /* Contact Section Styles */
+        .contact-section {
+            background-color: var(--color-gray-50);
+        }
+
+        .contact-info, .contact-form {
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .contact-info:hover, .contact-form:hover {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
-        .modal-header {
-            padding: 1rem 1rem 0;
-        }
-
-        .brand-logo {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .input-group-text {
-            background-color: transparent;
-            border-right: none;
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .form-control {
-            border-left: none;
+            border: 1px solid var(--color-gray-200);
+            padding: 0.75rem;
+            border-radius: 5px;
         }
 
         .form-control:focus {
+            border-color: var(--color-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(212, 163, 115, 0.25);
+        }
+
+        .form-label {
+            color: var(--color-gray-700);
+            font-weight: 500;
+        }
+
+        /* Improved Modal Styling */
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background-color: transparent;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .brand-logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .brand-logo-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-logo-circle::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0.7;
+        }
+
+        .brand-logo-circle i {
+            font-size: 2.5rem;
+            color: var(--color-secondary);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+            position: relative;
+            z-index: 2;
+        }
+
+        .input-group-lg .input-group-text {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+            border: 1px solid var(--color-gray-200);
+            border-right: none;
+            color: var(--color-gray-600);
+        }
+
+        .input-group-lg .form-control {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+            border: 1px solid var(--color-gray-200);
+            border-left: none;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+        }
+
+        .input-group-lg .form-control:focus {
             box-shadow: none;
             border-color: var(--color-secondary);
         }
 
-        .input-group:focus-within .input-group-text {
+        .input-group-lg .form-control:focus + .input-group-text {
             border-color: var(--color-secondary);
         }
 
-        .remember-me {
-            color: var(--color-gray-600);
+        .input-group-lg .toggle-password {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+            border: 1px solid var(--color-gray-200);
+            border-left: none;
+            background-color: transparent;
+        }
+
+        .input-group-lg .toggle-password:hover {
+            background-color: var(--color-gray-100);
         }
 
         .form-check-input:checked {
@@ -158,681 +553,338 @@ function getCategoryImage($categoryName) {
             border-color: var(--color-secondary);
         }
 
-        /* Custom Alert Styling - Minimalist */
-        .custom-alert {
-            border-radius: 4px;
-            padding: 0.75rem 1rem;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            letter-spacing: 0.01em;
-            animation: fadeIn 0.2s ease-out;
-            border: none;
-            text-align: center;
-        }
-
-        .custom-alert.alert-success {
-            background-color: #f8f9fa;
+        .forgot-password {
             color: var(--color-secondary);
-            border-bottom: 1px solid var(--color-secondary);
-        }
-
-        .custom-alert.alert-danger {
-            background-color: #f8f9fa;
-            color: #dc3545;
-            border-bottom: 1px solid #dc3545;
-        }
-
-        .custom-alert.alert-warning {
-            background-color: #f8f9fa;
-            color: #ffc107;
-            border-bottom: 1px solid #ffc107;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Password strength indicator */
-        .password-strength {
-            margin-top: 0.5rem;
-        }
-
-        .password-strength .progress {
-            height: 4px;
-            margin-bottom: 0.25rem;
-            background-color: #f0f0f0;
-        }
-
-        .password-strength .form-text {
-            font-size: 0.75rem;
-            color: #6c757d;
-        }
-
-        /* Form validation */
-        .is-valid {
-            border-color: #28a745 !important;
-        }
-
-        .is-invalid {
-            border-color: #dc3545 !important;
-        }
-
-        .text-success {
-            color: #28a745 !important;
-        }
-
-        .text-danger {
-            color: #dc3545 !important;
-        }
-
-        /* Header styling */
-        .site-header {
-            background-color: var(--color-primary);
-            position: relative;
-            z-index: 101; /* Higher than menu-nav */
-        }
-
-        /* Make menu-nav sticky */
-        .menu-nav {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: var(--shadow-md);
             transition: all 0.3s ease;
-            background-color: var(--color-white);
-            border-bottom: 1px solid var(--color-gray-200);
         }
 
-        /* Add padding to body to prevent content jump */
-        body {
-            padding-top: 0;
-        }
-
-        /* Header inner layout */
-        .header-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem 0;
-        }
-
-        /* Logo styling */
-        .logo a {
-            display: flex;
-            align-items: center;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--color-white);
-        }
-
-        .logo i {
-            margin-right: 0.5rem;
-            color: var(--color-secondary);
-        }
-
-        /* Main navigation */
-        .main-nav ul {
-            display: flex;
-            gap: 2rem;
-            margin: 0;
-            padding: 0;
-        }
-
-        .main-nav a {
-            font-weight: 600;
-            font-size: 0.875rem;
-            letter-spacing: 0.05em;
-            padding: 0.5rem 0;
-            position: relative;
-            color: var(--color-gray-300);
-            transition: color 0.3s ease;
-        }
-
-        .main-nav a:hover,
-        .main-nav a.active {
-            color: var(--color-white);
-        }
-
-        .main-nav a.active::after,
-        .main-nav a:hover::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: var(--color-secondary);
-        }
-
-        /* Header actions */
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .cart-icon {
-            position: relative;
-            font-size: 1.25rem;
-            color: var(--color-white);
-        }
-
-        .user-menu {
-            position: relative;
-        }
-
-        .user-icon {
-            font-size: 1.25rem;
-            cursor: pointer;
-            color: var(--color-white);
-        }
-
-        .user-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background-color: var(--color-primary-light);
-            box-shadow: var(--shadow-md);
-            border-radius: var(--radius-md);
-            width: 200px;
-            padding: 0.5rem 0;
-            display: none;
-            z-index: 10;
-        }
-
-        .user-dropdown.show {
-            display: block;
-        }
-
-        .user-dropdown ul {
-            padding: 0;
-            margin: 0;
-        }
-
-        .user-dropdown li a {
-            display: block;
-            padding: 0.75rem 1rem;
-            transition: background-color 0.3s ease;
-            color: var(--color-gray-300);
-        }
-
-        .user-dropdown li a:hover {
-            background-color: var(--color-primary-dark);
-            color: var(--color-white);
-        }
-
-        /* Starbucks-style menu tabs */
-        .menu-tabs {
-            display: flex;
-            padding: 0;
-            margin: 0;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .menu-tabs li {
-            margin: 0;
-        }
-
-        .menu-tabs a {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--color-gray-700);
-            padding: 1rem 1.5rem;
-            display: block;
-            position: relative;
-            transition: color 0.3s ease;
-            text-transform: capitalize;
-        }
-
-        .menu-tabs a:hover {
+        .forgot-password:hover {
             color: var(--color-primary);
+            text-decoration: underline !important;
         }
 
-        .menu-tabs a.active {
-            color: var(--color-primary);
-            font-weight: 700;
+        /* Improved header login icon */
+        .header-actions .login-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
         }
 
-        .menu-tabs a.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
+        .header-actions .login-icon:hover {
             background-color: var(--color-secondary);
-            border-radius: 4px 4px 0 0;
+            transform: translateY(-3px);
         }
 
-        /* Add scroll class for menu-nav */
-        .menu-nav.scrolled {
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Container for menu content */
-        .menu-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        @media (max-width: 992px) {
-            .header-inner {
-                flex-wrap: wrap;
-                gap: 1rem;
-            }
-
-            .logo {
-                flex: 1;
-            }
-
-            .main-nav {
-                order: 3;
-                width: 100%;
-                margin-top: 0.5rem;
-            }
-
-            .main-nav ul {
-                justify-content: space-between;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .menu-tabs {
-                justify-content: space-between;
-            }
-
-            .menu-tabs a {
-                padding: 0.75rem 0.75rem;
-                font-size: 0.8rem;
-            }
+        .header-actions .login-icon i {
+            font-size: 1.2rem;
+            color: white;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Simple Header -->
     <header class="site-header">
         <div class="container">
             <div class="header-inner">
                 <div class="logo">
                     <a href="index.php">
-                        <i class="bi bi-cup-hot"></i> Brew & Bake
+                        <i class="bi bi-cup-hot"></i>
+                        <span>Brew & Bake</span>
                     </a>
                 </div>
-                <nav class="main-nav">
-                    <ul>
-                        <li><a href="#" class="active">MENU</a></li>
-                        <li><a href="#about">ABOUT</a></li>
-                        <li><a href="#contact">CONTACT</a></li>
-                    </ul>
-                </nav>
                 <div class="header-actions">
                     <?php if ($isLoggedIn): ?>
-                        <a href="<?= $userRole === 'client' ? 'templates/client/cart.php' : '#' ?>" class="cart-icon">
+                        <a href="<?= $userRole === 'client' ? 'templates/client/orders.php' : '#' ?>">
                             <i class="bi bi-cart"></i>
                         </a>
-                        <div class="user-menu">
-                            <a href="#" class="user-icon">
-                                <i class="bi bi-person-circle"></i>
-                            </a>
-                            <div class="user-dropdown">
-                                <ul>
-                                    <?php if ($userRole === 'admin'): ?>
-                                        <li><a href="templates/admin/dashboard.php">Admin Dashboard</a></li>
-                                    <?php elseif ($userRole === 'staff'): ?>
-                                        <li><a href="templates/staff/staff.php">Staff Dashboard</a></li>
-                                    <?php else: ?>
-                                        <li><a href="templates/client/client.php">My Account</a></li>
-                                        <li><a href="templates/client/orders.php">My Orders</a></li>
-                                    <?php endif; ?>
-                                    <li><a href="templates/includes/logout.php">Logout</a></li>
-                                </ul>
-                            </div>
-                        </div>
+                        <a href="<?= $userRole === 'admin' ? 'templates/admin/dashboard.php' :
+                                  ($userRole === 'staff' ? 'templates/staff/staff.php' :
+                                  'templates/client/client.php') ?>">
+                            <i class="bi bi-person-circle"></i>
+                        </a>
                     <?php else: ?>
-                        <a href="#" class="cart-icon" id="loginCartLink">
-                            <i class="bi bi-cart"></i>
+                        <a href="#" class="login-icon" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="bi bi-person"></i>
                         </a>
-                        <div class="user-menu">
-                            <a href="#" class="user-icon">
-                                <i class="bi bi-person-circle"></i>
-                            </a>
-                            <div class="user-dropdown">
-                                <ul>
-                                    <li><a href="#" class="login-link">Login</a></li>
-                                    <li><a href="#" class="register-link">Register</a></li>
-                                </ul>
-                            </div>
-                        </div>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Menu Navigation -->
-    <div class="menu-nav">
+    <!-- Hero Section -->
+    <section class="hero-section">
         <div class="container">
-            <ul class="menu-tabs">
-                <li><a href="#menu-section" class="active">Menu</a></li>
-                <li><a href="#featured">Featured</a></li>
-                <li><a href="#about">About Us</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="container">
-        <div class="menu-container">
-            <!-- Sidebar -->
-            <aside class="menu-sidebar">
-                <h2>Drinks</h2>
-                <ul class="category-nav">
-                    <?php
-                    // Define drink categories
-                    $drinkCategories = ['coffee', 'drink', 'beverage', 'beverages', 'hot tea', 'cold tea', 'refreshers',
-                                       'frappuccino', 'blended beverage', 'iced energy', 'hot chocolate',
-                                       'bottled beverages'];
-
-                    foreach ($categories as $category):
-                        if (in_array(strtolower($category['name']), $drinkCategories)):
-                    ?>
-                        <li><a href="#category-<?= $category['id'] ?>"><?= htmlspecialchars(ucfirst($category['name'])) ?></a></li>
-                    <?php
-                        endif;
-                    endforeach;
-                    ?>
-                </ul>
-
-                <h2>Food</h2>
-                <ul class="category-nav">
-                    <?php
-                    // Define food categories
-                    $foodCategories = ['cake', 'cakes', 'pastry', 'pastries', 'dessert', 'sandwiches',
-                                      'breakfast', 'bakery', 'treats'];
-
-                    foreach ($categories as $category):
-                        if (in_array(strtolower($category['name']), $foodCategories)):
-                    ?>
-                        <li><a href="#category-<?= $category['id'] ?>"><?= htmlspecialchars(ucfirst($category['name'])) ?></a></li>
-                    <?php
-                        endif;
-                    endforeach;
-                    ?>
-                </ul>
-            </aside>
-
-            <!-- Menu Content -->
-            <div class="menu-content">
-                <h1 class="menu-title">Our Menu</h1>
-
-                <!-- Drinks Section -->
-                <section id="menu-section" class="menu-section">
-                    <h2 class="section-title">Drinks</h2>
-                    <div class="menu-grid">
-                        <?php foreach ($categories as $category): ?>
-                            <?php if (in_array(strtolower($category['name']), $drinkCategories)): ?>
-                                <a href="#category-<?= $category['id'] ?>" class="menu-item">
-                                    <div class="menu-item-image">
-                                        <img src="assets/images/categories/<?= getCategoryImage($category['name']) ?>" alt="<?= htmlspecialchars(ucfirst($category['name'])) ?>">
-                                    </div>
-                                    <h3 class="menu-item-title"><?= htmlspecialchars(ucfirst($category['name'])) ?></h3>
-                                </a>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
-
-                <!-- Food Section -->
-                <section class="menu-section">
-                    <h2 class="section-title">Food</h2>
-                    <div class="menu-grid">
-                        <?php foreach ($categories as $category): ?>
-                            <?php if (in_array(strtolower($category['name']), $foodCategories)): ?>
-                                <a href="#category-<?= $category['id'] ?>" class="menu-item">
-                                    <div class="menu-item-image">
-                                        <img src="assets/images/categories/<?= getCategoryImage($category['name']) ?>" alt="<?= htmlspecialchars(ucfirst($category['name'])) ?>">
-                                    </div>
-                                    <h3 class="menu-item-title"><?= htmlspecialchars(ucfirst($category['name'])) ?></h3>
-                                </a>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
-
-                <!-- Featured Products -->
-                <section id="featured" class="menu-section">
-                    <h2 class="section-title">Featured Products</h2>
-                    <div class="product-grid">
-                        <?php foreach ($featuredProducts as $product): ?>
-                            <div class="product-card">
-                                <div class="product-image">
-                                    <?php if (!empty($product['image'])): ?>
-                                        <img src="assets/images/products/<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>">
-                                    <?php else: ?>
-                                        <div class="no-image">
-                                            <i class="bi bi-cup-hot"></i>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="product-info">
-                                    <h3 class="product-title"><?= htmlspecialchars($product['name']) ?></h3>
-                                    <p class="text-muted"><?= htmlspecialchars(substr($product['description'] ?? '', 0, 60)) . (isset($product['description']) && strlen($product['description']) > 60 ? '...' : '') ?></p>
-                                    <div class="product-meta">
-                                        <span class="category"><?= htmlspecialchars(ucfirst($product['category_name'] ?? 'Uncategorized')) ?></span>
-                                        <span class="price">₱<?= number_format($product['price'], 2) ?></span>
-                                    </div>
-                                    <?php if ($isLoggedIn && $userRole === 'client'): ?>
-                                        <a href="templates/client/cart.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
-                                            <i class="bi bi-cart-plus"></i> Order Now
-                                        </a>
-                                    <?php else: ?>
-                                        <a href="#" class="btn btn-primary w-100 login-required">
-                                            <i class="bi bi-cart-plus"></i> Order Now
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
-
-                <!-- Category Products -->
-                <?php foreach ($categories as $category): ?>
-                    <?php if (!empty($productsByCategory[$category['id']])): ?>
-                        <section id="category-<?= $category['id'] ?>" class="menu-section">
-                            <h2 class="section-title"><?= htmlspecialchars(ucfirst($category['name'])) ?></h2>
-                            <div class="product-grid">
-                                <?php foreach ($productsByCategory[$category['id']] as $product): ?>
-                                    <div class="product-card">
-                                        <div class="product-image">
-                                            <?php if (!empty($product['image'])): ?>
-                                                <img src="assets/images/products/<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>">
-                                            <?php else: ?>
-                                                <div class="no-image">
-                                                    <i class="bi bi-cup-hot"></i>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="product-info">
-                                            <h3 class="product-title"><?= htmlspecialchars($product['name']) ?></h3>
-                                            <p class="text-muted"><?= htmlspecialchars(substr($product['description'] ?? '', 0, 60)) . (isset($product['description']) && strlen($product['description']) > 60 ? '...' : '') ?></p>
-                                            <div class="product-meta">
-                                                <span class="category"><?= htmlspecialchars(ucfirst($category['name'])) ?></span>
-                                                <span class="price">₱<?= number_format($product['price'], 2) ?></span>
-                                            </div>
-                                            <?php if ($isLoggedIn && $userRole === 'client'): ?>
-                                                <a href="templates/client/cart.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
-                                                    <i class="bi bi-cart-plus"></i> Order Now
-                                                </a>
-                                            <?php else: ?>
-                                                <a href="#" class="btn btn-primary w-100 login-required">
-                                                    <i class="bi bi-cart-plus"></i> Order Now
-                                                </a>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </section>
-                    <?php endif; ?>
-                <?php endforeach; ?>
+            <div class="hero-content">
+                <h1 class="hero-title">PREMIUM COFFEE & FRESH BAKERY</h1>
+                <p class="hero-subtitle">Experience the perfect blend of premium coffee and freshly baked goods, crafted with passion and the finest ingredients.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="templates/client/client.php" class="btn btn-primary-custom">EXPLORE MENU</a>
+                    <a href="#categories" class="btn btn-outline-light">DISCOVER MORE</a>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- About Section -->
-    <section id="about" class="about py-5">
+    <!-- Categories Section -->
+    <section id="categories" class="category-section">
+        <div class="container">
+            <h2 class="section-title">OUR MENU</h2>
+
+            <div class="menu-grid-container">
+                <div class="menu-grid">
+                    <?php
+                    // Define category descriptions and icons
+                    $categoryDetails = [
+                        'coffee' => [
+                            'description' => 'Premium coffee beans, expertly brewed',
+                            'icon' => 'bi-cup-hot',
+                            'items' => '8+ varieties'
+                        ],
+                        'cake' => [
+                            'description' => 'Delicious cakes for all occasions',
+                            'icon' => 'bi-cake2',
+                            'items' => '6+ varieties'
+                        ],
+                        'pastry' => [
+                            'description' => 'Freshly baked pastries daily',
+                            'icon' => 'bi-egg-fried',
+                            'items' => '10+ varieties'
+                        ],
+                        'beverage' => [
+                            'description' => 'Refreshing cold and hot drinks',
+                            'icon' => 'bi-cup-straw',
+                            'items' => '12+ varieties'
+                        ],
+                        'dessert' => [
+                            'description' => 'Sweet treats to satisfy your cravings',
+                            'icon' => 'bi-pie-chart',
+                            'items' => '8+ varieties'
+                        ],
+                        'sandwiches' => [
+                            'description' => 'Freshly made gourmet sandwiches',
+                            'icon' => 'bi-layers',
+                            'items' => '6+ varieties'
+                        ]
+                    ];
+
+                    // Default values for categories without specific details
+                    $defaultDetails = [
+                        'description' => 'Explore our delicious selection',
+                        'icon' => 'bi-basket',
+                        'items' => 'Various options'
+                    ];
+
+                    // Get badges for categories
+                    $badges = [
+                        'coffee' => 'Popular',
+                        'cake' => 'Bestseller',
+                        'pastry' => 'Fresh Daily',
+                        'sandwiches' => 'New'
+                    ];
+
+                    foreach ($categories as $index => $category):
+                        $categoryName = strtolower($category['name']);
+                        $details = $categoryDetails[$categoryName] ?? $defaultDetails;
+                        $hasBadge = isset($badges[$categoryName]);
+                    ?>
+                    <div class="category-item">
+                        <a href="templates/client/client.php#<?= $categoryName ?>" class="text-decoration-none">
+                            <div class="category-card">
+                                <?php if ($hasBadge): ?>
+                                <span class="category-badge"><?= $badges[$categoryName] ?></span>
+                                <?php endif; ?>
+                                <div class="category-img">
+                                    <img src="assets/images/categories/<?= getCategoryImage($category['name']) ?>" alt="<?= htmlspecialchars(ucfirst($category['name'])) ?>">
+                                </div>
+                                <div class="category-info">
+                                    <div>
+                                        <h3 class="category-title"><?= htmlspecialchars(ucfirst($category['name'])) ?></h3>
+                                        <p class="category-description"><?= $details['description'] ?></p>
+                                    </div>
+                                    <div class="category-meta">
+                                        <div class="meta-item">
+                                            <i class="bi <?= $details['icon'] ?>"></i>
+                                            <span><?= $details['items'] ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="templates/client/client.php" class="btn btn-primary-custom">View Full Menu</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section id="about" class="about-section py-5">
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h2 class="section-title mb-4">Our Story</h2>
-                    <p class="lead">Welcome to Brew & Bake, where passion meets perfection in every cup and every bite.</p>
-                    <p>We started with a simple dream: to create a space where people can enjoy exceptional coffee and delicious baked goods in a warm, welcoming atmosphere. Our journey began with a love for the art of coffee brewing and the joy of baking.</p>
-                    <p>Today, we continue to serve our community with the same passion and dedication, using only the finest ingredients and maintaining the highest standards of quality.</p>
-                </div>
-                <div class="col-lg-6">
-                    <img src="assets/images/about.jpg" alt="Our Coffee Shop" class="img-fluid rounded">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact py-5">
-        <div class="container">
-            <h2 class="section-title text-center mb-5">Contact Us</h2>
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="contact-info">
-                        <div class="info-item">
-                            <i class="bi bi-geo-alt"></i>
-                            <h3>Location</h3>
-                            <p>123 Coffee Street, Manila, Philippines</p>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-clock"></i>
-                            <h3>Hours</h3>
-                            <p>Monday - Sunday: 7:00 AM - 9:00 PM</p>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-telephone"></i>
-                            <h3>Phone</h3>
-                            <p>+63 123 456 7890</p>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-envelope"></i>
-                            <h3>Email</h3>
-                            <p>info@brewandbake.com</p>
-                        </div>
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <div class="about-image">
+                        <img src="assets/images/backgrounds/cafe-interior.jpg" alt="Brew & Bake Interior" class="img-fluid rounded shadow" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2FmZSUyMGludGVyaW9yfGVufDB8fDB8fHww&w=1000&q=80';">
                     </div>
                 </div>
                 <div class="col-lg-6">
-                    <form class="contact-form">
-                        <div class="mb-3">
-                            <input type="text" class="form-control" placeholder="Your Name" required>
+                    <div class="about-content">
+                        <h2 class="section-title text-start">ABOUT US</h2>
+                        <p class="lead mb-4">Crafting Premium Coffee & Delightful Pastries Since 2020</p>
+                        <p class="mb-4">At Brew & Bake, we believe in the perfect harmony between exceptional coffee and freshly baked goods. Our journey began with a simple passion for quality and has evolved into a beloved destination for coffee enthusiasts and pastry lovers alike.</p>
+                        <p class="mb-4">We source only the finest coffee beans from sustainable farms around the world, ensuring each cup tells a story of dedication and craftsmanship. Our bakers arrive at dawn each day to prepare fresh pastries, cakes, and bread using traditional recipes and premium ingredients.</p>
+                        <div class="row mt-4">
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <h5 class="mb-0">Premium Ingredients</h5>
+                                        <p class="text-muted mb-0">Locally sourced when possible</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <h5 class="mb-0">Skilled Baristas</h5>
+                                        <p class="text-muted mb-0">Trained coffee artisans</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <h5 class="mb-0">Fresh Daily</h5>
+                                        <p class="text-muted mb-0">Baked goods made each morning</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <h5 class="mb-0">Cozy Atmosphere</h5>
+                                        <p class="text-muted mb-0">Designed for comfort</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <input type="email" class="form-control" placeholder="Your Email" required>
-                        </div>
-                        <div class="mb-3">
-                            <textarea class="form-control" rows="5" placeholder="Your Message" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-accent-custom">Send Message</button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="testimonials py-5">
+    <!-- Contact Us Section -->
+    <section id="contact" class="contact-section py-5 bg-light">
         <div class="container">
-            <h2 class="section-title text-center mb-5">What Our Customers Say</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="testimonial-card">
-                        <div class="stars mb-3">
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                        </div>
-                        <p class="mb-3">"The best coffee I've ever had! Their pastries are amazing too. This is my go-to spot every morning."</p>
-                        <div class="d-flex align-items-center">
-                            <div class="testimonial-avatar me-3">
-                                <i class="bi bi-person-circle fs-1"></i>
+            <h2 class="section-title">CONTACT US</h2>
+            <p class="text-center text-muted mb-5">We'd love to hear from you! Reach out with any questions or feedback.</p>
+
+            <div class="row">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <div class="contact-info bg-white p-4 rounded shadow-sm h-100">
+                        <h4 class="mb-4">Get In Touch</h4>
+
+                        <div class="d-flex mb-4">
+                            <div class="contact-icon me-3">
+                                <i class="bi bi-geo-alt-fill text-secondary" style="font-size: 1.5rem;"></i>
                             </div>
                             <div>
-                                <h5 class="testimonial-name mb-0">Maria Santos</h5>
-                                <small class="testimonial-title">Regular Customer</small>
+                                <h5>Location</h5>
+                                <p class="text-muted mb-0">123 Coffee Street, Manila, Philippines</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex mb-4">
+                            <div class="contact-icon me-3">
+                                <i class="bi bi-clock-fill text-secondary" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div>
+                                <h5>Opening Hours</h5>
+                                <p class="text-muted mb-0">Monday - Friday: 7:00 AM - 8:00 PM</p>
+                                <p class="text-muted mb-0">Saturday - Sunday: 8:00 AM - 9:00 PM</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex mb-4">
+                            <div class="contact-icon me-3">
+                                <i class="bi bi-telephone-fill text-secondary" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div>
+                                <h5>Call Us</h5>
+                                <p class="text-muted mb-0">+63 (2) 8123 4567</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex">
+                            <div class="contact-icon me-3">
+                                <i class="bi bi-envelope-fill text-secondary" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div>
+                                <h5>Email Us</h5>
+                                <p class="text-muted mb-0">info@brewandbake.com</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- Add 2 more testimonials with similar structure -->
+
+                <div class="col-lg-7">
+                    <div class="contact-form bg-white p-4 rounded shadow-sm">
+                        <h4 class="mb-4">Send a Message</h4>
+                        <form id="contactForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name" class="form-label">Your Name</label>
+                                    <input type="text" class="form-control" id="name" placeholder="Enter your name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Your Email</label>
+                                    <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">Subject</label>
+                                <input type="text" class="form-control" id="subject" placeholder="Enter subject">
+                            </div>
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Message</label>
+                                <textarea class="form-control" id="message" rows="5" placeholder="Enter your message" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary-custom">Send Message</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="site-footer">
+    <footer class="footer">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <i class="bi bi-cup-hot"></i> Brew & Bake
-                </div>
-                <div class="footer-links">
-                    <div class="footer-column">
-                        <h4>About Us</h4>
-                        <ul>
-                            <li><a href="#about">Our Story</a></li>
-                            <li><a href="#">Careers</a></li>
-                            <li><a href="#">Social Impact</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Customer Service</h4>
-                        <ul>
-                            <li><a href="#contact">Contact Us</a></li>
-                            <li><a href="#">FAQs</a></li>
-                            <li><a href="#">Store Locator</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Quick Links</h4>
-                        <ul>
-                            <li><a href="index.php">Home</a></li>
-                            <li><a href="#featured">Featured</a></li>
-                            <?php if ($isLoggedIn): ?>
-                                <?php if ($userRole === 'admin'): ?>
-                                    <li><a href="templates/admin/dashboard.php">Admin Dashboard</a></li>
-                                <?php elseif ($userRole === 'staff'): ?>
-                                    <li><a href="templates/staff/staff.php">Staff Dashboard</a></li>
-                                <?php else: ?>
-                                    <li><a href="templates/client/client.php">My Account</a></li>
-                                <?php endif; ?>
-                                <li><a href="templates/includes/logout.php">Logout</a></li>
-                            <?php else: ?>
-                                <li><a href="#" class="login-link">Login</a></li>
-                                <li><a href="#" class="register-link">Register</a></li>
-                            <?php endif; ?>
-                        </ul>
-                    </div>
-                </div>
+            <div class="footer-logo">
+                <i class="bi bi-cup-hot"></i>
+                <span>Brew & Bake</span>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; <?= date('Y') ?> Brew & Bake. All rights reserved.</p>
-                <div class="social-links">
-                    <a href="#"><i class="bi bi-facebook"></i></a>
-                    <a href="#"><i class="bi bi-instagram"></i></a>
-                    <a href="#"><i class="bi bi-twitter"></i></a>
-                </div>
+            <p>Premium coffee and fresh bakery goods</p>
+            <div class="social-links">
+                <a href="#"><i class="bi bi-facebook"></i></a>
+                <a href="#"><i class="bi bi-instagram"></i></a>
+                <a href="#"><i class="bi bi-twitter"></i></a>
+                <a href="#"><i class="bi bi-pinterest"></i></a>
             </div>
+            <p class="copyright">© 2025 Brew & Bake. All rights reserved.</p>
         </div>
     </footer>
 
@@ -843,176 +895,172 @@ function getCategoryImage($categoryName) {
                 <div class="modal-header border-0">
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body px-4 py-2">
+                <div class="modal-body px-4 py-4">
                     <div class="text-center mb-4">
-                        <div class="brand-logo">
-                            <i class="bi bi-cup-hot" style="color: var(--color-secondary);"></i> Brew & Bake
+                        <div class="brand-logo-container mb-3">
+                            <div class="brand-logo-circle">
+                                <i class="bi bi-cup-hot"></i>
+                            </div>
                         </div>
-                        <h2 class="text-muted">Welcome Back!</h2>
-                        <p class="text-muted">Sign in to continue to your account</p>
+                        <h4 class="fw-bold">Welcome Back</h4>
+                        <p class="text-muted">Sign in to your Brew & Bake account</p>
                     </div>
-
-                    <form id="loginForm" method="POST">
-                        <div id="loginAlert" class="mt-2 mb-3">
-                            <?php if (isset($_SESSION['verification_success']) && $_SESSION['verification_success']): ?>
-                            <div class="custom-alert alert-success mb-3">
-                                <i class="bi bi-check-circle me-2"></i> Your email has been verified successfully! You can now log in.
-                            </div>
-                            <?php unset($_SESSION['verification_success']); ?>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-envelope"></i>
-                                </span>
-                                <input type="email" name="email" class="form-control" placeholder="Email address"
-                                    value="<?= isset($_SESSION['verification_email']) ? htmlspecialchars($_SESSION['verification_email']) : '' ?>"
-                                    required autofocus>
-                                <?php if (isset($_SESSION['verification_email'])) unset($_SESSION['verification_email']); ?>
+                    <form id="loginForm" action="templates/includes/login_process.php" method="post">
+                        <div class="mb-3">
+                            <label for="login_email" class="form-label">Email Address</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" name="email" id="login_email" placeholder="Enter your email" required>
                             </div>
                         </div>
-
-                        <div class="mb-4">
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-lock"></i>
-                                </span>
-                                <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
-                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label for="password" class="form-label">Password</label>
+                                <a href="#" class="text-decoration-none small forgot-password">Forgot Password?</a>
+                            </div>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button" tabindex="-1">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
                         </div>
-
                         <div class="mb-4 form-check">
-                            <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
-                            <label class="form-check-label remember-me" for="remember">Remember me</label>
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember">
+                            <label class="form-check-label remember-me" for="rememberMe">Keep me signed in</label>
                         </div>
-
-                        <button type="submit" class="btn btn-primary w-100 mb-4" style="background-color: var(--color-primary); border-color: var(--color-secondary);">
-                            <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
-                        </button>
-
-                        <div class="text-center mb-3">
-                            <span class="text-muted">or continue with</span>
-                        </div>
-
-                        <div class="d-flex justify-content-center gap-3 mb-4">
-                            <a href="#" class="btn btn-outline-secondary">
-                                <i class="bi bi-google"></i>
-                            </a>
-                            <a href="#" class="btn btn-outline-secondary">
-                                <i class="bi bi-facebook"></i>
-                            </a>
-                            <a href="#" class="btn btn-outline-secondary">
-                                <i class="bi bi-twitter"></i>
-                            </a>
-                        </div>
-
-                        <p class="text-center mb-0">
-                            Don't have an account?
-                            <a href="#" id="showRegisterModal" class="text-decoration-none" style="color: var(--color-secondary);">
-                                Sign up
-                            </a>
-                        </p>
+                        <div class="alert alert-danger login-error" style="display: none;"></div>
+                        <button type="submit" class="btn btn-primary-custom btn-lg w-100 mb-3">Sign In</button>
                     </form>
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Don't have an account? <a href="#" class="register-link fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#registerModal">Create Account</a></p>
+                    </div>
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="text-muted small mb-0">By signing in, you agree to our <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a></p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Register Modal -->
+    <!-- Registration Modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-4">
+                    <div class="text-center mb-4">
+                        <div class="brand-logo-container mb-3">
+                            <div class="brand-logo-circle">
+                                <i class="bi bi-cup-hot"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold">Create Your Account</h4>
+                        <p class="text-muted">Join the Brew & Bake community</p>
+                    </div>
+                    <form id="registerForm" action="templates/includes/register_handler.php" method="post">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" name="first_name" id="first_name" placeholder="Enter first name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" name="last_name" id="last_name" placeholder="Enter last name" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register_email" class="form-label">Email Address</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" name="email" id="register_email" placeholder="Enter your email" required>
+                            </div>
+                            <div class="form-text text-muted">We'll send a verification link to this email</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register_password" class="form-label">Password</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" name="password" id="register_password" placeholder="Create a password" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength mt-2">
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <small class="form-text password-feedback text-muted">Password must be at least 8 characters long.</small>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light"><i class="bi bi-lock-fill"></i></span>
+                                <input type="password" class="form-control" name="confirm_password" id="confirm_password" placeholder="Confirm your password" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-match-feedback mt-1"></div>
+                        </div>
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                            <label class="form-check-label remember-me" for="terms">I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a></label>
+                        </div>
+                        <div class="alert alert-danger registration-error" style="display: none;"></div>
+                        <button type="submit" class="btn btn-primary-custom btn-lg w-100 mb-3">Create Account</button>
+                    </form>
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Already have an account? <a href="#" class="login-link fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#loginModal">Sign In</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Success Modal -->
+    <div class="modal fade" id="verificationModal" tabindex="-1" aria-labelledby="verificationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0">
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body px-4 py-2">
-                    <div class="text-center mb-4">
-                        <div class="brand-logo">
-                            <i class="bi bi-cup-hot" style="color: var(--color-secondary);"></i> Brew & Bake
+                <div class="modal-body px-4 py-4 text-center">
+                    <div class="verification-icon mb-4">
+                        <div class="brand-logo-circle" style="background: linear-gradient(145deg, #28a745 0%, #20c997 100%);">
+                            <i class="bi bi-envelope-check" style="color: white;"></i>
                         </div>
-                        <h2 class="text-muted">Create Account</h2>
-                        <p class="text-muted">Join our community today</p>
                     </div>
-
-                    <div id="registerAlert" class="mt-2 mb-3"></div>
-
-                    <form id="registerForm" method="POST">
-                        <div class="row mb-3">
-                            <div class="col">
-                                <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
-                            </div>
-                            <div class="col">
-                                <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
+                    <h4 class="fw-bold mb-3">Verification Email Sent</h4>
+                    <p class="text-muted mb-4">We've sent a verification link to your email address. Please check your inbox and click the link to verify your account.</p>
+                    <div class="verification-link-container mt-4" style="display: none;">
+                        <div class="alert alert-info p-4 rounded-3 shadow-sm">
+                            <p class="mb-3"><strong>Didn't receive the email?</strong></p>
+                            <p class="mb-3">You can use the verification link below:</p>
+                            <div class="p-3 bg-light rounded mb-3">
+                                <a href="#" class="verification-link text-break" target="_blank"></a>
                             </div>
                         </div>
-                        <!-- Note: First and last names will be combined into a single 'name' field in the database -->
-
-                        <div class="mb-3">
-                            <input type="email" name="email" class="form-control" placeholder="Email Address" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-lock"></i>
-                                </span>
-                                <input type="password" name="password" id="reg_password" class="form-control" placeholder="Password (min. 8 characters)" required>
-                                <button class="btn btn-outline-secondary" type="button" id="toggleRegPassword">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                            <div class="password-strength mt-2" id="password-strength">
-                                <div class="progress" style="height: 5px;">
-                                    <div class="progress-bar" id="password-strength-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="qr-code-container mt-4 mb-4 text-center">
+                            <p class="mb-3">Or scan this QR code:</p>
+                            <div class="d-flex justify-content-center">
+                                <div class="p-3 bg-white rounded shadow-sm d-inline-block">
+                                    <img src="" alt="Verification QR Code" class="qr-code-image img-fluid" style="max-width: 150px;">
                                 </div>
-                                <small class="form-text text-muted mt-1" id="password-strength-text">Password strength: Too weak</small>
-                                <small class="form-text text-muted d-block mt-1">
-                                    <i class="bi bi-info-circle-fill me-1"></i> For a strong password, include:
-                                    <ul class="mb-0 ps-4 mt-1">
-                                        <li>At least 8 characters</li>
-                                        <li>Uppercase letters (A-Z)</li>
-                                        <li>Lowercase letters (a-z)</li>
-                                        <li>Numbers (0-9) or special characters (@#$!)</li>
-                                    </ul>
-                                </small>
                             </div>
                         </div>
-
-                        <div class="mb-4">
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-lock"></i>
-                                </span>
-                                <input type="password" name="confirm_password" id="reg_confirm_password" class="form-control" placeholder="Confirm Password" required>
-                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mb-4 form-check">
-                            <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
-                            <label class="form-check-label" for="terms">
-                                I agree to the <a href="#" style="color: var(--color-secondary);">Terms of Service</a> and <a href="#" style="color: var(--color-secondary);">Privacy Policy</a>
-                            </label>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 mb-4" style="background-color: var(--color-primary); border-color: var(--color-secondary);">
-                            <i class="bi bi-person-plus me-2"></i> Create Account
-                        </button>
-
-                        <p class="text-center mb-0">
-                            Already have an account?
-                            <a href="#" id="showLoginModal" class="text-decoration-none" style="color: var(--color-secondary);">
-                                Sign in
-                            </a>
-                        </p>
-                    </form>
+                    </div>
+                    <button type="button" class="btn btn-primary-custom btn-lg mt-3" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -1020,714 +1068,268 @@ function getCategoryImage($categoryName) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // User dropdown toggle
         document.addEventListener('DOMContentLoaded', function() {
-            const userIcon = document.querySelector('.user-icon');
-            const userDropdown = document.querySelector('.user-dropdown');
-            const menuNav = document.querySelector('.menu-nav');
+            // Toggle password visibility
+            document.querySelectorAll('.toggle-password').forEach(button => {
+                button.addEventListener('click', function() {
+                    const input = this.closest('.input-group').querySelector('input');
+                    const icon = this.querySelector('i');
 
-            // User dropdown toggle
-            if (userIcon) {
-                userIcon.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    userDropdown.classList.toggle('show');
-                });
-
-                document.addEventListener('click', function(e) {
-                    if (!e.target.closest('.user-menu')) {
-                        userDropdown.classList.remove('show');
-                    }
-                });
-            }
-
-            // Scroll effect for sticky menu navigation
-            window.addEventListener('scroll', function() {
-                if (window.scrollY > 100) {
-                    menuNav.classList.add('scrolled');
-                } else {
-                    menuNav.classList.remove('scrolled');
-                }
-
-                // Update active menu tab based on scroll position
-                const sections = document.querySelectorAll('section[id]');
-                const menuLinks = document.querySelectorAll('.menu-tabs a');
-
-                let currentSection = '';
-
-                sections.forEach(section => {
-                    const sectionTop = section.offsetTop - menuNav.offsetHeight - 50;
-                    const sectionHeight = section.offsetHeight;
-                    const sectionId = section.getAttribute('id');
-
-                    if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
-                        currentSection = sectionId;
-                    }
-                });
-
-                menuLinks.forEach(link => {
-                    link.classList.remove('active');
-                    const href = link.getAttribute('href').substring(1); // Remove the # character
-
-                    if (href === currentSection || (href === '' && currentSection === '')) {
-                        link.classList.add('active');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
                     }
                 });
             });
 
-            // Smooth scrolling for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
+            // Password strength meter
+            const passwordInput = document.getElementById('register_password');
+            const confirmPasswordInput = document.getElementById('confirm_password');
+            const progressBar = document.querySelector('.progress-bar');
+            const passwordFeedback = document.querySelector('.password-feedback');
+            const passwordMatchFeedback = document.querySelector('.password-match-feedback');
 
-                    // Get the target element
-                    const href = this.getAttribute('href');
-
-                    // Handle the case when href is just "#"
-                    if (href === "#") {
-                        window.scrollTo({
-                            top: 0,
-                            behavior: 'smooth'
-                        });
-                        return;
-                    }
-
-                    const target = document.querySelector(href);
-
-                    if (target) {
-                        // Get the height of the sticky menu nav
-                        const menuNavHeight = menuNav.offsetHeight;
-                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
-
-                        // Scroll to the target with an offset for the sticky menu
-                        window.scrollTo({
-                            top: targetPosition - menuNavHeight - 20, // 20px extra padding
-                            behavior: 'smooth'
-                        });
-
-                        // Update active class in menu tabs
-                        document.querySelectorAll('.menu-tabs a').forEach(link => {
-                            link.classList.remove('active');
-                        });
-                        this.classList.add('active');
-                    }
-                });
-            });
-
-            // Add scroll reveal effect for product cards
-            const animateElements = document.querySelectorAll('.product-card, .menu-item');
-
-            if ('IntersectionObserver' in window) {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.style.opacity = '1';
-                            entry.target.style.transform = 'translateY(0)';
-                            observer.unobserve(entry.target);
-                        }
-                    });
-                }, {threshold: 0.1});
-
-                animateElements.forEach(el => {
-                    el.style.opacity = '0';
-                    el.style.transform = 'translateY(20px)';
-                    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                    observer.observe(el);
-                });
-            }
-
-            // Login and Register Modal Functionality
-            const loginLinks = document.querySelectorAll('a[href="templates/views/login.php"]');
-            const registerLinks = document.querySelectorAll('a[href="templates/views/register.php"]');
-            const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-            const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
-            const showRegisterModalLink = document.getElementById('showRegisterModal');
-            const showLoginModalLink = document.getElementById('showLoginModal');
-            const togglePasswordBtn = document.getElementById('togglePassword');
-            const passwordField = document.getElementById('password');
-
-            // Show login modal when login links are clicked
-            loginLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    loginModal.show();
-                });
-            });
-
-            // Show register modal when register links are clicked
-            registerLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    registerModal.show();
-                });
-            });
-
-            // Handle login-required links
-            document.querySelectorAll('.login-required').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    loginModal.show();
-                });
-            });
-
-            // Handle login link in dropdown
-            document.querySelectorAll('.login-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    loginModal.show();
-                });
-            });
-
-            // Handle register link in dropdown
-            document.querySelectorAll('.register-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    registerModal.show();
-                });
-            });
-
-            // Handle cart icon click when not logged in
-            const loginCartLink = document.getElementById('loginCartLink');
-            if (loginCartLink) {
-                loginCartLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    loginModal.show();
-                });
-            }
-
-            // Switch between login and register modals
-            if (showRegisterModalLink) {
-                showRegisterModalLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    loginModal.hide();
-                    setTimeout(() => {
-                        registerModal.show();
-                    }, 400);
-                });
-            }
-
-            if (showLoginModalLink) {
-                showLoginModalLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    registerModal.hide();
-                    setTimeout(() => {
-                        loginModal.show();
-                    }, 400);
-                });
-            }
-
-            // Toggle password visibility for login form
-            if (togglePasswordBtn && passwordField) {
-                togglePasswordBtn.addEventListener('click', function() {
-                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordField.setAttribute('type', type);
-
-                    // Toggle the eye icon
-                    this.querySelector('i').classList.toggle('bi-eye');
-                    this.querySelector('i').classList.toggle('bi-eye-slash');
-                });
-            }
-
-            // Toggle password visibility for registration form
-            const toggleRegPasswordBtn = document.getElementById('toggleRegPassword');
-            const regPasswordField = document.getElementById('reg_password');
-            if (toggleRegPasswordBtn && regPasswordField) {
-                toggleRegPasswordBtn.addEventListener('click', function() {
-                    const type = regPasswordField.getAttribute('type') === 'password' ? 'text' : 'password';
-                    regPasswordField.setAttribute('type', type);
-
-                    // Toggle the eye icon
-                    this.querySelector('i').classList.toggle('bi-eye');
-                    this.querySelector('i').classList.toggle('bi-eye-slash');
-                });
-
-                // Password strength indicator
-                regPasswordField.addEventListener('input', function() {
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
                     const password = this.value;
-                    const strengthBar = document.getElementById('password-strength-bar');
-                    const strengthText = document.getElementById('password-strength-text');
-
-                    // Calculate password strength
                     let strength = 0;
+                    let feedback = '';
 
                     // Length check
                     if (password.length >= 8) {
                         strength += 25;
+                    } else {
+                        feedback = 'Password must be at least 8 characters long.';
                     }
 
-                    // Contains lowercase letters
-                    if (password.match(/[a-z]+/)) {
+                    // Lowercase letters check
+                    if (password.match(/[a-z]/)) {
                         strength += 25;
                     }
 
-                    // Contains uppercase letters
-                    if (password.match(/[A-Z]+/)) {
+                    // Uppercase letters check
+                    if (password.match(/[A-Z]/)) {
                         strength += 25;
                     }
 
-                    // Contains numbers or special characters
-                    if (password.match(/[0-9]+/) || password.match(/[$@#&!]+/)) {
+                    // Numbers or special characters check
+                    if (password.match(/[0-9]/) || password.match(/[^a-zA-Z0-9]/)) {
                         strength += 25;
                     }
 
-                    // Update the strength bar
-                    strengthBar.style.width = strength + '%';
-                    strengthBar.setAttribute('aria-valuenow', strength);
+                    // Update progress bar
+                    progressBar.style.width = strength + '%';
+                    progressBar.setAttribute('aria-valuenow', strength);
 
                     // Update color based on strength
-                    if (strength < 25) {
-                        strengthBar.className = 'progress-bar bg-danger';
-                        strengthText.textContent = 'Password strength: Too weak';
-                    } else if (strength < 50) {
-                        strengthBar.className = 'progress-bar bg-warning';
-                        strengthText.textContent = 'Password strength: Weak';
+                    if (strength < 50) {
+                        progressBar.classList.remove('bg-warning', 'bg-success');
+                        progressBar.classList.add('bg-danger');
+                        if (!feedback) feedback = 'Weak password';
                     } else if (strength < 75) {
-                        strengthBar.className = 'progress-bar bg-info';
-                        strengthText.textContent = 'Password strength: Medium';
+                        progressBar.classList.remove('bg-danger', 'bg-success');
+                        progressBar.classList.add('bg-warning');
+                        if (!feedback) feedback = 'Medium strength password';
                     } else {
-                        strengthBar.className = 'progress-bar bg-success';
-                        strengthText.textContent = 'Password strength: Strong';
+                        progressBar.classList.remove('bg-danger', 'bg-warning');
+                        progressBar.classList.add('bg-success');
+                        if (!feedback) feedback = 'Strong password';
+                    }
+
+                    passwordFeedback.textContent = feedback;
+
+                    // Check password match if confirm password has value
+                    if (confirmPasswordInput.value) {
+                        checkPasswordMatch();
                     }
                 });
             }
 
-            // Toggle confirm password visibility for registration form
-            const toggleConfirmPasswordBtn = document.getElementById('toggleConfirmPassword');
-            const confirmPasswordField = document.getElementById('reg_confirm_password');
-            if (toggleConfirmPasswordBtn && confirmPasswordField) {
-                toggleConfirmPasswordBtn.addEventListener('click', function() {
-                    const type = confirmPasswordField.getAttribute('type') === 'password' ? 'text' : 'password';
-                    confirmPasswordField.setAttribute('type', type);
+            // Password match check
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+            }
 
-                    // Toggle the eye icon
-                    this.querySelector('i').classList.toggle('bi-eye');
-                    this.querySelector('i').classList.toggle('bi-eye-slash');
-                });
+            function checkPasswordMatch() {
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
 
-                // Check if passwords match in real-time
-                confirmPasswordField.addEventListener('input', function() {
-                    const password = document.getElementById('reg_password').value;
-                    const confirmPassword = this.value;
-
-                    // Add feedback element if it doesn't exist
-                    let feedbackElement = document.getElementById('password-match-feedback');
-                    if (!feedbackElement) {
-                        feedbackElement = document.createElement('div');
-                        feedbackElement.id = 'password-match-feedback';
-                        feedbackElement.className = 'form-text mt-1';
-                        this.parentNode.parentNode.appendChild(feedbackElement);
-                    }
-
-                    // Check if passwords match
-                    if (confirmPassword === '') {
-                        feedbackElement.textContent = '';
-                        feedbackElement.className = 'form-text mt-1';
-                        this.classList.remove('is-valid', 'is-invalid');
-                    } else if (password === confirmPassword) {
-                        feedbackElement.textContent = 'Passwords match';
-                        feedbackElement.className = 'form-text text-success mt-1';
-                        this.classList.add('is-valid');
-                        this.classList.remove('is-invalid');
-                    } else {
-                        feedbackElement.textContent = 'Passwords do not match';
-                        feedbackElement.className = 'form-text text-danger mt-1';
-                        this.classList.add('is-invalid');
-                        this.classList.remove('is-valid');
-                    }
-                });
+                if (confirmPassword === '') {
+                    passwordMatchFeedback.textContent = '';
+                    passwordMatchFeedback.className = 'password-match-feedback mt-1';
+                } else if (password === confirmPassword) {
+                    passwordMatchFeedback.textContent = 'Passwords match';
+                    passwordMatchFeedback.className = 'password-match-feedback mt-1 text-success';
+                } else {
+                    passwordMatchFeedback.textContent = 'Passwords do not match';
+                    passwordMatchFeedback.className = 'password-match-feedback mt-1 text-danger';
+                }
             }
 
             // Handle login form submission
-            const loginForm = document.getElementById('loginForm');
+            const loginForm = document.querySelector('form[action="templates/includes/login_process.php"]');
             if (loginForm) {
-                // Function to handle test email button
-                function setupTestEmailButton(button) {
-                    if (!button) return;
-
-                    button.addEventListener('click', function() {
-                        const email = this.getAttribute('data-email');
-                        const token = this.getAttribute('data-token');
-                        const name = this.getAttribute('data-name');
-                        const statusEl = this.nextElementSibling;
-
-                        // Disable button and show loading
-                        this.disabled = true;
-                        this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Sending...';
-                        statusEl.innerHTML = '<span class="text-muted">Sending verification email...</span>';
-
-                        // Send AJAX request to test email
-                        const formData = new FormData();
-                        formData.append('email', email);
-                        formData.append('token', token);
-                        formData.append('name', name);
-
-                        fetch('templates/includes/test_email.php', {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                statusEl.innerHTML = `<span class="text-success"><i class="bi bi-check-circle me-1"></i> ${data.message}</span>`;
-                                this.innerHTML = '<i class="bi bi-envelope-check me-1"></i> Email Sent';
-                                this.classList.remove('btn-outline-secondary');
-                                this.classList.add('btn-success');
-                            } else {
-                                statusEl.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i> ${data.message}</span>`;
-                                this.innerHTML = '<i class="bi bi-envelope me-1"></i> Test Email Verification';
-                                this.disabled = false;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i> An error occurred. Please try again.</span>';
-                            this.innerHTML = '<i class="bi bi-envelope me-1"></i> Test Email Verification';
-                            this.disabled = false;
-                        });
-                    });
-                }
-
-                // Function to create verification UI
-                function createVerificationUI(data, formId) {
-                    const email = document.getElementById(formId).email.value;
-                    let name = 'User';
-
-                    if (formId === 'registerForm') {
-                        name = `${document.getElementById(formId).first_name.value} ${document.getElementById(formId).last_name.value}`;
-                    }
-
-                    return `<div class="mt-3 p-3 border rounded verification-container" style="background-color: #f8f9fa; border-color: #dee2e6 !important;">
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-envelope-check me-2" style="font-size: 1.25rem; color: var(--color-primary);"></i>
-                            <h6 class="mb-0 fw-bold">Email Verification Required</h6>
-                        </div>
-                        <p class="mb-3 small">Please verify your email address to activate your account.</p>
-
-                        <div class="row g-3">
-                            <div class="col-md-8">
-                                <a href="${data.verification_link}" class="btn btn-primary w-100 mb-2" style="background-color: var(--color-primary); border-color: var(--color-primary);">
-                                    <i class="bi bi-check-circle me-2"></i> Verify My Account
-                                </a>
-
-                                ${data.test_email ? `
-                                <button type="button" class="btn btn-outline-secondary w-100 test-email-btn-${formId === 'loginForm' ? 'login' : 'register'}"
-                                        data-email="${email}"
-                                        data-token="${data.verification_link.split('token=')[1]}"
-                                        data-name="${name}">
-                                    <i class="bi bi-envelope me-2"></i> Send Verification Email
-                                </button>
-                                <div class="email-status-${formId === 'loginForm' ? 'login' : 'register'} mt-2 small"></div>
-                                ` : ''}
-                            </div>
-
-                            ${data.qr_code ? `
-                            <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
-                                <p class="mb-2 small text-muted text-center">Or scan this QR code:</p>
-                                <img src="${data.qr_code}" alt="Verification QR Code" class="img-fluid" style="max-width: 120px;">
-                            </div>
-                            ` : ''}
-                        </div>
-                    </div>`;
-                }
-
-                // Handle form submission
                 loginForm.addEventListener('submit', function(e) {
                     e.preventDefault();
 
-                    // Clear previous alerts
-                    const alertEl = document.getElementById('loginAlert');
-                    // Preserve any server-side messages
-                    const serverMessages = alertEl.querySelectorAll('.custom-alert.alert-success');
-                    if (serverMessages.length === 0) {
-                        alertEl.innerHTML = '';
-                    }
-
-                    // Add loading indicator
-                    const loadingDiv = document.createElement('div');
-                    loadingDiv.className = 'custom-alert alert-warning';
-                    loadingDiv.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> Logging in...';
-                    alertEl.appendChild(loadingDiv);
-
                     const formData = new FormData(this);
+                    formData.append('remember', document.getElementById('rememberMe').checked ? '1' : '0');
 
-                    // Send AJAX request to login handler
                     fetch('templates/includes/login_handler.php', {
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Clear any existing alerts
-                            alertEl.innerHTML = '';
-
-                            // Show success message before redirect
-                            const successDiv = document.createElement('div');
-                            successDiv.className = 'custom-alert alert-success';
-                            successDiv.innerHTML = `<i class="bi bi-check-circle me-2"></i> ${data.message}`;
-                            alertEl.appendChild(successDiv);
-
-                            // Redirect after a short delay
-                            setTimeout(() => {
-                                window.location.href = data.redirect;
-                            }, 1000);
+                            // Redirect on successful login
+                            window.location.href = data.redirect;
                         } else {
-                            // Clear any existing alerts
-                            alertEl.innerHTML = '';
-
                             // Show error message
-                            const errorDiv = document.createElement('div');
-                            errorDiv.className = 'custom-alert alert-danger';
-                            errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i> ${data.message}`;
-                            alertEl.appendChild(errorDiv);
-
-                            // If verification link is provided, show verification UI
-                            if (data.verification_link) {
-                                // Create a more prominent verification UI
-                                const verificationDiv = document.createElement('div');
-                                verificationDiv.className = 'mt-3 p-3 border rounded verification-container';
-                                verificationDiv.style.backgroundColor = '#f8f9fa';
-                                verificationDiv.style.borderColor = '#dc3545 !important';
-                                verificationDiv.style.borderWidth = '2px';
-
-                                // Add content to the verification div
-                                verificationDiv.innerHTML = `
-                                    <div class="d-flex align-items-center mb-3">
-                                        <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 1.25rem; color: #dc3545;"></i>
-                                        <h6 class="mb-0 fw-bold">Please verify your email address</h6>
-                                    </div>
-                                    <p class="mb-3 small">Your account has been created but not yet verified. Please verify your email address to log in.</p>
-
-                                    <div class="row g-3">
-                                        <div class="col-md-8">
-                                            <a href="${data.verification_link}" class="btn btn-primary w-100 mb-2" style="background-color: var(--color-primary); border-color: var(--color-primary);">
-                                                <i class="bi bi-check-circle me-2"></i> Verify My Account
-                                            </a>
-
-                                            ${data.test_email ? `
-                                            <button type="button" class="btn btn-outline-secondary w-100 test-email-btn-login"
-                                                    data-email="${document.getElementById('loginForm').email.value}"
-                                                    data-token="${data.verification_link.split('token=')[1]}"
-                                                    data-name="User">
-                                                <i class="bi bi-envelope me-2"></i> Send Verification Email
-                                            </button>
-                                            <div class="email-status-login mt-2 small"></div>
-                                            ` : ''}
-                                        </div>
-
-                                        ${data.qr_code ? `
-                                        <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
-                                            <p class="mb-2 small text-muted text-center">Or scan this QR code:</p>
-                                            <img src="${data.qr_code}" alt="Verification QR Code" class="img-fluid" style="max-width: 120px;">
-                                        </div>
-                                        ` : ''}
-                                    </div>
-                                `;
-
-                                alertEl.appendChild(verificationDiv);
-
-                                // Automatically open the verification link in a new tab
-                                setTimeout(() => {
-                                    window.open(data.verification_link, '_blank');
-                                }, 1000);
+                            let errorContainer = document.querySelector('.login-error');
+                            if (!errorContainer) {
+                                errorContainer = document.createElement('div');
+                                errorContainer.className = 'alert alert-danger login-error mt-3';
+                                loginForm.insertBefore(errorContainer, loginForm.querySelector('button[type="submit"]'));
                             }
+                            errorContainer.textContent = data.message;
+                            errorContainer.style.display = 'block';
 
-                            // Setup test email button if present
-                            setTimeout(() => {
-                                setupTestEmailButton(document.querySelector('.test-email-btn-login'));
-                            }, 100);
+                            // If verification needed, show verification info
+                            if (data.verification_link) {
+                                const verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
+                                document.querySelector('.verification-link-container').style.display = 'block';
+                                document.querySelector('.verification-link').href = data.verification_link;
+                                document.querySelector('.verification-link').textContent = data.verification_link;
+                                document.querySelector('.qr-code-image').src = data.qr_code;
+                                verificationModal.show();
+                            }
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-
-                        // Clear any existing alerts
-                        alertEl.innerHTML = '';
-
-                        // Show error message
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'custom-alert alert-danger';
-                        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i> A network error occurred. Please check your connection and try again.';
-                        alertEl.appendChild(errorDiv);
                     });
                 });
             }
 
-            // Handle register form submission
+            // Handle registration form submission
             const registerForm = document.getElementById('registerForm');
             if (registerForm) {
                 registerForm.addEventListener('submit', function(e) {
                     e.preventDefault();
 
-                    // Clear previous alerts
-                    const alertEl = document.getElementById('registerAlert');
+                    const formData = new FormData(this);
+                    formData.append('terms', document.getElementById('terms').checked ? '1' : '0');
 
-                    // Client-side validation
-                    const firstName = this.first_name.value.trim();
-                    const lastName = this.last_name.value.trim();
-                    const email = this.email.value.trim();
-                    const password = this.password.value;
-                    const confirmPassword = this.confirm_password.value;
-                    const terms = this.terms && this.terms.checked;
-
-                    // Validation errors
-                    let errors = [];
-
-                    // Check required fields
-                    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-                        errors.push('All fields are required.');
-                    }
-
-                    // Validate email
-                    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                        errors.push('Please enter a valid email address.');
-                    }
-
-                    // Validate password match
-                    if (password && confirmPassword && password !== confirmPassword) {
-                        errors.push('Passwords do not match.');
-                    }
-
-                    // Validate password strength
-                    if (password) {
-                        if (password.length < 8) {
-                            errors.push('Password must be at least 8 characters long.');
-                        } else {
-                            // Calculate password strength
-                            let strength = 0;
-                            if (password.length >= 8) strength += 25;
-                            if (/[a-z]/.test(password)) strength += 25;
-                            if (/[A-Z]/.test(password)) strength += 25;
-                            if (/[0-9]/.test(password) || /[^a-zA-Z0-9]/.test(password)) strength += 25;
-
-                            if (strength < 50) {
-                                errors.push('Please use a stronger password with uppercase letters, numbers, or special characters.');
-                            }
-                        }
-                    }
-
-                    // Check terms agreement
-                    if (!terms) {
-                        errors.push('You must agree to the Terms of Service and Privacy Policy.');
-                    }
-
-                    // Show first error if any
-                    if (errors.length > 0) {
-                        alertEl.innerHTML = `<div class="custom-alert alert-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i> ${errors[0]}
-                        </div>`;
-                        return;
-                    }
-
-                    // Clear previous alerts
-                    alertEl.innerHTML = '';
-
-                    // Show loading indicator
-                    const loadingDiv = document.createElement('div');
-                    loadingDiv.className = 'custom-alert alert-warning';
-                    loadingDiv.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> Creating your account...';
-                    alertEl.appendChild(loadingDiv);
-
-                    // Send AJAX request to register handler
                     fetch('templates/includes/register_handler.php', {
                         method: 'POST',
-                        body: new FormData(this)
+                        body: formData
                     })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Clear any existing alerts
-                            alertEl.innerHTML = '';
+                            // Hide registration modal
+                            const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+                            registerModal.hide();
 
-                            // Show success message
-                            const successDiv = document.createElement('div');
-                            successDiv.className = 'custom-alert alert-success';
+                            // Show verification modal
+                            const verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
 
-                            // Customize the success message
-                            let successMessage = 'Registration successful!';
-                            if (data.verification_link && data.email_sent) {
-                                successMessage = 'Registration successful! A verification email has been sent.';
+                            // If test email is enabled, show verification link
+                            if (data.test_email) {
+                                document.querySelector('.verification-link-container').style.display = 'block';
+                                document.querySelector('.verification-link').href = data.verification_link;
+                                document.querySelector('.verification-link').textContent = data.verification_link;
+                                document.querySelector('.qr-code-image').src = data.qr_code;
+                            } else {
+                                document.querySelector('.verification-link-container').style.display = 'none';
                             }
 
-                            successDiv.innerHTML = `<i class="bi bi-check-circle me-2"></i> ${successMessage}`;
-                            alertEl.appendChild(successDiv);
+                            verificationModal.show();
 
-                            // If verification link is provided and email was sent automatically
-                            if (data.verification_link && data.email_sent) {
-                                // Automatically open the verification link in a new tab after a delay
-                                setTimeout(() => {
-                                    window.open(data.verification_link, '_blank');
-                                }, 1500);
-                            }
-
-                            // Reset the form
-                            this.reset();
-
-                            // Switch to login modal after delay
-                            setTimeout(() => {
-                                registerModal.hide();
-
-                                const loginAlertEl = document.getElementById('loginAlert');
-                                loginAlertEl.innerHTML = '';
-
-                                // Create a single, clear message for the login modal
-                                const successDiv = document.createElement('div');
-                                successDiv.className = 'custom-alert alert-success';
-
-                                if (data.verification_link && data.email_sent) {
-                                    // If email was sent, show a message about verification
-                                    successDiv.innerHTML = `
-                                        <i class="bi bi-check-circle me-2"></i>
-                                        Registration successful! A verification email has been sent to your address.
-                                        <br><br>
-                                        <small class="text-muted">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            Please verify your email before logging in.
-                                        </small>
-                                    `;
-                                } else {
-                                    // Simple success message
-                                    successDiv.innerHTML = '<i class="bi bi-check-circle me-2"></i> Registration successful!';
-                                }
-
-                                loginAlertEl.appendChild(successDiv);
-
-                                loginModal.show();
-                            }, 3000);
+                            // Reset form
+                            registerForm.reset();
                         } else {
-                            // Clear any existing alerts
-                            alertEl.innerHTML = '';
-
                             // Show error message
-                            const errorDiv = document.createElement('div');
-                            errorDiv.className = 'custom-alert alert-danger';
-                            errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i> ${data.message}`;
-                            alertEl.appendChild(errorDiv);
+                            const errorContainer = document.querySelector('.registration-error');
+                            errorContainer.textContent = data.message;
+                            errorContainer.style.display = 'block';
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-
-                        // Clear any existing alerts
-                        alertEl.innerHTML = '';
-
-                        // Show error message
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'custom-alert alert-danger';
-                        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i> A network error occurred. Please check your connection and try again.';
-                        alertEl.appendChild(errorDiv);
                     });
                 });
             }
+
+            // Modal switching
+            const loginLink = document.querySelector('.login-link');
+            const registerLink = document.querySelector('.register-link');
+
+            if (loginLink) {
+                loginLink.addEventListener('click', function(e) {
+                    const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+                    if (registerModal) {
+                        registerModal.hide();
+                    }
+                });
+            }
+
+            if (registerLink) {
+                registerLink.addEventListener('click', function(e) {
+                    const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+                    if (loginModal) {
+                        loginModal.hide();
+                    }
+                });
+            }
+
+            // Handle contact form submission
+            const contactForm = document.getElementById('contactForm');
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    // Get form values
+                    const name = document.getElementById('name').value;
+                    const email = document.getElementById('email').value;
+                    const subject = document.getElementById('subject').value;
+                    const message = document.getElementById('message').value;
+
+                    // Simple validation
+                    if (!name || !email || !message) {
+                        alert('Please fill in all required fields');
+                        return;
+                    }
+
+                    // In a real application, you would send this data to a server
+                    // For now, we'll just show a success message
+                    alert('Thank you for your message! We will get back to you soon.');
+
+                    // Reset the form
+                    contactForm.reset();
+                });
+            }
+
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    if (this.getAttribute('href') !== '#' &&
+                        !this.getAttribute('href').includes('Modal') &&
+                        document.querySelector(this.getAttribute('href'))) {
+                        e.preventDefault();
+
+                        document.querySelector(this.getAttribute('href')).scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
         });
     </script>
 </body>

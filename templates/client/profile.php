@@ -199,16 +199,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         }
 
         .btn-primary {
-            background-color: var(--color-primary);
-            border-color: var(--color-primary);
+            background-color: #f59e0b;
+            border-color: #f59e0b;
             padding: 0.5rem 1.25rem;
             font-weight: 500;
             border-radius: 8px;
+            color: #111827;
         }
 
         .btn-primary:hover {
-            background-color: var(--color-primary-dark);
-            border-color: var(--color-primary-dark);
+            background-color: #d97706;
+            border-color: #d97706;
+            color: #111827;
+        }
+
+        .cart-dropdown .btn-primary {
+            background-color: #f59e0b;
+            border-color: #f59e0b;
+            color: #111827;
+        }
+
+        .cart-dropdown .btn-primary:hover {
+            background-color: #d97706;
+            border-color: #d97706;
+        }
+
+        .cart-dropdown .text-muted {
+            color: #94a3b8 !important;
         }
 
         .btn-outline-secondary {
@@ -294,19 +311,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
         /* Header and menu navigation styling */
         .site-header {
-            background-color: var(--color-primary);
+            background-color: #111827;
             position: relative;
-            z-index: 99; /* Lower than menu-nav */
+            z-index: 49; /* Lower than menu-nav */
+            padding: 0.75rem 0;
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo a {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .logo a i {
+            margin-right: 0.5rem;
+            font-size: 1.75rem;
+        }
+
+        /* Main navigation styles removed */
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-icon {
+            color: #ffffff;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
         }
 
         .menu-nav {
             position: sticky;
             top: 0;
-            z-index: 101; /* Higher than site-header */
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
-            background-color: var(--color-white);
-            border-bottom: 1px solid var(--color-gray-200);
+            background-color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         .menu-tabs {
@@ -322,8 +380,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
         .menu-tabs a {
             font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--color-gray-700);
+            font-weight: 500;
+            color: #4b5563;
             padding: 1rem 1.5rem;
             display: block;
             position: relative;
@@ -332,12 +390,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         }
 
         .menu-tabs a:hover {
-            color: var(--color-primary);
+            color: #111827;
         }
 
         .menu-tabs a.active {
-            color: var(--color-primary);
-            font-weight: 700;
+            color: #111827;
+            font-weight: 600;
         }
 
         .menu-tabs a.active::after {
@@ -346,9 +404,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 4px;
-            background-color: var(--color-secondary);
-            border-radius: 4px 4px 0 0;
+            height: 3px;
+            background-color: #f59e0b;
+            border-radius: 2px 2px 0 0;
         }
 
         /* User dropdown styling */
@@ -356,13 +414,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             position: absolute;
             top: 100%;
             right: 0;
-            background-color: var(--color-primary-light);
-            box-shadow: var(--shadow-md);
-            border-radius: var(--radius-md);
+            background-color: #1e293b;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
             width: 200px;
             padding: 0.5rem 0;
             display: none;
-            z-index: 10;
+            z-index: 100; /* Higher than menu-nav but lower than cart-dropdown */
         }
 
         .user-dropdown.show {
@@ -379,14 +437,177 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             display: block;
             padding: 0.75rem 1rem;
             transition: background-color 0.3s ease;
-            color: var(--color-gray-300);
+            color: #f8fafc;
             text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .user-dropdown li a:hover,
         .user-dropdown li a.active {
-            background-color: var(--color-primary-dark);
-            color: var(--color-white);
+            background-color: #334155;
+            color: #ffffff;
+        }
+
+        /* Cart styling */
+        .cart-menu {
+            position: relative;
+        }
+
+        .cart-icon {
+            position: relative;
+            font-size: 1.25rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #f59e0b;
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 350px;
+            background-color: #1e293b;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 0;
+            z-index: 150; /* Higher than menu-nav and user-dropdown */
+            display: none;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .cart-dropdown.show {
+            display: block;
+        }
+
+        .cart-dropdown-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #334155;
+            background-color: #1e293b;
+        }
+
+        .cart-dropdown-header h6 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #f8fafc;
+        }
+
+        .cart-dropdown-items {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 0;
+            background-color: #1e293b;
+        }
+
+        .cart-dropdown-loading {
+            padding: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cart-dropdown-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cart-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            background-color: #334155;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+            color: #f8fafc;
+        }
+
+        .cart-item-price {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cart-item-quantity {
+            background-color: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #f8fafc;
+        }
+
+        .cart-dropdown-footer {
+            padding: 12px 15px;
+            border-top: 1px solid #334155;
+            background-color: #1e293b;
+        }
+
+        .cart-dropdown-link {
+            color: #f8fafc;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .cart-dropdown-link:hover {
+            color: #f59e0b;
+            text-decoration: underline;
+        }
+
+        .cart-empty {
+            padding: 30px 15px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .cart-empty i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #64748b;
+        }
+
+        .cart-empty p {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
         }
 
         /* Responsive adjustments */
@@ -398,37 +619,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             .card-header h2 {
                 font-size: 1.125rem;
             }
+
+            .cart-dropdown {
+                width: 300px;
+                right: -50px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="site-header">
-        <div class="container">
-            <div class="header-inner">
-                <div class="logo">
-                    <a href="../../index.php">
-                        <i class="bi bi-cup-hot"></i> Brew & Bake
-                    </a>
-                </div>
-                <nav class="main-nav">
-                    <ul>
-                        <li><a href="client.php" class="active">MENU</a></li>
-                        <li><a href="client.php#about">ABOUT</a></li>
-                        <li><a href="client.php#contact">CONTACT</a></li>
-                    </ul>
-                </nav>
-                <div class="header-actions">
-                    <a href="cart.php" class="cart-icon">
-                        <i class="bi bi-cart"></i>
-                    </a>
-                    <a href="#" class="user-icon">
-                        <i class="bi bi-person-circle"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Include Header -->
+    <?php include_once "../includes/header.php"; ?>
 
     <!-- Menu Navigation -->
     <div class="menu-nav">
@@ -441,14 +642,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         </div>
     </div>
 
-    <!-- User Dropdown Menu -->
-    <div class="user-dropdown">
-        <ul>
-            <li><a href="profile.php" class="active">Account Settings</a></li>
-            <li><a href="orders.php">My Orders</a></li>
-            <li><a href="../includes/logout.php">Logout</a></li>
-        </ul>
-    </div>
+
 
     <!-- Main Content -->
     <main class="account-section">
@@ -625,27 +819,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     </footer>
 
     <!-- JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+    $root_path = '../../';
+    include_once "../../templates/includes/footer-scripts.php";
+    ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Toggle user dropdown
-            const userIcon = document.querySelector('.user-icon');
-            const userDropdown = document.querySelector('.user-dropdown');
-
-            if (userIcon && userDropdown) {
-                userIcon.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    userDropdown.classList.toggle('show');
-                });
-
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!userIcon.contains(e.target) && !userDropdown.contains(e.target)) {
-                        userDropdown.classList.remove('show');
-                    }
-                });
-            }
-
             // Make menu-nav sticky on scroll
             const menuNav = document.querySelector('.menu-nav');
             const siteHeader = document.querySelector('.site-header');

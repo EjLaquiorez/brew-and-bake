@@ -1,1 +1,211 @@
- 
+/* Products CSS for Brew & Bake */
+
+:root {
+    /* Color System - Vibrant Coffee & Bakery Palette */
+    --color-primary: #8B4513;        /* Main brand color - rich coffee brown */
+    --color-primary-light: #C68642;  /* Caramel */
+    --color-primary-dark: #5E2F0D;   /* Dark roast */
+    --color-secondary: #D4A373;      /* Warm pastry gold */
+    --color-secondary-light: #E9C496;
+    --color-secondary-dark: #B07D4C;
+
+    /* Neutral colors with more contrast */
+    --color-white: #FFFFFF;
+    --color-gray-50: #F8F5F2;        /* Cream white */
+    --color-gray-100: #F0E6D9;       /* Soft cream */
+    --color-gray-200: #E6D0B8;       /* Light tan */
+    --color-gray-300: #D1B99E;       /* Medium tan */
+    --color-gray-400: #B39B82;       /* Darker tan */
+    --color-gray-500: #8D7966;       /* Light brown */
+    --color-gray-600: #6D5D4B;       /* Medium brown */
+    --color-gray-700: #523D35;       /* Dark brown (original primary) */
+    --color-gray-800: #3A2B26;       /* Very dark brown */
+    --color-gray-900: #2A1F1A;       /* Almost black with warm tint */
+    --color-black: #000000;
+
+    /* Border radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+}
+
+/* Products Header */
+.products-header {
+    background-color: var(--color-primary);
+    color: white;
+    padding: 3rem 0;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.products-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.products-header p {
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+/* Filters */
+.filters-container {
+    background-color: var(--color-gray-50);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.search-box {
+    position: relative;
+}
+
+.btn-search {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: var(--color-gray-500);
+}
+
+/* Product Card */
+.product-card {
+    background-color: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-gray-200);
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.product-image {
+    height: 200px;
+    width: 100%;
+    object-fit: cover;
+    background-color: #111827; /* Match the menu-item-image background color */
+}
+
+/* Style for generic category images used as product placeholders */
+.generic-product-image {
+    opacity: 0.9;
+    padding: 1rem !important;
+    object-fit: contain !important;
+    background-color: #111827; /* Match the menu-item-image background color */
+}
+
+.product-info {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-info h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-gray-900);
+}
+
+.product-info p {
+    color: var(--color-gray-600);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    flex-grow: 1;
+}
+
+.product-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.category {
+    font-size: 0.8rem;
+    color: var(--color-gray-500);
+    background-color: var(--color-gray-100);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+}
+
+.price {
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 1.1rem;
+}
+
+/* Footer */
+.footer {
+    background-color: var(--color-gray-900);
+    color: var(--color-gray-300);
+    margin-top: 3rem;
+}
+
+.footer h3, .footer h4 {
+    color: white;
+    margin-bottom: 1.5rem;
+}
+
+.footer p {
+    color: var(--color-gray-400);
+}
+
+.footer a {
+    color: var(--color-gray-400);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: var(--color-secondary);
+}
+
+.footer ul li {
+    margin-bottom: 0.5rem;
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.social-links a:hover {
+    background-color: var(--color-secondary);
+    color: var(--color-gray-900);
+    transform: translateY(-3px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .product-card {
+        margin-bottom: 1.5rem;
+    }
+
+    .filters-container {
+        padding: 1rem;
+    }
+}

@@ -92,15 +92,9 @@ $giftCardAmounts = [100, 200, 500, 1000, 2000, 5000];
                         <i class="bi bi-cup-hot"></i> Brew & Bake
                     </a>
                 </div>
-                <nav class="main-nav">
-                    <ul>
-                        <li><a href="menu.php">MENU</a></li>
-                        <li><a href="rewards.php">REWARDS</a></li>
-                        <li><a href="gift-cards.php" class="active">GIFT CARDS</a></li>
-                    </ul>
-                </nav>
+                <!-- Main navigation removed -->
                 <div class="header-actions">
-                    <a href="cart.php" class="cart-icon">
+                    <a href="orders.php" class="cart-icon">
                         <i class="bi bi-cart"></i>
                         <?php if (!empty($_SESSION['cart'])): ?>
                             <span class="cart-count"><?= count($_SESSION['cart']) ?></span>
@@ -340,18 +334,18 @@ $giftCardAmounts = [100, 200, 500, 1000, 2000, 5000];
         document.addEventListener('DOMContentLoaded', function() {
             const userIcon = document.querySelector('.user-icon');
             const userDropdown = document.querySelector('.user-dropdown');
-            
+
             userIcon.addEventListener('click', function(e) {
                 e.preventDefault();
                 userDropdown.classList.toggle('show');
             });
-            
+
             document.addEventListener('click', function(e) {
                 if (!e.target.closest('.user-menu')) {
                     userDropdown.classList.remove('show');
                 }
             });
-            
+
             // Gift card form submission
             document.getElementById('giftCardForm').addEventListener('submit', function(e) {
                 e.preventDefault();

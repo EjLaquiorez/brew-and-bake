@@ -71,53 +71,57 @@ try {
 
 // Helper function to get category image
 function getCategoryImage($categoryName) {
-    $defaultImage = "category-default.jpg";
+    $defaultImage = "coffee.png"; // Default to coffee.png if no match
     $categoryName = strtolower($categoryName);
 
     switch ($categoryName) {
         case 'coffee':
-            return "hot-coffee.jpg";
+            return "coffee.png";
         case 'cake':
-            return "cake.jpg";
+        case 'cakes':
+            return "cake.png";
         case 'pastry':
-            return "pastry.jpg";
-        case 'drink':
-            return "cold-coffee.jpg";
-        case 'dessert':
-            return "dessert.jpg";
+        case 'pastries':
+            return "pastries.png";
         case 'beverage':
         case 'beverages':
-            return "cold-coffee.jpg";
+        case 'drink':
+        case 'drinks':
+            return "beverage.png";
+        // For other categories, we'll use the available images as fallbacks
+        case 'dessert':
+        case 'bakery':
+        case 'treats':
+            return "cake.png";
+        case 'sandwich':
         case 'sandwiches':
-            return "sandwich.jpg";
-        case 'pastries':
-            return "pastry.jpg";
-        case 'cakes':
-            return "cake.jpg";
+            return "sandwich.png";
+        case 'breakfast':
         case 'hot tea':
-            return "hot-tea.jpg";
         case 'cold tea':
-            return "cold-tea.jpg";
         case 'refreshers':
-            return "refreshers.jpg";
         case 'frappuccino':
         case 'blended beverage':
-            return "frappuccino.jpg";
         case 'iced energy':
-            return "iced-energy.jpg";
         case 'hot chocolate':
-            return "hot-chocolate.jpg";
         case 'bottled beverages':
-            return "bottled-beverages.jpg";
-        case 'breakfast':
-            return "breakfast.jpg";
-        case 'bakery':
-            return "bakery.jpg";
-        case 'treats':
-            return "treats.jpg";
+            // For any other drink-related category, use beverage.png
+            if (strpos($categoryName, 'tea') !== false ||
+                strpos($categoryName, 'drink') !== false ||
+                strpos($categoryName, 'beverage') !== false) {
+                return "beverage.png";
+            }
+            // For any other food-related category, use pastries.png
+            return "pastries.png";
         default:
             return $defaultImage;
     }
+}
+
+// Helper function to get the appropriate category image for a product
+function getProductCategoryImage($categoryName) {
+    // Simply use the same function as getCategoryImage for consistency
+    return getCategoryImage($categoryName);
 }
 ?>
 
@@ -136,7 +140,8 @@ function getCategoryImage($categoryName) {
     <link rel="stylesheet" href="../../assets/css/menu.css?v=<?= time() ?>">
 </head>
 <body>
-   
+    <!-- Include Header -->
+    <?php include_once "../includes/header.php"; ?>
 
     <!-- Menu Navigation -->
     <div class="menu-nav">
@@ -177,7 +182,7 @@ function getCategoryImage($categoryName) {
                 <ul class="category-nav">
                     <?php
                     // Define food categories
-                    $foodCategories = ['cake', 'cakes', 'pastry', 'pastries', 'dessert', 'sandwiches',
+                    $foodCategories = ['cake', 'cakes', 'pastry', 'pastries', 'dessert', 'sandwich', 'sandwiches',
                                       'breakfast', 'bakery', 'treats'];
 
                     foreach ($categories as $category):
@@ -193,7 +198,7 @@ function getCategoryImage($categoryName) {
 
             <!-- Menu Content -->
             <div class="menu-content">
-                <h1 class="menu-title">Menu</h1>
+                <h1 class="menu-title">Our Menu</h1>
 
                 <!-- Drinks Section -->
                 <section class="menu-section">
@@ -239,9 +244,19 @@ function getCategoryImage($categoryName) {
                                     <?php if (!empty($product['image'])): ?>
                                         <img src="../../assets/images/products/<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>">
                                     <?php else: ?>
-                                        <div class="no-image">
-                                            <i class="bi bi-cup-hot"></i>
-                                        </div>
+                                        <?php
+                                        // Get category name for the product
+                                        $categoryName = strtolower($product['category_name'] ?? '');
+                                        $categoryImage = getProductCategoryImage($categoryName);
+
+                                        if (!empty($categoryImage)):
+                                        ?>
+                                            <img src="../../assets/images/categories/<?= $categoryImage ?>" alt="<?= htmlspecialchars($product['name']) ?>" class="generic-product-image">
+                                        <?php else: ?>
+                                            <div class="no-image">
+                                                <i class="bi bi-cup-hot"></i>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                                 <div class="product-info">
@@ -304,28 +319,12 @@ function getCategoryImage($categoryName) {
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/user-menu.js"></script>
     <script>
         function addToCart(productId) {
             // TODO: Implement add to cart functionality
             alert('Product added to cart!');
         }
-
-        // User dropdown toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const userIcon = document.querySelector('.user-icon');
-            const userDropdown = document.querySelector('.user-dropdown');
-
-            userIcon.addEventListener('click', function(e) {
-                e.preventDefault();
-                userDropdown.classList.toggle('show');
-            });
-
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.user-menu')) {
-                    userDropdown.classList.remove('show');
-                }
-            });
-        });
     </script>
 </body>
 </html>

@@ -35,6 +35,81 @@ try {
     $user = [];
 }
 
+// Initialize cart if not exists
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+// Handle adding products to cart
+if (isset($_GET['add']) && is_numeric($_GET['add'])) {
+    $productId = (int)$_GET['add'];
+
+    // Check if product exists and is active
+    try {
+        $stmt = $conn->prepare("SELECT * FROM products WHERE id = ? AND status = 'active'");
+        $stmt->execute([$productId]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($product) {
+            // Add to cart or increment quantity
+            if (isset($_SESSION['cart'][$productId])) {
+                $_SESSION['cart'][$productId]++;
+            } else {
+                $_SESSION['cart'][$productId] = 1;
+            }
+
+            $successMessage = "Product added to your cart!";
+
+            // Redirect to remove the GET parameter
+            header("Location: orders.php");
+            exit;
+        } else {
+            $errorMessage = "Product not found or unavailable.";
+        }
+    } catch (PDOException $e) {
+        $errorMessage = "Error adding product to cart: " . $e->getMessage();
+    }
+}
+
+// Get cart items
+$cartItems = [];
+$totalAmount = 0;
+
+if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
+    $productIds = array_keys($_SESSION['cart']);
+    $placeholders = str_repeat('?,', count($productIds) - 1) . '?';
+
+    try {
+        $stmt = $conn->prepare("
+            SELECT p.*, c.name as category_name
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.id
+            WHERE p.id IN ($placeholders) AND p.status = 'active'
+        ");
+        $stmt->execute($productIds);
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($products as $product) {
+            $quantity = $_SESSION['cart'][$product['id']];
+            $subtotal = $product['price'] * $quantity;
+
+            $cartItems[] = [
+                'id' => $product['id'],
+                'name' => $product['name'],
+                'price' => $product['price'],
+                'image' => $product['image'],
+                'category' => $product['category_name'],
+                'quantity' => $quantity,
+                'subtotal' => $subtotal
+            ];
+
+            $totalAmount += $subtotal;
+        }
+    } catch (PDOException $e) {
+        $errorMessage = "Error fetching cart items: " . $e->getMessage();
+    }
+}
+
 // Get user orders
 try {
     // Check if orders table exists
@@ -144,16 +219,33 @@ try {
         }
 
         .btn-primary {
-            background-color: var(--color-primary);
-            border-color: var(--color-primary);
+            background-color: #f59e0b;
+            border-color: #f59e0b;
             padding: 0.5rem 1.25rem;
             font-weight: 500;
             border-radius: 8px;
+            color: #111827;
         }
 
         .btn-primary:hover {
-            background-color: var(--color-primary-dark);
-            border-color: var(--color-primary-dark);
+            background-color: #d97706;
+            border-color: #d97706;
+            color: #111827;
+        }
+
+        .cart-dropdown .btn-primary {
+            background-color: #f59e0b;
+            border-color: #f59e0b;
+            color: #111827;
+        }
+
+        .cart-dropdown .btn-primary:hover {
+            background-color: #d97706;
+            border-color: #d97706;
+        }
+
+        .cart-dropdown .text-muted {
+            color: #94a3b8 !important;
         }
 
         .alert {
@@ -221,6 +313,92 @@ try {
         .order-items {
             color: var(--color-gray-600);
             font-size: 0.875rem;
+        }
+
+        /* Shopping Cart Styles */
+        .cart-section {
+            margin-bottom: 2rem;
+        }
+
+        .cart-item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: var(--color-gray-100);
+        }
+
+        .cart-item-placeholder {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--color-gray-100);
+            border-radius: 8px;
+            color: var(--color-gray-400);
+            font-size: 1.5rem;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            max-width: 120px;
+        }
+
+        .quantity-input {
+            width: 50px;
+            text-align: center;
+            border-radius: 0;
+            border-left: 0;
+            border-right: 0;
+        }
+
+        .quantity-btn {
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .quantity-btn:first-child {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .quantity-btn:last-child {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .order-summary {
+            background-color: var(--color-gray-50);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .order-summary-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--color-gray-800);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            color: var(--color-gray-700);
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--color-gray-200);
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--color-gray-900);
         }
 
         /* Order details modal */
@@ -315,19 +493,61 @@ try {
 
         /* Header and menu navigation styling */
         .site-header {
-            background-color: var(--color-primary);
+            background-color: #111827;
             position: relative;
-            z-index: 99; /* Lower than menu-nav */
+            z-index: 49; /* Lower than menu-nav */
+            padding: 0.75rem 0;
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo a {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .logo a i {
+            margin-right: 0.5rem;
+            font-size: 1.75rem;
+        }
+
+        /* Main navigation styles removed */
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-icon {
+            color: #ffffff;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
         }
 
         .menu-nav {
             position: sticky;
             top: 0;
-            z-index: 101; /* Higher than site-header */
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
-            background-color: var(--color-white);
-            border-bottom: 1px solid var(--color-gray-200);
+            background-color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 40; /* Lower than dropdown menus but higher than regular content */
         }
 
         .menu-tabs {
@@ -343,8 +563,8 @@ try {
 
         .menu-tabs a {
             font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--color-gray-700);
+            font-weight: 500;
+            color: #4b5563;
             padding: 1rem 1.5rem;
             display: block;
             position: relative;
@@ -353,12 +573,12 @@ try {
         }
 
         .menu-tabs a:hover {
-            color: var(--color-primary);
+            color: #111827;
         }
 
         .menu-tabs a.active {
-            color: var(--color-primary);
-            font-weight: 700;
+            color: #111827;
+            font-weight: 600;
         }
 
         .menu-tabs a.active::after {
@@ -367,9 +587,9 @@ try {
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 4px;
-            background-color: var(--color-secondary);
-            border-radius: 4px 4px 0 0;
+            height: 3px;
+            background-color: #f59e0b;
+            border-radius: 2px 2px 0 0;
         }
 
         /* User dropdown styling */
@@ -377,13 +597,13 @@ try {
             position: absolute;
             top: 100%;
             right: 0;
-            background-color: var(--color-primary-light);
-            box-shadow: var(--shadow-md);
-            border-radius: var(--radius-md);
+            background-color: #1e293b;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
             width: 200px;
             padding: 0.5rem 0;
             display: none;
-            z-index: 10;
+            z-index: 100; /* Higher than menu-nav but lower than cart-dropdown */
         }
 
         .user-dropdown.show {
@@ -400,14 +620,178 @@ try {
             display: block;
             padding: 0.75rem 1rem;
             transition: background-color 0.3s ease;
-            color: var(--color-gray-300);
+            color: #f8fafc;
             text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 1000;
         }
 
         .user-dropdown li a:hover,
         .user-dropdown li a.active {
-            background-color: var(--color-primary-dark);
-            color: var(--color-white);
+            background-color: #334155;
+            color: #ffffff;
+        }
+
+        /* Cart styling */
+        .cart-menu {
+            position: relative;
+        }
+
+        .cart-icon {
+            position: relative;
+            font-size: 1.25rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #f59e0b;
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 350px;
+            background-color: #1e293b;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 0;
+            z-index: 150; /* Higher than menu-nav and user-dropdown */
+            display: none;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .cart-dropdown.show {
+            display: block;
+        }
+
+        .cart-dropdown-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #334155;
+            background-color: #1e293b;
+        }
+
+        .cart-dropdown-header h6 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #f8fafc;
+        }
+
+        .cart-dropdown-items {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 0;
+            background-color: #1e293b;
+        }
+
+        .cart-dropdown-loading {
+            padding: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cart-dropdown-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cart-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            background-color: #334155;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+            color: #f8fafc;
+        }
+
+        .cart-item-price {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cart-item-quantity {
+            background-color: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #f8fafc;
+        }
+
+        .cart-dropdown-footer {
+            padding: 12px 15px;
+            border-top: 1px solid #334155;
+            background-color: #1e293b;
+        }
+
+        .cart-dropdown-link {
+            color: #f8fafc;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .cart-dropdown-link:hover {
+            color: #f59e0b;
+            text-decoration: underline;
+        }
+
+        .cart-empty {
+            padding: 30px 15px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .cart-empty i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #64748b;
+        }
+
+        .cart-empty p {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
         }
 
         /* Responsive adjustments */
@@ -431,37 +815,17 @@ try {
             .order-date {
                 font-size: 0.75rem;
             }
+
+            .cart-dropdown {
+                width: 300px;
+                right: -50px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="site-header">
-        <div class="container">
-            <div class="header-inner">
-                <div class="logo">
-                    <a href="../../index.php">
-                        <i class="bi bi-cup-hot"></i> Brew & Bake
-                    </a>
-                </div>
-                <nav class="main-nav">
-                    <ul>
-                        <li><a href="client.php" class="active">MENU</a></li>
-                        <li><a href="client.php#about">ABOUT</a></li>
-                        <li><a href="client.php#contact">CONTACT</a></li>
-                    </ul>
-                </nav>
-                <div class="header-actions">
-                    <a href="cart.php" class="cart-icon">
-                        <i class="bi bi-cart"></i>
-                    </a>
-                    <a href="#" class="user-icon">
-                        <i class="bi bi-person-circle"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Include Header -->
+    <?php include_once "../includes/header.php"; ?>
 
     <!-- Menu Navigation -->
     <div class="menu-nav">
@@ -474,14 +838,7 @@ try {
         </div>
     </div>
 
-    <!-- User Dropdown Menu -->
-    <div class="user-dropdown">
-        <ul>
-            <li><a href="profile.php">Account Settings</a></li>
-            <li><a href="orders.php" class="active">My Orders</a></li>
-            <li><a href="../includes/logout.php">Logout</a></li>
-        </ul>
-    </div>
+
 
     <!-- Main Content -->
     <main class="orders-section">
@@ -489,7 +846,7 @@ try {
             <!-- Page Header -->
             <div class="orders-header">
                 <h1 class="orders-title">My Orders</h1>
-                <p class="orders-subtitle">View and track your order history</p>
+                <p class="orders-subtitle">Manage your cart and view your order history</p>
             </div>
 
             <?php if (!empty($successMessage)): ?>
@@ -504,10 +861,122 @@ try {
                 </div>
             <?php endif; ?>
 
-            <!-- Orders List -->
+            <!-- Shopping Cart Section -->
+            <div class="cart-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="bi bi-cart"></i> Shopping Cart</h2>
+                    </div>
+                    <div class="card-body">
+                        <?php if (empty($cartItems)): ?>
+                            <!-- Empty Cart -->
+                            <div class="text-center py-4">
+                                <i class="bi bi-cart-x display-4 text-muted"></i>
+                                <h3 class="mt-3">Your Cart is Empty</h3>
+                                <p class="text-muted mb-4">Looks like you haven't added any products to your cart yet.</p>
+                                <a href="client.php" class="btn btn-primary">
+                                    <i class="bi bi-cup-hot me-2"></i> Browse Menu
+                                </a>
+                            </div>
+                        <?php else: ?>
+                            <!-- Cart Items -->
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    <form method="POST" action="orders.php">
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Product</th>
+                                                        <th>Price</th>
+                                                        <th>Quantity</th>
+                                                        <th>Subtotal</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($cartItems as $item): ?>
+                                                        <tr>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <?php if (!empty($item['image'])): ?>
+                                                                        <img src="../../assets/images/products/<?= htmlspecialchars($item['image']) ?>"
+                                                                            alt="<?= htmlspecialchars($item['name']) ?>"
+                                                                            class="cart-item-image me-3">
+                                                                    <?php else: ?>
+                                                                        <div class="cart-item-placeholder me-3">
+                                                                            <i class="bi bi-image"></i>
+                                                                        </div>
+                                                                    <?php endif; ?>
+                                                                    <div>
+                                                                        <h6 class="mb-0"><?= htmlspecialchars($item['name']) ?></h6>
+                                                                        <small class="text-muted"><?= htmlspecialchars(ucfirst($item['category'])) ?></small>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td>₱<?= number_format($item['price'], 2) ?></td>
+                                                            <td>
+                                                                <div class="quantity-control">
+                                                                    <button type="button" class="btn btn-sm btn-outline-secondary quantity-btn" data-action="decrease" data-id="<?= $item['id'] ?>">-</button>
+                                                                    <input type="number" name="quantity[<?= $item['id'] ?>]" value="<?= $item['quantity'] ?>" min="1" max="99" class="form-control quantity-input">
+                                                                    <button type="button" class="btn btn-sm btn-outline-secondary quantity-btn" data-action="increase" data-id="<?= $item['id'] ?>">+</button>
+                                                                </div>
+                                                            </td>
+                                                            <td>₱<?= number_format($item['subtotal'], 2) ?></td>
+                                                            <td>
+                                                                <button type="submit" name="remove_item" value="<?= $item['id'] ?>" class="btn btn-sm btn-outline-danger" formaction="orders.php">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-3">
+                                            <button type="submit" name="update_cart" class="btn btn-outline-primary" formaction="orders.php">
+                                                <i class="bi bi-arrow-repeat"></i> Update Cart
+                                            </button>
+                                            <a href="client.php" class="btn btn-outline-secondary">
+                                                <i class="bi bi-plus-circle"></i> Add More Items
+                                            </a>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="order-summary">
+                                        <h3 class="order-summary-title">Order Summary</h3>
+                                        <div class="summary-item">
+                                            <span>Subtotal</span>
+                                            <span>₱<?= number_format($totalAmount, 2) ?></span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span>Delivery Fee</span>
+                                            <span>₱50.00</span>
+                                        </div>
+                                        <div class="summary-total">
+                                            <span>Total</span>
+                                            <span>₱<?= number_format($totalAmount + 50, 2) ?></span>
+                                        </div>
+                                        <div class="mt-4">
+                                            <form method="POST" action="orders.php">
+                                                <button type="submit" name="checkout" class="btn btn-primary w-100">
+                                                    <i class="bi bi-credit-card me-2"></i> Proceed to Checkout
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order History Section -->
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="bi bi-bag"></i> Order History</h2>
+                    <h2><i class="bi bi-clock-history"></i> Order History</h2>
                 </div>
                 <div class="card-body">
                     <?php if (empty($orders)): ?>
@@ -681,27 +1150,12 @@ try {
     </footer>
 
     <!-- JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php
+    $root_path = '../../';
+    include_once "../../templates/includes/footer-scripts.php";
+    ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Toggle user dropdown
-            const userIcon = document.querySelector('.user-icon');
-            const userDropdown = document.querySelector('.user-dropdown');
-
-            if (userIcon && userDropdown) {
-                userIcon.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    userDropdown.classList.toggle('show');
-                });
-
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!userIcon.contains(e.target) && !userDropdown.contains(e.target)) {
-                        userDropdown.classList.remove('show');
-                    }
-                });
-            }
-
             // Make menu-nav sticky on scroll
             const menuNav = document.querySelector('.menu-nav');
             const siteHeader = document.querySelector('.site-header');
@@ -724,6 +1178,25 @@ try {
                     }
                 });
             }
+
+            // Handle quantity buttons in shopping cart
+            const quantityBtns = document.querySelectorAll('.quantity-btn');
+            quantityBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.dataset.action;
+                    const productId = this.dataset.id;
+                    const input = document.querySelector(`input[name="quantity[${productId}]"]`);
+                    let value = parseInt(input.value);
+
+                    if (action === 'increase') {
+                        value = Math.min(value + 1, 99);
+                    } else if (action === 'decrease') {
+                        value = Math.max(value - 1, 1);
+                    }
+
+                    input.value = value;
+                });
+            });
 
             // Handle order details modal
             const orderDetailsModal = document.getElementById('orderDetailsModal');
