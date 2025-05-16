@@ -24,6 +24,200 @@ if (isset($_SESSION['error'])) {
     unset($_SESSION['error']);
 }
 
+// Handle cart operations
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Handle remove item from cart
+    if (isset($_POST['remove_item']) && is_numeric($_POST['remove_item'])) {
+        $productId = (int)$_POST['remove_item'];
+        if (isset($_SESSION['cart'][$productId])) {
+            unset($_SESSION['cart'][$productId]);
+            $successMessage = "Item removed from cart successfully.";
+        }
+    }
+
+    // Handle update cart quantities
+    if (isset($_POST['update_cart']) && isset($_POST['quantity'])) {
+        $stockErrors = [];
+
+        // First, check stock availability for all products
+        foreach ($_POST['quantity'] as $productId => $quantity) {
+            $productId = (int)$productId;
+            $quantity = (int)$quantity;
+
+            if ($quantity > 0 && $quantity <= 99) {
+                // Check product stock
+                try {
+                    $stmt = $conn->prepare("SELECT stock FROM products WHERE id = ? AND status = 'active'");
+                    $stmt->execute([$productId]);
+                    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if ($product && $quantity > $product['stock']) {
+                        // If requested quantity exceeds available stock
+                        $stockErrors[$productId] = [
+                            'requested' => $quantity,
+                            'available' => $product['stock'],
+                            'message' => "Only {$product['stock']} units available for this product."
+                        ];
+                    }
+                } catch (PDOException $e) {
+                    // Skip this product on error
+                    continue;
+                }
+            }
+        }
+
+        // If there are stock errors and this is an AJAX request, return them
+        if (!empty($stockErrors) && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Some items exceed available stock.',
+                'errors' => $stockErrors
+            ]);
+            exit;
+        }
+
+        // Update quantities that are valid
+        foreach ($_POST['quantity'] as $productId => $quantity) {
+            $productId = (int)$productId;
+            $quantity = (int)$quantity;
+
+            if ($quantity > 0 && $quantity <= 99) {
+                if (isset($_SESSION['cart'][$productId])) {
+                    // If we have a stock error for this product, set to max available
+                    if (isset($stockErrors[$productId])) {
+                        $_SESSION['cart'][$productId] = $stockErrors[$productId]['available'];
+                    } else {
+                        $_SESSION['cart'][$productId] = $quantity;
+                    }
+                }
+            }
+        }
+
+        // Set appropriate message
+        if (!empty($stockErrors)) {
+            $errorMessage = "Some items were adjusted due to stock limitations.";
+        } else {
+            $successMessage = "Cart updated successfully.";
+        }
+
+        // Only show success message if it's not an automatic update
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => empty($stockErrors) ? $successMessage : $errorMessage,
+                'errors' => $stockErrors
+            ]);
+            exit;
+        }
+    }
+
+    // Handle checkout
+    if (isset($_POST['checkout'])) {
+        // Check if cart is empty
+        if (empty($_SESSION['cart'])) {
+            $errorMessage = "Your cart is empty. Please add items before checkout.";
+        } else {
+            // Process checkout
+            try {
+                // First, verify stock availability for all items
+                $stockErrors = [];
+                $productUpdates = [];
+
+                foreach ($cartItems as $item) {
+                    // Check current stock
+                    $stmt = $conn->prepare("SELECT stock FROM products WHERE id = ? AND status = 'active'");
+                    $stmt->execute([$item['id']]);
+                    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$product) {
+                        $stockErrors[] = "Product '{$item['name']}' is no longer available.";
+                        continue;
+                    }
+
+                    if ($product['stock'] < $item['quantity']) {
+                        if ($product['stock'] <= 0) {
+                            $stockErrors[] = "'{$item['name']}' is out of stock.";
+                        } else {
+                            $stockErrors[] = "Only {$product['stock']} units of '{$item['name']}' available.";
+                            // Update cart with available quantity
+                            $_SESSION['cart'][$item['id']] = $product['stock'];
+                            $productUpdates[$item['id']] = $product['stock'];
+                        }
+                    }
+                }
+
+                // If there are stock errors, don't proceed with checkout
+                if (!empty($stockErrors)) {
+                    $errorMessage = "Cannot complete checkout due to stock limitations:<br>" . implode("<br>", $stockErrors);
+
+                    // If we updated any quantities, we need to refresh the page
+                    if (!empty($productUpdates)) {
+                        $_SESSION['error'] = $errorMessage;
+                        header("Location: orders.php");
+                        exit;
+                    }
+
+                    // Otherwise just show the error
+                    break;
+                }
+
+                // Start transaction
+                $conn->beginTransaction();
+
+                // Create order record
+                $stmt = $conn->prepare("INSERT INTO orders (client_id, order_date, total_price, status, payment_status, created_at)
+                                        VALUES (?, NOW(), ?, 'pending', 'unpaid', NOW())");
+                $stmt->execute([$userId, $totalAmount + 50]); // Adding shipping fee
+
+                $orderId = $conn->lastInsertId();
+
+                // Add order items and update stock
+                $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price, created_at)
+                                        VALUES (?, ?, ?, ?, NOW())");
+
+                $updateStockStmt = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+
+                foreach ($cartItems as $item) {
+                    $stmt->execute([
+                        $orderId,
+                        $item['id'],
+                        $item['quantity'],
+                        $item['price']
+                    ]);
+
+                    // Update product stock
+                    $updateStockStmt->execute([$item['quantity'], $item['id']]);
+                }
+
+                // Create a payment record
+                $stmt = $conn->prepare("INSERT INTO payments (order_id, amount, payment_method, payment_status, transaction_date)
+                                        VALUES (?, ?, 'cash', 'pending', NOW())");
+                $stmt->execute([$orderId, $totalAmount + 50]);
+
+                // Commit transaction
+                $conn->commit();
+
+                // Clear cart
+                $_SESSION['cart'] = [];
+
+                // Set success message
+                $_SESSION['success'] = "Your order has been placed successfully! Order #" . $orderId;
+
+                // Redirect to prevent form resubmission
+                header("Location: orders.php");
+                exit;
+
+            } catch (PDOException $e) {
+                // Rollback transaction on error
+                $conn->rollBack();
+                $errorMessage = "Error processing your order: " . $e->getMessage();
+            }
+        }
+    }
+}
+
 // Get user information
 $userId = $_SESSION['user_id'];
 try {
@@ -44,30 +238,117 @@ if (!isset($_SESSION['cart'])) {
 if (isset($_GET['add']) && is_numeric($_GET['add'])) {
     $productId = (int)$_GET['add'];
 
-    // Check if product exists and is active
+    // Get quantity from URL parameter or default to 1
+    $quantity = 1;
+    if (isset($_GET['quantity']) && is_numeric($_GET['quantity'])) {
+        $quantity = (int)$_GET['quantity'];
+        // Validate quantity
+        if ($quantity < 1) {
+            $quantity = 1;
+        } else if ($quantity > 99) {
+            $quantity = 99;
+        }
+    }
+
+    // Check if product exists, is active, and has sufficient stock
     try {
         $stmt = $conn->prepare("SELECT * FROM products WHERE id = ? AND status = 'active'");
         $stmt->execute([$productId]);
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($product) {
-            // Add to cart or increment quantity
+            // Calculate total quantity (current cart + new quantity)
+            $totalQuantity = $quantity;
             if (isset($_SESSION['cart'][$productId])) {
-                $_SESSION['cart'][$productId]++;
-            } else {
-                $_SESSION['cart'][$productId] = 1;
+                $totalQuantity += $_SESSION['cart'][$productId];
             }
 
-            $successMessage = "Product added to your cart!";
+            // Check if we have enough stock
+            if ($product['stock'] <= 0) {
+                $errorMessage = "Sorry, this product is out of stock.";
 
-            // Redirect to remove the GET parameter
-            header("Location: orders.php");
-            exit;
+                // Return error for AJAX requests
+                if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => false,
+                        'message' => $errorMessage,
+                        'error_type' => 'out_of_stock',
+                        'product_id' => $productId
+                    ]);
+                    exit;
+                }
+            }
+            else if ($totalQuantity > $product['stock']) {
+                // If requested quantity exceeds available stock
+                $availableStock = $product['stock'];
+                if (isset($_SESSION['cart'][$productId])) {
+                    $availableStock -= $_SESSION['cart'][$productId];
+                }
+
+                if ($availableStock <= 0) {
+                    $errorMessage = "You already have all available items of this product in your cart.";
+                } else {
+                    $errorMessage = "Only {$availableStock} more units available for this product.";
+                }
+
+                // Return error for AJAX requests
+                if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => false,
+                        'message' => $errorMessage,
+                        'error_type' => 'insufficient_stock',
+                        'available_stock' => $availableStock,
+                        'product_id' => $productId
+                    ]);
+                    exit;
+                }
+            }
+            else {
+                // We have enough stock, proceed with adding to cart
+                if (isset($_SESSION['cart'][$productId])) {
+                    $_SESSION['cart'][$productId] += $quantity;
+                    // Ensure quantity doesn't exceed maximum or available stock
+                    $_SESSION['cart'][$productId] = min($_SESSION['cart'][$productId], 99, $product['stock']);
+                } else {
+                    $_SESSION['cart'][$productId] = $quantity;
+                }
+
+                $successMessage = "Product added to your cart!";
+
+                // Check if this is an AJAX request
+                if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
+                    // Return JSON response for AJAX requests
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => $successMessage,
+                        'quantity' => $quantity,
+                        'product_id' => $productId,
+                        'cart_count' => count($_SESSION['cart']),
+                        'stock' => $product['stock'],
+                        'remaining_stock' => $product['stock'] - $_SESSION['cart'][$productId]
+                    ]);
+                    exit;
+                } else {
+                    // Redirect for normal requests
+                    header("Location: orders.php");
+                    exit;
+                }
+            }
         } else {
             $errorMessage = "Product not found or unavailable.";
         }
     } catch (PDOException $e) {
         $errorMessage = "Error adding product to cart: " . $e->getMessage();
+    }
+
+    // If we reach here with an error and it's not an AJAX request, redirect
+    if (!isset($_GET['ajax']) || $_GET['ajax'] != 1) {
+        $_SESSION['error'] = $errorMessage;
+        header("Location: orders.php");
+        exit;
     }
 }
 
@@ -248,10 +529,133 @@ try {
             color: #94a3b8 !important;
         }
 
+        /* Custom Alert Styling */
         .alert {
-            border-radius: 8px;
-            padding: 1rem;
+            position: relative;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
             margin-bottom: 1.5rem;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            animation: slideInDown 0.3s ease-out;
+            display: flex;
+            align-items: center;
+        }
+
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid #28a745;
+            color: #1e7e34;
+        }
+
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+            color: #bd2130;
+        }
+
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            color: #d39e00;
+        }
+
+        .alert-info {
+            background-color: rgba(23, 162, 184, 0.1);
+            border-left: 4px solid #17a2b8;
+            color: #117a8b;
+        }
+
+        .alert i {
+            font-size: 1.25rem;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-container {
+            max-width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-dismissible {
+            padding-right: 3rem;
+        }
+
+        .alert-dismissible .btn-close {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            padding: 0.25rem;
+            background: transparent;
+            border: 0;
+            font-size: 1.25rem;
+            color: currentColor;
+            opacity: 0.5;
+            cursor: pointer;
+        }
+
+        .alert-dismissible .btn-close:hover {
+            opacity: 0.75;
+        }
+
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Cart updating indicator */
+        #cart-updating-indicator {
+            display: flex;
+            align-items: center;
+            animation: fadeInOut 1.5s ease-in-out;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            max-width: 200px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background-color: rgba(17, 24, 39, 0.8);
+            color: #fff;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1050;
+            border: none;
+        }
+
+        #cart-updating-indicator i {
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        #cart-updating-indicator.success {
+            background-color: rgba(40, 167, 69, 0.8);
+        }
+
+        #cart-updating-indicator.error {
+            background-color: rgba(220, 53, 69, 0.8);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(10px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(10px); }
         }
 
         .badge {
@@ -849,17 +1253,32 @@ try {
                 <p class="orders-subtitle">Manage your cart and view your order history</p>
             </div>
 
-            <?php if (!empty($successMessage)): ?>
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle-fill me-2"></i> <?= htmlspecialchars($successMessage) ?>
-                </div>
-            <?php endif; ?>
+            <!-- Alert Container -->
+            <div class="alert-container">
+                <?php if (!empty($successMessage)): ?>
+                    <div class="alert alert-success alert-dismissible" role="alert">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div class="alert-content">
+                            <?= htmlspecialchars($successMessage) ?>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                <?php endif; ?>
 
-            <?php if (!empty($errorMessage)): ?>
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= htmlspecialchars($errorMessage) ?>
-                </div>
-            <?php endif; ?>
+                <?php if (!empty($errorMessage)): ?>
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <div class="alert-content">
+                            <?= htmlspecialchars($errorMessage) ?>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                <?php endif; ?>
+            </div>
 
             <!-- Shopping Cart Section -->
             <div class="cart-section">
@@ -933,10 +1352,7 @@ try {
                                                 </tbody>
                                             </table>
                                         </div>
-                                        <div class="d-flex justify-content-between mt-3">
-                                            <button type="submit" name="update_cart" class="btn btn-outline-primary" formaction="orders.php">
-                                                <i class="bi bi-arrow-repeat"></i> Update Cart
-                                            </button>
+                                        <div class="d-flex justify-content-end mt-3">
                                             <a href="client.php" class="btn btn-outline-secondary">
                                                 <i class="bi bi-plus-circle"></i> Add More Items
                                             </a>
@@ -1050,7 +1466,7 @@ try {
 
                                                 // Try to get the actual count from the database if possible
                                                 try {
-                                                    $itemStmt = $conn->prepare("SELECT COUNT(*) FROM orders_items WHERE order_id = ?");
+                                                    $itemStmt = $conn->prepare("SELECT COUNT(*) FROM order_items WHERE order_id = ?");
                                                     $itemStmt->execute([$order['id']]);
                                                     $itemCount = $itemStmt->fetchColumn();
                                                 } catch (PDOException $e) {
@@ -1179,24 +1595,172 @@ try {
                 });
             }
 
-            // Handle quantity buttons in shopping cart
-            const quantityBtns = document.querySelectorAll('.quantity-btn');
-            quantityBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const action = this.dataset.action;
-                    const productId = this.dataset.id;
-                    const input = document.querySelector(`input[name="quantity[${productId}]"]`);
-                    let value = parseInt(input.value);
+            // Auto-dismiss alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
 
-                    if (action === 'increase') {
-                        value = Math.min(value + 1, 99);
-                    } else if (action === 'decrease') {
-                        value = Math.max(value - 1, 1);
+            // Handle quantity buttons in shopping cart with automatic update
+            const quantityBtns = document.querySelectorAll('.quantity-btn');
+            const cartForm = document.querySelector('form[action="orders.php"]');
+
+            // Function to show updating indicator
+            function showUpdatingIndicator() {
+                // Remove any existing indicator
+                const existingIndicator = document.getElementById('cart-updating-indicator');
+                if (existingIndicator && existingIndicator.parentNode) {
+                    existingIndicator.parentNode.removeChild(existingIndicator);
+                }
+
+                // Create new indicator
+                const indicator = document.createElement('div');
+                indicator.id = 'cart-updating-indicator';
+                indicator.innerHTML = `
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Updating...</span>
+                `;
+
+                // Add to body instead of alert container for less intrusive display
+                document.body.appendChild(indicator);
+
+                return indicator;
+            }
+
+            // Function to automatically update cart
+            function updateCart(input) {
+                if (cartForm) {
+                    // Show updating indicator
+                    const indicator = showUpdatingIndicator();
+
+                    // Create a hidden input for update_cart
+                    let updateInput = document.querySelector('input[name="auto_update_cart"]');
+                    if (!updateInput) {
+                        updateInput = document.createElement('input');
+                        updateInput.type = 'hidden';
+                        updateInput.name = 'update_cart';
+                        updateInput.value = '1';
+                        cartForm.appendChild(updateInput);
                     }
 
-                    input.value = value;
+                    // Submit the form
+                    const formData = new FormData(cartForm);
+
+                    fetch('orders.php', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        // Parse the HTML to get the updated cart content
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+
+                        // Update the cart section
+                        const newCartSection = doc.querySelector('.cart-section');
+                        const currentCartSection = document.querySelector('.cart-section');
+                        if (newCartSection && currentCartSection) {
+                            currentCartSection.innerHTML = newCartSection.innerHTML;
+
+                            // Reattach event listeners to the new buttons
+                            attachQuantityButtonListeners();
+                        }
+
+                        // Update the order summary if it exists
+                        const newOrderSummary = doc.querySelector('.order-summary');
+                        const currentOrderSummary = document.querySelector('.order-summary');
+                        if (newOrderSummary && currentOrderSummary) {
+                            currentOrderSummary.innerHTML = newOrderSummary.innerHTML;
+                        }
+
+                        // Show success indicator
+                        if (indicator && indicator.parentNode) {
+                            indicator.className = indicator.className + ' success';
+                            indicator.innerHTML = `
+                                <i class="bi bi-check-circle"></i>
+                                <span>Updated</span>
+                            `;
+
+                            // Remove the indicator after a short delay
+                            setTimeout(() => {
+                                if (indicator && indicator.parentNode) {
+                                    indicator.parentNode.removeChild(indicator);
+                                }
+                            }, 1000);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating cart:', error);
+                        // Show error message
+                        if (indicator && indicator.parentNode) {
+                            indicator.className = indicator.className + ' error';
+                            indicator.innerHTML = `
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <span>Failed</span>
+                            `;
+
+                            // Remove the indicator after a delay
+                            setTimeout(() => {
+                                if (indicator && indicator.parentNode) {
+                                    indicator.parentNode.removeChild(indicator);
+                                }
+                            }, 2000);
+                        }
+                    });
+                }
+            }
+
+            // Function to attach event listeners to quantity buttons
+            function attachQuantityButtonListeners() {
+                const quantityBtns = document.querySelectorAll('.quantity-btn');
+                const quantityInputs = document.querySelectorAll('.quantity-input');
+
+                quantityBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const action = this.dataset.action;
+                        const productId = this.dataset.id;
+                        const input = document.querySelector(`input[name="quantity[${productId}]"]`);
+                        let value = parseInt(input.value);
+
+                        if (action === 'increase') {
+                            value = Math.min(value + 1, 99);
+                        } else if (action === 'decrease') {
+                            value = Math.max(value - 1, 1);
+                        }
+
+                        input.value = value;
+
+                        // Automatically update the cart
+                        updateCart(input);
+                    });
                 });
-            });
+
+                // Also update when input value changes directly
+                quantityInputs.forEach(input => {
+                    input.addEventListener('change', function() {
+                        // Ensure value is within valid range
+                        let value = parseInt(this.value);
+                        if (isNaN(value) || value < 1) {
+                            value = 1;
+                        } else if (value > 99) {
+                            value = 99;
+                        }
+                        this.value = value;
+
+                        // Automatically update the cart
+                        updateCart(this);
+                    });
+                });
+            }
+
+            // Initial attachment of event listeners
+            attachQuantityButtonListeners();
 
             // Handle order details modal
             const orderDetailsModal = document.getElementById('orderDetailsModal');
@@ -1273,6 +1837,15 @@ try {
                 const formattedDate = orderDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                 const formattedTime = orderDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 
+                // Format payment date if available
+                let formattedPaymentDate = '';
+                let formattedPaymentTime = '';
+                if (orderData.payment_transaction_date) {
+                    const paymentDate = new Date(orderData.payment_transaction_date);
+                    formattedPaymentDate = paymentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    formattedPaymentTime = paymentDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+                }
+
                 // Determine status badge class
                 let statusClass = 'bg-secondary';
                 switch (String(orderData.status).toLowerCase()) {
@@ -1289,6 +1862,25 @@ try {
                         statusClass = 'bg-danger';
                         break;
                 }
+
+                // Determine payment status badge class
+                let paymentStatusClass = 'bg-secondary';
+                switch (String(orderData.payment_status).toLowerCase()) {
+                    case 'paid':
+                        paymentStatusClass = 'bg-success';
+                        break;
+                    case 'unpaid':
+                        paymentStatusClass = 'bg-warning';
+                        break;
+                }
+
+                // Format payment method for display
+                const paymentMethodDisplay = {
+                    'cash': 'Cash',
+                    'credit_card': 'Credit Card',
+                    'gcash': 'GCash',
+                    'bank_transfer': 'Bank Transfer'
+                };
 
                 // Generate HTML for order details
                 return `
@@ -1332,10 +1924,14 @@ try {
                                 <p class="mb-3">${orderData.address}</p>
                             ` : ''}
                             <p class="mb-1"><strong>Payment Status:</strong></p>
-                            <p>${orderData.payment_status || 'Not specified'}</p>
-                            ${orderData.payment_method ? `
-                                <p class="mb-1"><strong>Payment Method:</strong></p>
-                                <p>${orderData.payment_method}</p>
+                            <p><span class="badge ${paymentStatusClass}">${orderData.payment_status ? orderData.payment_status.charAt(0).toUpperCase() + orderData.payment_status.slice(1) : 'Not specified'}</span></p>
+
+                            <p class="mb-1"><strong>Payment Method:</strong></p>
+                            <p>${orderData.payment_method ? paymentMethodDisplay[orderData.payment_method] || orderData.payment_method : 'Not specified'}</p>
+
+                            ${orderData.payment_transaction_date ? `
+                                <p class="mb-1"><strong>Payment Date:</strong></p>
+                                <p>${formattedPaymentDate} at ${formattedPaymentTime}</p>
                             ` : ''}
                         </div>
                         <div class="col-md-6">

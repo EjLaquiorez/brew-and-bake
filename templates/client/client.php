@@ -587,6 +587,228 @@ function getCategoryImage($categoryName) {
             }
         }
 
+        /* Add to Cart Modal Styles */
+        .product-modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 1rem 1.5rem;
+        }
+
+        .product-modal-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            padding: 1rem 1.5rem;
+        }
+
+        .product-image-container {
+            width: 100%;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            margin-right: 1rem;
+        }
+
+        .product-image-container img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+            z-index: 1;
+        }
+
+        .product-image-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #dee2e6;
+            font-size: 3rem;
+            z-index: 0;
+        }
+
+        .product-details-container {
+            padding: 0 0.5rem 0 1rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #111827;
+            line-height: 1.3;
+        }
+
+        .product-category-badge {
+            background-color: #f59e0b;
+            color: #111827;
+            font-weight: 500;
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+        }
+
+        .stock-badge {
+            background-color: #10b981;
+            color: white;
+            font-weight: 500;
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+            margin-left: 0.5rem;
+        }
+
+        .product-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            max-height: 4.5rem;
+            overflow-y: auto;
+        }
+
+        .product-modal-divider {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 1rem 0;
+        }
+
+        .quantity-control-modal {
+            max-width: 180px;
+        }
+
+        .quantity-control-modal .form-control {
+            text-align: center;
+            font-weight: 600;
+            border-radius: 0;
+            height: 42px;
+            border-color: #e5e7eb;
+        }
+
+        .btn-quantity {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-color: #e5e7eb;
+            color: #111827;
+            font-size: 1rem;
+            padding: 0;
+        }
+
+        .btn-quantity:hover {
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+        }
+
+        .btn-quantity:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+
+        .btn-quantity:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtotal-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        /* Add to cart success animation */
+        .add-to-cart-success {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1060;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .add-to-cart-success.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            color: #10b981;
+            margin-bottom: 1rem;
+            animation: scaleIn 0.5s ease;
+        }
+
+        .success-message {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Toast notification styles */
+        .toast-container {
+            z-index: 1070;
+        }
+
+        .toast {
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+            min-width: 280px;
+        }
+
+        .toast.bg-success {
+            background-color: rgba(16, 185, 129, 0.95) !important;
+        }
+
+        .toast-body {
+            padding: 0.75rem 1rem 0.5rem;
+            font-weight: 500;
+        }
+
+        .toast-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .toast-actions .btn-light {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 255, 255, 0.9);
+            color: #10b981;
+            font-weight: 500;
+            width: 100%;
+        }
+
         @media (max-width: 768px) {
             .menu-tabs {
                 justify-content: space-between;
@@ -595,6 +817,60 @@ function getCategoryImage($categoryName) {
             .menu-tabs a {
                 padding: 0.75rem 0.75rem;
                 font-size: 0.8rem;
+            }
+
+            /* Mobile modal adjustments */
+            .product-image-container {
+                height: 140px;
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+
+            .product-modal-top .row {
+                flex-direction: column;
+            }
+
+            .product-modal-top .col-5,
+            .product-modal-top .col-7 {
+                width: 100%;
+                max-width: 100%;
+                flex: 0 0 100%;
+            }
+
+            .product-details-container {
+                padding: 0;
+            }
+
+            .product-modal-title {
+                font-size: 1.1rem;
+            }
+
+            .product-price {
+                font-size: 1.25rem;
+            }
+
+            .subtotal-container {
+                text-align: left !important;
+                margin-top: 1rem !important;
+            }
+
+            .product-modal-bottom .row {
+                flex-direction: column;
+            }
+
+            .product-modal-bottom .col-md-6 {
+                width: 100%;
+                max-width: 100%;
+                flex: 0 0 100%;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .modal-footer .btn {
+                width: 100%;
             }
         }
     </style>
@@ -716,9 +992,20 @@ function getCategoryImage($categoryName) {
                                         <span class="price">₱<?= number_format($product['price'], 2) ?></span>
                                     </div>
                                     <?php if ($isLoggedIn && $userRole === 'client'): ?>
-                                        <a href="orders.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
-                                            <i class="bi bi-cart-plus"></i> Order Now
-                                        </a>
+                                        <div class="d-flex flex-column">
+                                            <small class="text-muted mb-1">Stock: <?= $product['stock'] ?></small>
+                                            <button type="button" class="btn btn-primary w-100 add-to-cart-btn"
+                                                data-product-id="<?= $product['id'] ?>"
+                                                data-product-name="<?= htmlspecialchars($product['name']) ?>"
+                                                data-product-price="<?= $product['price'] ?>"
+                                                data-product-image="<?= !empty($product['image']) ? htmlspecialchars($product['image']) : '' ?>"
+                                                data-product-stock="<?= $product['stock'] ?>">
+                                                <i class="bi bi-cart-plus"></i> Order Now
+                                                <?php if ($product['stock'] <= 0): ?>
+                                                    <span class="badge bg-danger ms-1">Out of Stock</span>
+                                                <?php endif; ?>
+                                            </button>
+                                        </div>
                                     <?php else: ?>
                                         <a href="#" class="btn btn-primary w-100 login-required">
                                             <i class="bi bi-cart-plus"></i> Order Now
@@ -755,9 +1042,21 @@ function getCategoryImage($categoryName) {
                                                 <span class="price">₱<?= number_format($product['price'], 2) ?></span>
                                             </div>
                                             <?php if ($isLoggedIn && $userRole === 'client'): ?>
-                                                <a href="orders.php?add=<?= $product['id'] ?>" class="btn btn-primary w-100">
-                                                    <i class="bi bi-cart-plus"></i> Order Now
-                                                </a>
+                                                <div class="d-flex flex-column">
+                                                    <small class="text-muted mb-1">Stock: <?= $product['stock'] ?></small>
+                                                    <button type="button" class="btn btn-primary w-100 add-to-cart-btn"
+                                                        data-product-id="<?= $product['id'] ?>"
+                                                        data-product-name="<?= htmlspecialchars($product['name']) ?>"
+                                                        data-product-price="<?= $product['price'] ?>"
+                                                        data-product-image="<?= !empty($product['image']) ? htmlspecialchars($product['image']) : '' ?>"
+                                                        data-product-category="<?= htmlspecialchars(ucfirst($category['name'])) ?>"
+                                                        data-product-stock="<?= $product['stock'] ?>">
+                                                        <i class="bi bi-cart-plus"></i> Order Now
+                                                        <?php if ($product['stock'] <= 0): ?>
+                                                            <span class="badge bg-danger ms-1">Out of Stock</span>
+                                                        <?php endif; ?>
+                                                    </button>
+                                                </div>
                                             <?php else: ?>
                                                 <a href="#" class="btn btn-primary w-100 login-required">
                                                     <i class="bi bi-cart-plus"></i> Order Now
@@ -1013,6 +1312,86 @@ function getCategoryImage($categoryName) {
         </div>
     </div>
 
+    <!-- Add to Cart Modal -->
+    <div class="modal fade" id="addToCartModal" tabindex="-1" aria-labelledby="addToCartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header product-modal-header">
+                    <h5 class="modal-title" id="addToCartModalLabel">Add to Cart</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="product-modal-top mb-4">
+                        <div class="row g-0">
+                            <div class="col-5">
+                                <div class="product-image-container">
+                                    <img id="modal-product-image" src="" alt="Product" class="img-fluid rounded">
+                                    <div class="product-image-placeholder">
+                                        <i class="bi bi-cup-hot"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="product-details-container">
+                                    <div class="product-badges mb-2">
+                                        <span id="modal-product-category" class="badge product-category-badge"></span>
+                                        <span id="modal-product-stock" class="badge stock-badge">In Stock</span>
+                                    </div>
+                                    <div id="stock-warning" class="alert alert-warning d-none mb-2" style="font-size: 0.8rem; padding: 0.5rem;">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                        <span id="stock-warning-text"></span>
+                                    </div>
+                                    <h4 id="modal-product-name" class="product-modal-title"></h4>
+                                    <p class="product-price">₱<span id="modal-product-price"></span></p>
+                                    <div id="modal-product-description" class="product-description small text-muted mb-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-modal-divider"></div>
+
+                    <div class="product-modal-bottom mt-4">
+                        <div class="row align-items-end">
+                            <div class="col-md-6">
+                                <label for="product-quantity" class="form-label fw-bold">Quantity</label>
+                                <div class="quantity-control-modal d-flex align-items-center">
+                                    <button type="button" class="btn btn-quantity" id="decrease-quantity">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" id="product-quantity" class="form-control mx-2" value="1" min="1" max="99">
+                                    <button type="button" class="btn btn-quantity" id="increase-quantity">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="subtotal-container text-md-end mt-3 mt-md-0">
+                                    <div class="text-muted small">Subtotal</div>
+                                    <div class="subtotal-price">₱<span id="modal-subtotal"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer product-modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-add-to-cart">
+                        <i class="bi bi-cart-plus me-2"></i>Add to Cart
+                    </button>
+                </div>
+
+                <!-- Add to Cart Success Message -->
+                <div class="add-to-cart-success" id="add-to-cart-success">
+                    <div class="success-icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="success-message">Added to cart!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Register Modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -1193,6 +1572,336 @@ function getCategoryImage($categoryName) {
             if (typeof loadCartItems === 'function') {
                 loadCartItems();
             }
+
+            // Add to Cart Modal Functionality
+            const addToCartModal = new bootstrap.Modal(document.getElementById('addToCartModal'));
+            const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+            const productQuantityInput = document.getElementById('product-quantity');
+            const decreaseQuantityBtn = document.getElementById('decrease-quantity');
+            const increaseQuantityBtn = document.getElementById('increase-quantity');
+            const confirmAddToCartBtn = document.getElementById('confirm-add-to-cart');
+            const stockWarning = document.getElementById('stock-warning');
+            const stockWarningText = document.getElementById('stock-warning-text');
+
+            let currentProductId = null;
+            let currentProductPrice = 0;
+            let currentProductStock = 0;
+            let currentCartQuantity = 0;
+
+            // Update subtotal based on quantity
+            function updateSubtotal() {
+                const quantity = parseInt(productQuantityInput.value);
+                const subtotal = (currentProductPrice * quantity).toFixed(2);
+                document.getElementById('modal-subtotal').textContent = subtotal;
+            }
+
+            // Check stock and update UI accordingly
+            function checkStockLimits() {
+                const quantity = parseInt(productQuantityInput.value);
+                const availableStock = currentProductStock - currentCartQuantity;
+
+                // Reset styles
+                decreaseQuantityBtn.classList.remove('btn-danger');
+                increaseQuantityBtn.classList.remove('btn-danger');
+                productQuantityInput.classList.remove('text-danger', 'border-danger');
+                stockWarning.classList.add('d-none');
+
+                // Check if we're at stock limits
+                if (currentProductStock <= 0) {
+                    // Out of stock
+                    productQuantityInput.value = 0;
+                    productQuantityInput.disabled = true;
+                    decreaseQuantityBtn.disabled = true;
+                    increaseQuantityBtn.disabled = true;
+                    confirmAddToCartBtn.disabled = true;
+
+                    stockWarningText.textContent = "This product is out of stock.";
+                    stockWarning.classList.remove('d-none');
+
+                    // Update stock badge
+                    document.getElementById('modal-product-stock').textContent = "Out of Stock";
+                    document.getElementById('modal-product-stock').className = "badge bg-danger";
+
+                    return;
+                }
+
+                // Enable controls
+                productQuantityInput.disabled = false;
+                confirmAddToCartBtn.disabled = false;
+
+                if (availableStock <= 0) {
+                    // All stock is in cart
+                    productQuantityInput.value = 0;
+                    productQuantityInput.disabled = true;
+                    decreaseQuantityBtn.disabled = true;
+                    increaseQuantityBtn.disabled = true;
+                    confirmAddToCartBtn.disabled = true;
+
+                    stockWarningText.textContent = "You already have all available items in your cart.";
+                    stockWarning.classList.remove('d-none');
+
+                    // Update stock badge
+                    document.getElementById('modal-product-stock').textContent = "In Cart: " + currentCartQuantity;
+                    document.getElementById('modal-product-stock').className = "badge bg-info";
+
+                    return;
+                }
+
+                // Update stock badge
+                if (currentProductStock <= 0) {
+                    document.getElementById('modal-product-stock').textContent = "Out of Stock";
+                    document.getElementById('modal-product-stock').className = "badge bg-danger";
+                } else {
+                    document.getElementById('modal-product-stock').textContent = "In Stock: " + currentProductStock;
+                    document.getElementById('modal-product-stock').className = "badge stock-badge";
+                }
+
+                // Check if current quantity exceeds available stock
+                if (quantity > availableStock) {
+                    productQuantityInput.value = availableStock;
+                    productQuantityInput.classList.add('text-danger', 'border-danger');
+                    increaseQuantityBtn.classList.add('btn-danger');
+
+                    stockWarningText.textContent = "Only " + availableStock + " more units available.";
+                    stockWarning.classList.remove('d-none');
+                }
+
+                // Disable increase button if at max
+                if (quantity >= availableStock) {
+                    increaseQuantityBtn.disabled = true;
+                    increaseQuantityBtn.classList.add('btn-danger');
+                } else {
+                    increaseQuantityBtn.disabled = false;
+                }
+
+                // Disable decrease button if at min
+                decreaseQuantityBtn.disabled = quantity <= 1;
+
+                updateSubtotal();
+            }
+
+            // Handle quantity changes
+            productQuantityInput.addEventListener('change', function() {
+                let value = parseInt(this.value);
+
+                // Validate input
+                if (isNaN(value) || value < 1) {
+                    value = 1;
+                } else if (value > 99) {
+                    value = 99;
+                }
+
+                this.value = value;
+                checkStockLimits();
+            });
+
+            // Decrease quantity button
+            decreaseQuantityBtn.addEventListener('click', function() {
+                let value = parseInt(productQuantityInput.value);
+                if (value > 1) {
+                    productQuantityInput.value = value - 1;
+                    checkStockLimits();
+                }
+            });
+
+            // Increase quantity button
+            increaseQuantityBtn.addEventListener('click', function() {
+                let value = parseInt(productQuantityInput.value);
+                const availableStock = currentProductStock - currentCartQuantity;
+
+                if (value < Math.min(99, availableStock)) {
+                    productQuantityInput.value = value + 1;
+                    checkStockLimits();
+                }
+            });
+
+            // Show modal when add to cart button is clicked
+            addToCartButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Get product details from data attributes
+                    currentProductId = this.dataset.productId;
+                    const productName = this.dataset.productName;
+                    currentProductPrice = parseFloat(this.dataset.productPrice);
+                    const productImage = this.dataset.productImage;
+                    const productCategory = this.dataset.productCategory || 'Product';
+                    currentProductStock = parseInt(this.dataset.productStock) || 0;
+
+                    // Check if product is already in cart
+                    currentCartQuantity = 0;
+
+                    // Get product description from the product card if available
+                    let productDescription = '';
+                    const productCard = this.closest('.product-card');
+                    if (productCard) {
+                        const descriptionElement = productCard.querySelector('.text-muted');
+                        if (descriptionElement) {
+                            productDescription = descriptionElement.textContent;
+                        }
+                    }
+
+                    // Set modal content
+                    document.getElementById('modal-product-name').textContent = productName;
+                    document.getElementById('modal-product-price').textContent = currentProductPrice.toFixed(2);
+                    document.getElementById('modal-product-category').textContent = productCategory;
+
+                    // Set product description
+                    const descriptionElement = document.getElementById('modal-product-description');
+                    if (productDescription) {
+                        descriptionElement.textContent = productDescription;
+                        descriptionElement.style.display = 'block';
+                    } else {
+                        descriptionElement.style.display = 'none';
+                    }
+
+                    // Set product image or show placeholder
+                    const imageElement = document.getElementById('modal-product-image');
+                    const placeholderElement = document.querySelector('.product-image-placeholder');
+
+                    if (productImage) {
+                        imageElement.src = '../../assets/images/products/' + productImage;
+                        imageElement.style.display = 'block';
+                        placeholderElement.style.display = 'none';
+                    } else {
+                        imageElement.style.display = 'none';
+                        placeholderElement.style.display = 'flex';
+                    }
+
+                    // Reset quantity to 1
+                    productQuantityInput.value = 1;
+
+                    // Check if product is in cart
+                    if (typeof loadCartItems === 'function') {
+                        // Fetch cart data to check current quantity
+                        fetch('get_cart_items.php')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.items) {
+                                    // Find this product in cart
+                                    const cartItem = data.items.find(item => item.id === currentProductId);
+                                    if (cartItem) {
+                                        currentCartQuantity = cartItem.quantity;
+                                    }
+                                }
+                                // Update UI based on stock
+                                checkStockLimits();
+                            })
+                            .catch(error => {
+                                console.error('Error fetching cart:', error);
+                                // Still update UI with default values
+                                checkStockLimits();
+                            });
+                    } else {
+                        // Just update UI based on stock
+                        checkStockLimits();
+                    }
+
+                    // Hide success message if it was shown
+                    document.getElementById('add-to-cart-success').classList.remove('show');
+
+                    // Show modal
+                    addToCartModal.show();
+                });
+            });
+
+            // Handle add to cart confirmation
+            confirmAddToCartBtn.addEventListener('click', function() {
+                if (currentProductId) {
+                    const quantity = parseInt(productQuantityInput.value);
+                    const productName = document.getElementById('modal-product-name').textContent;
+
+                    // Show success animation
+                    const successElement = document.getElementById('add-to-cart-success');
+                    successElement.classList.add('show');
+
+                    // Disable the button to prevent multiple clicks
+                    this.disabled = true;
+
+                    // Add to cart via AJAX instead of redirecting
+                    fetch(`orders.php?add=${currentProductId}&quantity=${quantity}&ajax=1`)
+                        .then(response => response.json())
+                        .catch(error => {
+                            console.error('Error:', error);
+                            return { success: false, message: 'Network error occurred' };
+                        })
+                        .then(data => {
+                            // Close modal after animation completes
+                            setTimeout(() => {
+                                // Hide the modal
+                                addToCartModal.hide();
+
+                                // Re-enable the button
+                                this.disabled = false;
+
+                                // Show toast notification
+                                const toastContainer = document.getElementById('toast-container');
+                                if (!toastContainer) {
+                                    // Create toast container if it doesn't exist
+                                    const container = document.createElement('div');
+                                    container.id = 'toast-container';
+                                    container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                                    document.body.appendChild(container);
+                                }
+
+                                // Create toast element
+                                const toastId = 'cart-toast-' + Date.now();
+                                const toastHTML = `
+                                    <div id="${toastId}" class="toast text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                                        <div class="d-flex">
+                                            <div class="toast-body">
+                                                <i class="bi bi-check-circle me-2"></i>
+                                                ${quantity} × ${productName} added to cart
+                                            </div>
+                                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                        </div>
+                                        <div class="toast-actions px-3 pb-2">
+                                            <a href="orders.php" class="btn btn-sm btn-light">
+                                                <i class="bi bi-cart me-1"></i> View Cart
+                                            </a>
+                                        </div>
+                                    </div>
+                                `;
+
+                                document.getElementById('toast-container').innerHTML += toastHTML;
+
+                                // Initialize and show the toast
+                                const toastElement = document.getElementById(toastId);
+                                const toast = new bootstrap.Toast(toastElement, {
+                                    delay: 5000,  // Longer delay to give time to use the buttons
+                                    autohide: true
+                                });
+                                toast.show();
+
+
+
+                                // Update cart count if available
+                                if (typeof loadCartItems === 'function') {
+                                    loadCartItems();
+                                }
+                            }, 1000);
+                        });
+                }
+            });
+
+            // Add keyboard support for quantity input
+            productQuantityInput.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    let value = parseInt(this.value);
+                    const availableStock = currentProductStock - currentCartQuantity;
+
+                    if (value < Math.min(99, availableStock)) {
+                        this.value = value + 1;
+                        checkStockLimits();
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    let value = parseInt(this.value);
+                    if (value > 1) {
+                        this.value = value - 1;
+                        checkStockLimits();
+                    }
+                }
+            });
 
             // Add scroll reveal effect for product cards
             const animateElements = document.querySelectorAll('.product-card, .menu-item');
