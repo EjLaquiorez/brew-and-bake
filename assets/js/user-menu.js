@@ -165,8 +165,30 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        // Fetch cart items using AJAX - use a relative path that works from any page
-        fetch(window.location.origin + '/brew-and-bake/templates/client/get_cart_items.php')
+        // Fetch cart items using AJAX - use a relative path
+        // Determine the path to get_cart_items.php based on the current page
+        let cartItemsPath = 'templates/client/get_cart_items.php';
+        let imagesPath = 'assets/images/products/';
+        let clientPath = 'templates/client/client.php';
+
+        // If we're already in a subdirectory, adjust the paths
+        if (window.location.pathname.includes('/templates/client/')) {
+            cartItemsPath = 'get_cart_items.php';
+            imagesPath = '../../assets/images/products/';
+            clientPath = 'client.php';
+        } else if (window.location.pathname.includes('/templates/')) {
+            cartItemsPath = 'client/get_cart_items.php';
+            imagesPath = '../../assets/images/products/';
+            clientPath = 'client/client.php';
+        } else if (window.location.pathname.includes('/admin/') ||
+                   window.location.pathname.includes('/client/') ||
+                   window.location.pathname.includes('/staff/')) {
+            cartItemsPath = '../client/get_cart_items.php';
+            imagesPath = '../../../assets/images/products/';
+            clientPath = '../client/client.php';
+        }
+
+        fetch(cartItemsPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -180,12 +202,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         data.items.forEach(item => {
                             html += `
                                 <div class="cart-dropdown-item">
-                                    <img src="${window.location.origin}/brew-and-bake/assets/images/products/${item.image || 'placeholder.jpg'}" alt="${item.name}" class="cart-item-image">
+                                    <img src="${imagesPath}${item.image || 'placeholder.jpg'}" alt="${item.name}" class="cart-item-image">
                                     <div class="cart-item-details">
                                         <div class="cart-item-name">${item.name}</div>
                                         <div class="cart-item-price">
                                             <span>₱${parseFloat(item.price).toFixed(2)}</span>
                                             <span class="cart-item-quantity">x${item.quantity}</span>
+                                        </div>
+                                        <div class="cart-item-subtotal text-end">
+                                            <small class="text-muted">Subtotal: ₱${parseFloat(item.subtotal).toFixed(2)}</small>
                                         </div>
                                     </div>
                                 </div>
@@ -193,17 +218,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         cartDropdownItems.innerHTML = html;
 
-                        // Update cart count
+                        // Update cart count and total
                         const cartTotalCount = document.querySelector('.cart-total-count');
                         if (cartTotalCount) {
-                            cartTotalCount.textContent = `${data.items.length} items in cart`;
+                            cartTotalCount.textContent = `${data.total_items} items in cart - Total: ₱${parseFloat(data.total_amount).toFixed(2)}`;
                         }
                     } else {
                         cartDropdownItems.innerHTML = `
                             <div class="cart-empty">
                                 <i class="bi bi-cart-x"></i>
                                 <p>Your cart is empty</p>
-                                <a href="${window.location.origin}/brew-and-bake/templates/client/client.php" class="btn btn-sm btn-primary">Browse Menu</a>
+                                <a href="${clientPath}" class="btn btn-sm btn-primary">Browse Menu</a>
                             </div>
                         `;
                     }

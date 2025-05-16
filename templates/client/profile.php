@@ -25,14 +25,66 @@ if (isset($_SESSION['error'])) {
 }
 
 // Get user information
-$userId = $_SESSION['user_id'];
-try {
-    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $errorMessage = "Error fetching user data: " . $e->getMessage();
+$userId = getCurrentUserId();
+if ($userId) {
+    try {
+        // Get user data
+        $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Check if client_addresses table exists
+        $stmt = $conn->prepare("
+            SELECT COUNT(*)
+            FROM information_schema.tables
+            WHERE table_schema = DATABASE()
+            AND table_name = 'client_addresses'
+        ");
+        $stmt->execute();
+        $tableExists = $stmt->fetchColumn() > 0;
+
+        if ($tableExists) {
+            try {
+                // Try to get address data with is_default column
+                $stmt = $conn->prepare("
+                    SELECT * FROM client_addresses
+                    WHERE client_id = ? AND is_default = 1
+                ");
+                $stmt->execute([$userId]);
+                $addressData = $stmt->fetch(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                // If is_default column doesn't exist, get the first address for the client
+                if (strpos($e->getMessage(), "Unknown column 'is_default'") !== false) {
+                    $stmt = $conn->prepare("
+                        SELECT * FROM client_addresses
+                        WHERE client_id = ?
+                        LIMIT 1
+                    ");
+                    $stmt->execute([$userId]);
+                    $addressData = $stmt->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    throw $e; // Re-throw if it's a different error
+                }
+            }
+
+            // Add address and phone to user data if available
+            if ($addressData) {
+                $user['address'] = $addressData['address'];
+                $user['phone'] = $addressData['phone'] ?? '';
+            }
+        }
+    } catch (PDOException $e) {
+        $errorMessage = "Error fetching user data: " . $e->getMessage();
+        $user = [];
+    }
+} else {
+    // Handle case where user ID is not available
+    $errorMessage = "User information not available. Please log in again.";
     $user = [];
+    // Redirect to login page
+    $_SESSION['error'] = $errorMessage;
+    header("Location: ../../index.php");
+    exit;
 }
 
 // Handle profile update
@@ -41,6 +93,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $email = trim($_POST['email']);
     $phone = trim($_POST['phone'] ?? '');
     $address = trim($_POST['address'] ?? '');
+
+    // Format phone number for Philippines (add +63 prefix if not already present)
+    if (!empty($phone)) {
+        // Remove any non-digit characters
+        $phone = preg_replace('/\D/', '', $phone);
+
+        // If the phone number starts with '0', remove it
+        if (substr($phone, 0, 1) === '0') {
+            $phone = substr($phone, 1);
+        }
+
+        // If the phone number doesn't start with '+63', add it
+        if (substr($phone, 0, 3) !== '+63') {
+            $phone = '+63' . $phone;
+        }
+    }
 
     // Validate inputs
     if (empty($name) || empty($email)) {
@@ -56,10 +124,115 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                 // Update user profile
                 $stmt = $conn->prepare("
                     UPDATE users
-                    SET name = ?, email = ?, phone = ?, address = ?
+                    SET name = ?, email = ?
                     WHERE id = ?
                 ");
-                $stmt->execute([$name, $email, $phone, $address, $userId]);
+                $stmt->execute([$name, $email, $userId]);
+
+                // Check if client_addresses table exists
+                $stmt = $conn->prepare("
+                    SELECT COUNT(*)
+                    FROM information_schema.tables
+                    WHERE table_schema = DATABASE()
+                    AND table_name = 'client_addresses'
+                ");
+                $stmt->execute();
+                $tableExists = $stmt->fetchColumn() > 0;
+
+                if (!$tableExists) {
+                    // Create the client_addresses table if it doesn't exist
+                    $stmt = $conn->prepare("
+                        CREATE TABLE IF NOT EXISTS client_addresses (
+                            id INT NOT NULL AUTO_INCREMENT,
+                            client_id INT NOT NULL,
+                            address TEXT NOT NULL,
+                            city VARCHAR(100) NOT NULL DEFAULT 'Manila',
+                            state VARCHAR(100) NULL,
+                            postal_code VARCHAR(20) NOT NULL DEFAULT '1000',
+                            country VARCHAR(100) NOT NULL DEFAULT 'Philippines',
+                            phone VARCHAR(20) NULL,
+                            is_default BOOLEAN NOT NULL DEFAULT 1,
+                            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                            PRIMARY KEY (id),
+                            FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE
+                        )
+                    ");
+                    $stmt->execute();
+                }
+
+                try {
+                    // Check if client has an address record with is_default column
+                    $stmt = $conn->prepare("SELECT id FROM client_addresses WHERE client_id = ? AND is_default = 1");
+                    $stmt->execute([$userId]);
+                    $addressExists = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if ($addressExists) {
+                        // Update existing address with is_default column
+                        $stmt = $conn->prepare("
+                            UPDATE client_addresses
+                            SET address = ?, phone = ?
+                            WHERE client_id = ? AND is_default = 1
+                        ");
+                        $stmt->execute([$address, $phone, $userId]);
+                    } else {
+                        // Create new address record with is_default column
+                        $stmt = $conn->prepare("
+                            INSERT INTO client_addresses
+                            (client_id, address, city, state, postal_code, country, phone, is_default)
+                            VALUES (?, ?, 'Manila', NULL, '1000', 'Philippines', ?, 1)
+                        ");
+                        $stmt->execute([$userId, $address, $phone]);
+                    }
+                } catch (PDOException $e) {
+                    // If is_default column doesn't exist
+                    if (strpos($e->getMessage(), "Unknown column 'is_default'") !== false) {
+                        // Check if the is_default column exists
+                        $stmt = $conn->prepare("
+                            SELECT COUNT(*)
+                            FROM information_schema.columns
+                            WHERE table_schema = DATABASE()
+                            AND table_name = 'client_addresses'
+                            AND column_name = 'is_default'
+                        ");
+                        $stmt->execute();
+                        $isDefaultExists = $stmt->fetchColumn() > 0;
+
+                        if (!$isDefaultExists) {
+                            // Add is_default column if it doesn't exist
+                            $stmt = $conn->prepare("
+                                ALTER TABLE client_addresses
+                                ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT 1 AFTER phone
+                            ");
+                            $stmt->execute();
+                        }
+
+                        // Check if client has any address record
+                        $stmt = $conn->prepare("SELECT id FROM client_addresses WHERE client_id = ? LIMIT 1");
+                        $stmt->execute([$userId]);
+                        $addressExists = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                        if ($addressExists) {
+                            // Update existing address without is_default condition
+                            $stmt = $conn->prepare("
+                                UPDATE client_addresses
+                                SET address = ?, phone = ?, is_default = 1
+                                WHERE client_id = ? AND id = ?
+                            ");
+                            $stmt->execute([$address, $phone, $userId, $addressExists['id']]);
+                        } else {
+                            // Create new address record with is_default
+                            $stmt = $conn->prepare("
+                                INSERT INTO client_addresses
+                                (client_id, address, city, state, postal_code, country, phone, is_default)
+                                VALUES (?, ?, 'Manila', NULL, '1000', 'Philippines', ?, 1)
+                            ");
+                            $stmt->execute([$userId, $address, $phone]);
+                        }
+                    } else {
+                        throw $e; // Re-throw if it's a different error
+                    }
+                }
 
                 $successMessage = "Profile updated successfully!";
 
@@ -294,6 +467,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             border: 4px solid var(--color-white);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             margin-bottom: 1rem;
+        }
+
+        /* Address modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1050;
+            overflow: auto;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-dialog {
+            margin: 1.75rem auto;
+            max-width: 500px;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            outline: 0;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #000;
+            opacity: 0.5;
+            cursor: pointer;
+        }
+
+        .region-tab.active {
+            color: #f59e0b;
+            font-weight: 600;
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .list-group-item.region-item:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+        body.modal-open {
+            overflow: hidden;
         }
 
         .profile-picture-placeholder {
@@ -715,13 +962,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                                 </div>
                                 <div class="mb-3">
                                     <label for="phone" class="form-label">Phone Number</label>
-                                    <input type="tel" class="form-control" id="phone" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
-                                    <div class="form-text">Optional: Add your phone number for delivery updates</div>
+                                    <div class="input-group">
+                                        <span class="input-group-text">+63</span>
+                                        <input type="tel" class="form-control" id="phone" name="phone"
+                                               value="<?= htmlspecialchars(preg_replace('/^\+63/', '', $user['phone'] ?? '')) ?>"
+                                               placeholder="9XX XXX XXXX"
+                                               pattern="[9][0-9]{9}"
+                                               maxlength="10">
+                                    </div>
+                                    <div class="form-text">Optional: Add your Philippine mobile number (e.g., 9XXXXXXXXX) for delivery updates</div>
                                 </div>
                                 <div class="mb-4">
-                                    <label for="address" class="form-label">Delivery Address</label>
-                                    <textarea class="form-control" id="address" name="address" rows="3"><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
-                                    <div class="form-text">Optional: Add your delivery address for faster checkout</div>
+                                    <label class="form-label">Delivery Address</label>
+                                    <div class="card border p-3 mb-2">
+                                        <div id="delivery-address-display">
+                                            <?php if (!empty($user['address'])): ?>
+                                                <?php
+                                                // Get address data
+                                                $stmt = $conn->prepare("
+                                                    SELECT * FROM client_addresses
+                                                    WHERE client_id = ? AND is_default = 1
+                                                ");
+                                                $stmt->execute([$userId]);
+                                                $addressData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                                                if ($addressData):
+                                                    $fullName = $addressData['full_name'] ?? $user['name'];
+                                                    $phone = $addressData['phone'] ?? '';
+                                                    $region = $addressData['region'] ?? '';
+                                                    $province = $addressData['province'] ?? '';
+                                                    $city = $addressData['city'] ?? '';
+                                                    $barangay = $addressData['barangay'] ?? '';
+                                                    $addressType = $addressData['address_type'] ?? 'Home';
+
+                                                    $location = '';
+                                                    if ($region) $location .= $region;
+                                                    if ($province) $location .= $province ? ', ' . $province : '';
+                                                    if ($city) $location .= $city ? ', ' . $city : '';
+                                                    if ($barangay) $location .= $barangay ? ', ' . $barangay : '';
+
+                                                    if (empty($location)) {
+                                                        $location = $addressData['address'] ?? '';
+                                                    }
+                                                ?>
+                                                    <strong><?= htmlspecialchars($fullName) ?></strong><br>
+                                                    <?= htmlspecialchars($phone) ?><br>
+                                                    <?= htmlspecialchars($addressData['street_address'] ?? '') ?><br>
+                                                    <?= htmlspecialchars($location) ?><br>
+                                                    <?= htmlspecialchars($addressData['postal_code'] ?? '') ?><br>
+                                                    <span class="badge bg-secondary"><?= htmlspecialchars($addressType) ?></span>
+                                                <?php else: ?>
+                                                    <p class="text-muted mb-0">
+                                                        <?= htmlspecialchars($user['address']) ?>
+                                                    </p>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <p class="text-muted mb-0">No delivery address added yet.</p>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" id="edit-address-btn">
+                                                <i class="bi bi-pencil-square me-1"></i> Edit Address
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-text">Your delivery address will be used for faster checkout</div>
+
+                                    <!-- Hidden address field for backward compatibility -->
+                                    <input type="hidden" id="address" name="address" value="<?= htmlspecialchars($user['address'] ?? '') ?>">
                                 </div>
                                 <div class="d-flex justify-content-end">
                                     <button type="submit" class="btn btn-primary" name="update_profile">
@@ -818,11 +1126,206 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         </div>
     </footer>
 
+    <!-- Address Modal -->
+    <div class="modal" id="address-modal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Address</h5>
+                    <button type="button" class="btn-close" id="close-address-modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="alert-container"></div>
+
+                    <form id="address-form">
+                        <div class="mb-3">
+                            <label for="full_name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="full_name" name="full_name"
+                                   value="<?= htmlspecialchars($addressData['full_name'] ?? $user['name'] ?? '') ?>" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text">+63</span>
+                                <input type="tel" class="form-control" id="phone" name="phone"
+                                       value="<?= htmlspecialchars(preg_replace('/^\+63/', '', $addressData['phone'] ?? $user['phone'] ?? '')) ?>"
+                                       placeholder="9XX XXX XXXX"
+                                       pattern="[9][0-9]{9}"
+                                       maxlength="10" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="postal_code" class="form-label">Postal Code</label>
+                            <input type="text" class="form-control" id="postal_code" name="postal_code"
+                                   value="<?= htmlspecialchars($addressData['postal_code'] ?? '') ?>"
+                                   placeholder="e.g., 5300" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="street_address" class="form-label">Street Name, Building, House No.</label>
+                            <input type="text" class="form-control" id="street_address" name="street_address"
+                                   value="<?= htmlspecialchars($addressData['street_address'] ?? '') ?>"
+                                   placeholder="e.g., Visapa Homes, Bgy. Irawan PPC" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="location_display" class="form-label">Region, Province, City, Barangay</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="location-display" name="location"
+                                       value="<?php
+                                           $location = '';
+                                           if (!empty($addressData)) {
+                                               if (!empty($addressData['region'])) $location .= $addressData['region'];
+                                               if (!empty($addressData['province'])) $location .= !empty($location) ? ', ' . $addressData['province'] : $addressData['province'];
+                                               if (!empty($addressData['city'])) $location .= !empty($location) ? ', ' . $addressData['city'] : $addressData['city'];
+                                               if (!empty($addressData['barangay'])) $location .= !empty($location) ? ', ' . $addressData['barangay'] : $addressData['barangay'];
+                                           }
+                                           echo htmlspecialchars($location);
+                                       ?>"
+                                       readonly required>
+                                <button class="btn btn-outline-secondary" type="button" id="clear-location">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+
+                            <!-- Hidden inputs for region, province, city, barangay -->
+                            <input type="hidden" id="selected-region" name="selected_region"
+                                   value="<?= htmlspecialchars($addressData['region'] ?? '') ?>">
+                            <input type="hidden" id="selected-province" name="selected_province"
+                                   value="<?= htmlspecialchars($addressData['province'] ?? '') ?>">
+                            <input type="hidden" id="selected-city" name="selected_city"
+                                   value="<?= htmlspecialchars($addressData['city'] ?? '') ?>">
+                            <input type="hidden" id="selected-barangay" name="selected_barangay"
+                                   value="<?= htmlspecialchars($addressData['barangay'] ?? '') ?>">
+
+                            <!-- Location selector -->
+                            <div id="location-selector" class="card mt-2" style="display: none;">
+                                <div class="card-header p-0">
+                                    <ul class="nav nav-tabs card-header-tabs">
+                                        <li class="nav-item">
+                                            <a class="nav-link region-tab active" href="#" data-tab="region-content">Region</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link region-tab" href="#" data-tab="province-content">Province</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link region-tab" href="#" data-tab="city-content">City</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link region-tab" href="#" data-tab="barangay-content">Barangay</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div id="region-content" class="tab-content p-3" style="max-height: 200px; overflow-y: auto;">
+                                        <div class="list-group list-group-flush">
+                                            <a href="#" class="list-group-item list-group-item-action region-item">Metro Manila</a>
+                                            <a href="#" class="list-group-item list-group-item-action region-item">Mindanao</a>
+                                            <a href="#" class="list-group-item list-group-item-action region-item">North Luzon</a>
+                                            <a href="#" class="list-group-item list-group-item-action region-item">South Luzon</a>
+                                            <a href="#" class="list-group-item list-group-item-action region-item">Visayas</a>
+                                        </div>
+                                    </div>
+                                    <div id="province-content" class="tab-content p-3" style="display: none; max-height: 200px; overflow-y: auto;">
+                                        <!-- Provinces will be loaded dynamically -->
+                                        <div class="text-center py-3">
+                                            <p>Please select a region first</p>
+                                        </div>
+                                    </div>
+                                    <div id="city-content" class="tab-content p-3" style="display: none; max-height: 200px; overflow-y: auto;">
+                                        <!-- Cities will be loaded dynamically -->
+                                        <div class="text-center py-3">
+                                            <p>Please select a province first</p>
+                                        </div>
+                                    </div>
+                                    <div id="barangay-content" class="tab-content p-3" style="display: none; max-height: 200px; overflow-y: auto;">
+                                        <!-- Barangays will be loaded dynamically -->
+                                        <div class="text-center py-3">
+                                            <p>Please select a city first</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Map display -->
+                        <div class="mb-3">
+                            <label class="form-label">Location on Map</label>
+                            <div id="map-container" class="border rounded position-relative" style="height: 250px; background-color: #f8f9fa;">
+                                <div id="map-canvas" style="height: 100%; width: 100%;"></div>
+                                <div id="map-error" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center bg-white" style="display: none; z-index: 200;">
+                                    <div class="text-danger mb-2"><i class="bi bi-exclamation-triangle-fill" style="font-size: 2rem;"></i></div>
+                                    <p class="text-center px-3" id="map-error-message">Unable to load map. Please check your connection.</p>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="retry-map-load">
+                                        <i class="bi bi-arrow-clockwise me-1"></i> Retry
+                                    </button>
+                                </div>
+                                <div id="map-loading" class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white" style="z-index: 100;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                                <div class="position-absolute bottom-0 end-0 m-2" style="z-index: 50;">
+                                    <button type="button" class="btn btn-primary shadow-sm" id="use-current-location">
+                                        <i class="bi bi-geo-alt-fill"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div class="form-text">Tap on the map to set your location</div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enable-precise-location" checked>
+                                    <label class="form-check-label small" for="enable-precise-location">Precise location</label>
+                                </div>
+                            </div>
+
+                            <!-- Hidden inputs for latitude and longitude -->
+                            <input type="hidden" id="latitude" name="latitude" value="<?= htmlspecialchars($addressData['latitude'] ?? '') ?>">
+                            <input type="hidden" id="longitude" name="longitude" value="<?= htmlspecialchars($addressData['longitude'] ?? '') ?>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Label As:</label>
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="address_type" id="home" value="Home"
+                                       <?= ($addressData['address_type'] ?? 'Home') === 'Home' ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-secondary" for="home">Home</label>
+
+                                <input type="radio" class="btn-check" name="address_type" id="work" value="Work"
+                                       <?= ($addressData['address_type'] ?? '') === 'Work' ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-secondary" for="work">Work</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_default" name="is_default" value="1" checked>
+                                <label class="form-check-label" for="is_default">
+                                    Set as Default Address
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="button" class="btn btn-secondary me-2" id="cancel-address-btn">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <?php
     $root_path = '../../';
     include_once "../../templates/includes/footer-scripts.php";
     ?>
+    <!-- Google Maps JavaScript API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&libraries=places"></script>
+    <script src="../../assets/js/address-modal.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Make menu-nav sticky on scroll

@@ -51,7 +51,7 @@ echo '<link rel="stylesheet" href="' . $root_path . 'assets/css/site-header.css?
                         </a>
                         <div class="cart-dropdown">
                             <div class="cart-dropdown-header">
-                                <h6>Recently Added Products</h6>
+                                <h6>Your Cart Items</h6>
                             </div>
                             <div class="cart-dropdown-items">
                                 <!-- Cart items will be loaded here via JavaScript -->

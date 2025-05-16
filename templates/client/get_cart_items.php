@@ -14,6 +14,7 @@ if (!isLoggedIn()) {
 
 // Initialize response
 $response = [
+    'success' => true,
     'items' => [],
     'total_items' => 0,
     'total_amount' => 0
@@ -38,12 +39,12 @@ try {
     ");
     $stmt->execute($productIds);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Process products
     foreach ($products as $product) {
         $quantity = $_SESSION['cart'][$product['id']];
         $subtotal = $product['price'] * $quantity;
-        
+
         $response['items'][] = [
             'id' => $product['id'],
             'name' => $product['name'],
@@ -53,19 +54,16 @@ try {
             'quantity' => $quantity,
             'subtotal' => $subtotal
         ];
-        
+
         $response['total_amount'] += $subtotal;
     }
-    
+
     // Sort items by most recently added (assuming the cart is ordered by addition time)
     $response['items'] = array_reverse($response['items']);
-    
-    // Limit to 5 items for the dropdown
+
+    // Store the total number of items but don't limit the display
     $response['total_items'] = count($response['items']);
-    if (count($response['items']) > 5) {
-        $response['items'] = array_slice($response['items'], 0, 5);
-    }
-    
+
     echo json_encode($response);
 } catch (PDOException $e) {
     echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);

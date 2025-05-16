@@ -386,6 +386,9 @@ try {
                                 <a href="settings.php" class="btn btn-light">
                                     <i class="bi bi-gear me-2"></i> System Settings
                                 </a>
+                                <a href="../../fix_instructions.html" class="btn btn-warning">
+                                    <i class="bi bi-tools me-2"></i> Fix Client Addresses
+                                </a>
                             </div>
                         </div>
                     </div>

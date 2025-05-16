@@ -121,11 +121,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Process checkout
             try {
-                // First, verify stock availability for all items
+                // Get selected items from the form
+                $selectedItems = [];
+                $deliveryOption = 'pickup'; // Default to pickup (no fee)
+
+                if (isset($_POST['selected_items_json']) && !empty($_POST['selected_items_json'])) {
+                    $selectedItems = json_decode($_POST['selected_items_json'], true);
+
+                    // If no items selected, show error
+                    if (empty($selectedItems)) {
+                        $errorMessage = "Please select at least one item to checkout.";
+                        // Don't proceed with checkout
+                        throw new Exception($errorMessage);
+                    }
+                }
+
+                // Get delivery option
+                if (isset($_POST['delivery_option'])) {
+                    $deliveryOption = $_POST['delivery_option'];
+                }
+
+                // Filter cart items to only include selected items
+                $selectedCartItems = [];
+                $selectedTotalAmount = 0;
+
+                foreach ($cartItems as $item) {
+                    if (in_array($item['id'], $selectedItems)) {
+                        $selectedCartItems[] = $item;
+                        $selectedTotalAmount += $item['subtotal'];
+                    }
+                }
+
+                // First, verify stock availability for all selected items
                 $stockErrors = [];
                 $productUpdates = [];
 
-                foreach ($cartItems as $item) {
+                foreach ($selectedCartItems as $item) {
                     // Check current stock
                     $stmt = $conn->prepare("SELECT stock FROM products WHERE id = ? AND status = 'active'");
                     $stmt->execute([$item['id']]);
@@ -159,17 +190,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         exit;
                     }
 
-                    // Otherwise just show the error
-                    break;
+                    // Otherwise just show the error and continue
+                    // No need to do anything else here, the error message is already set
                 }
 
                 // Start transaction
                 $conn->beginTransaction();
 
+                // Check if user ID is available
+                if (!$userId) {
+                    throw new Exception("User ID not available. Please log in again.");
+                }
+
+                // Calculate final total amount
+                $finalTotalAmount = $selectedTotalAmount;
+                $deliveryFee = 0;
+
+                // Add delivery fee only if delivery option is selected
+                if ($deliveryOption === 'delivery') {
+                    $deliveryFee = 50;
+                    $finalTotalAmount += $deliveryFee;
+                }
+
                 // Create order record
                 $stmt = $conn->prepare("INSERT INTO orders (client_id, order_date, total_price, status, payment_status, created_at)
                                         VALUES (?, NOW(), ?, 'pending', 'unpaid', NOW())");
-                $stmt->execute([$userId, $totalAmount + 50]); // Adding shipping fee
+                $stmt->execute([$userId, $finalTotalAmount]);
 
                 $orderId = $conn->lastInsertId();
 
@@ -179,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $updateStockStmt = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
 
-                foreach ($cartItems as $item) {
+                foreach ($selectedCartItems as $item) {
                     $stmt->execute([
                         $orderId,
                         $item['id'],
@@ -189,21 +235,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Update product stock
                     $updateStockStmt->execute([$item['quantity'], $item['id']]);
+
+                    // Remove the item from the cart
+                    unset($_SESSION['cart'][$item['id']]);
                 }
 
                 // Create a payment record
                 $stmt = $conn->prepare("INSERT INTO payments (order_id, amount, payment_method, payment_status, transaction_date)
                                         VALUES (?, ?, 'cash', 'pending', NOW())");
-                $stmt->execute([$orderId, $totalAmount + 50]);
+                $stmt->execute([$orderId, $finalTotalAmount]);
 
                 // Commit transaction
                 $conn->commit();
 
-                // Clear cart
-                $_SESSION['cart'] = [];
+                // Note: We've already removed the selected items from the cart in the loop above
+                // If cart is now empty, initialize it as an empty array
+                if (empty($_SESSION['cart'])) {
+                    $_SESSION['cart'] = [];
+                }
 
                 // Set success message
-                $_SESSION['success'] = "Your order has been placed successfully! Order #" . $orderId;
+                $itemCount = count($selectedCartItems);
+                $deliveryMessage = ($deliveryOption === 'delivery') ? " with home delivery" : " for in-store pickup";
+                $_SESSION['success'] = "Your order with $itemCount item" . ($itemCount > 1 ? "s" : "") . $deliveryMessage . " has been placed successfully! Order #" . $orderId;
 
                 // Redirect to prevent form resubmission
                 header("Location: orders.php");
@@ -219,13 +273,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Get user information
-$userId = $_SESSION['user_id'];
-try {
-    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $errorMessage = "Error fetching user data: " . $e->getMessage();
+$userId = getCurrentUserId();
+if ($userId) {
+    try {
+        $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $errorMessage = "Error fetching user data: " . $e->getMessage();
+        $user = [];
+    }
+} else {
+    // Handle case where user ID is not available
+    $errorMessage = "User information not available. Please log in again.";
     $user = [];
 }
 
@@ -398,7 +458,7 @@ try {
     $stmt->execute();
     $tableExists = $stmt->rowCount() > 0;
 
-    if ($tableExists) {
+    if ($tableExists && $userId) {
         $stmt = $conn->prepare("SELECT * FROM orders WHERE client_id = ? ORDER BY created_at DESC");
         $stmt->execute([$userId]);
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -747,31 +807,93 @@ try {
         .quantity-control {
             display: flex;
             align-items: center;
-            max-width: 120px;
+            max-width: 140px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            background-color: #ffffff;
         }
 
         .quantity-input {
-            width: 50px;
+            width: 60px;
+            height: 38px;
             text-align: center;
             border-radius: 0;
-            border-left: 0;
-            border-right: 0;
+            border: none;
+            border-left: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+            font-weight: 600;
+            color: #111827;
+            font-size: 1rem;
+            padding: 0.375rem 0.5rem;
+            background-color: #ffffff;
+        }
+
+        .quantity-input:focus {
+            outline: none;
+            box-shadow: none;
+            background-color: #f9fafb;
         }
 
         .quantity-btn {
-            border-radius: 4px;
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
+            border: none;
+            background-color: #f9fafb;
+            color: #4b5563;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            height: 38px;
+            width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
         }
 
-        .quantity-btn:first-child {
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
+        .quantity-btn:hover {
+            background-color: #f3f4f6;
+            color: #111827;
         }
 
-        .quantity-btn:last-child {
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
+        .quantity-btn:active,
+        .quantity-btn.active {
+            background-color: #e5e7eb;
+            transform: scale(0.95);
+        }
+
+        .quantity-btn:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .quantity-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Add red styling for quantity controls when at stock limit */
+        .quantity-control.at-limit .quantity-btn,
+        .quantity-control.at-limit .quantity-input {
+            color: #dc2626;
+            border-color: #fee2e2;
+        }
+
+        .quantity-control.at-limit .quantity-btn:disabled {
+            background-color: #fee2e2;
+        }
+
+        /* Animation for quantity changes */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .quantity-input.updated {
+            animation: pulse 0.3s ease-in-out;
+            background-color: #f0fdf4;
+            transition: background-color 0.5s ease;
         }
 
         .order-summary {
@@ -1306,6 +1428,11 @@ try {
                                             <table class="table">
                                                 <thead>
                                                     <tr>
+                                                        <th width="5%">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="select-all-items">
+                                                            </div>
+                                                        </th>
                                                         <th>Product</th>
                                                         <th>Price</th>
                                                         <th>Quantity</th>
@@ -1316,6 +1443,15 @@ try {
                                                 <tbody>
                                                     <?php foreach ($cartItems as $item): ?>
                                                         <tr>
+                                                            <td>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input item-checkbox" type="checkbox"
+                                                                           name="selected_items[]"
+                                                                           value="<?= $item['id'] ?>"
+                                                                           id="item-<?= $item['id'] ?>"
+                                                                           data-price="<?= $item['subtotal'] ?>">
+                                                                </div>
+                                                            </td>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
                                                                     <?php if (!empty($item['image'])): ?>
@@ -1335,11 +1471,40 @@ try {
                                                             </td>
                                                             <td>₱<?= number_format($item['price'], 2) ?></td>
                                                             <td>
-                                                                <div class="quantity-control">
-                                                                    <button type="button" class="btn btn-sm btn-outline-secondary quantity-btn" data-action="decrease" data-id="<?= $item['id'] ?>">-</button>
-                                                                    <input type="number" name="quantity[<?= $item['id'] ?>]" value="<?= $item['quantity'] ?>" min="1" max="99" class="form-control quantity-input">
-                                                                    <button type="button" class="btn btn-sm btn-outline-secondary quantity-btn" data-action="increase" data-id="<?= $item['id'] ?>">+</button>
+                                                                <?php
+                                                                // Check if we're at the stock limit
+                                                                $atStockLimit = isset($item['stock']) && $item['quantity'] >= $item['stock'];
+                                                                $limitClass = $atStockLimit ? 'at-limit' : '';
+                                                                ?>
+                                                                <div class="quantity-control <?= $limitClass ?>">
+                                                                    <button type="button"
+                                                                            class="quantity-btn"
+                                                                            data-action="decrease"
+                                                                            data-id="<?= $item['id'] ?>"
+                                                                            aria-label="Decrease quantity">
+                                                                        <i class="bi bi-dash"></i>
+                                                                    </button>
+                                                                    <input type="number"
+                                                                           name="quantity[<?= $item['id'] ?>]"
+                                                                           value="<?= $item['quantity'] ?>"
+                                                                           min="1"
+                                                                           max="<?= isset($item['stock']) ? $item['stock'] : 99 ?>"
+                                                                           class="form-control quantity-input"
+                                                                           aria-label="Product quantity">
+                                                                    <button type="button"
+                                                                            class="quantity-btn"
+                                                                            data-action="increase"
+                                                                            data-id="<?= $item['id'] ?>"
+                                                                            <?= $atStockLimit ? 'disabled' : '' ?>
+                                                                            aria-label="Increase quantity">
+                                                                        <i class="bi bi-plus"></i>
+                                                                    </button>
                                                                 </div>
+                                                                <?php if (isset($item['stock'])): ?>
+                                                                <div class="mt-1">
+                                                                    <small class="text-muted">Stock: <?= $item['stock'] ?></small>
+                                                                </div>
+                                                                <?php endif; ?>
                                                             </td>
                                                             <td>₱<?= number_format($item['subtotal'], 2) ?></td>
                                                             <td>
@@ -1362,20 +1527,50 @@ try {
                                 <div class="col-lg-4">
                                     <div class="order-summary">
                                         <h3 class="order-summary-title">Order Summary</h3>
+
                                         <div class="summary-item">
                                             <span>Subtotal</span>
-                                            <span>₱<?= number_format($totalAmount, 2) ?></span>
+                                            <span id="summary-subtotal">₱<?= number_format($totalAmount, 2) ?></span>
                                         </div>
-                                        <div class="summary-item">
-                                            <span>Delivery Fee</span>
-                                            <span>₱50.00</span>
+                                        <div class="mb-3 pb-2 border-bottom">
+                                            <h6 class="mb-2 fw-bold">Delivery Options</h6>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input delivery-option" type="radio" name="delivery_option" id="delivery-option-pickup" value="pickup" checked>
+                                                <label class="form-check-label" for="delivery-option-pickup">
+                                                    In-store Pickup <span class="badge bg-success ms-1">Free</span>
+                                                </label>
+                                            </div>
+                                            <div class="form-check d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <input class="form-check-input delivery-option" type="radio" name="delivery_option" id="delivery-option-delivery" value="delivery">
+                                                    <label class="form-check-label" for="delivery-option-delivery">
+                                                        Home Delivery
+                                                    </label>
+                                                </div>
+                                                <span id="delivery-fee" class="text-muted">₱50.00</span>
+                                            </div>
                                         </div>
                                         <div class="summary-total">
                                             <span>Total</span>
-                                            <span>₱<?= number_format($totalAmount + 50, 2) ?></span>
+                                            <span id="summary-total">₱<?= number_format($totalAmount, 2) ?></span>
                                         </div>
+
+                                        <div class="mt-3 mb-3">
+                                            <div class="alert alert-info py-2 mb-0" role="alert" style="font-size: 0.85rem;">
+                                                <i class="bi bi-info-circle"></i>
+                                                <div class="alert-content">
+                                                    <p class="mb-1">Select items to include in your order using the checkboxes.</p>
+                                                    <p class="mb-0">Choose between in-store pickup (free) or home delivery (₱50.00).</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <div class="mt-4">
-                                            <form method="POST" action="orders.php">
+                                            <form method="POST" action="orders.php" id="checkout-form">
+                                                <!-- Hidden fields to store selected items -->
+                                                <input type="hidden" name="selected_items_json" id="selected-items-json" value="">
+                                                <input type="hidden" name="delivery_option" id="delivery-option-input" value="pickup">
+
                                                 <button type="submit" name="checkout" class="btn btn-primary w-100">
                                                     <i class="bi bi-credit-card me-2"></i> Proceed to Checkout
                                                 </button>
@@ -1723,18 +1918,62 @@ try {
 
                 quantityBtns.forEach(btn => {
                     btn.addEventListener('click', function() {
+                        if (this.disabled) return;
+
                         const action = this.dataset.action;
                         const productId = this.dataset.id;
                         const input = document.querySelector(`input[name="quantity[${productId}]"]`);
                         let value = parseInt(input.value);
+                        const max = parseInt(input.getAttribute('max')) || 99;
+
+                        // Get the quantity control container
+                        const quantityControl = this.closest('.quantity-control');
 
                         if (action === 'increase') {
-                            value = Math.min(value + 1, 99);
+                            if (value < max) {
+                                value = Math.min(value + 1, max);
+
+                                // Check if we've reached the max (stock limit)
+                                if (value >= max) {
+                                    // Add visual indicator
+                                    if (quantityControl) {
+                                        quantityControl.classList.add('at-limit');
+                                    }
+
+                                    // Disable the increase button
+                                    this.disabled = true;
+                                }
+                            }
                         } else if (action === 'decrease') {
-                            value = Math.max(value - 1, 1);
+                            if (value > 1) {
+                                value = Math.max(value - 1, 1);
+
+                                // If we were at the limit but now we're not
+                                if (value < max && quantityControl) {
+                                    quantityControl.classList.remove('at-limit');
+
+                                    // Re-enable the increase button
+                                    const increaseBtn = quantityControl.querySelector('[data-action="increase"]');
+                                    if (increaseBtn) {
+                                        increaseBtn.disabled = false;
+                                    }
+                                }
+                            }
                         }
 
                         input.value = value;
+
+                        // Add visual feedback for the button press
+                        this.classList.add('active');
+                        setTimeout(() => {
+                            this.classList.remove('active');
+                        }, 200);
+
+                        // Add animation to the input
+                        input.classList.add('updated');
+                        setTimeout(() => {
+                            input.classList.remove('updated');
+                        }, 500);
 
                         // Automatically update the cart
                         updateCart(input);
@@ -1744,23 +1983,199 @@ try {
                 // Also update when input value changes directly
                 quantityInputs.forEach(input => {
                     input.addEventListener('change', function() {
+                        // Get the quantity control container
+                        const quantityControl = this.closest('.quantity-control');
+
+                        // Get max value (stock limit)
+                        const max = parseInt(this.getAttribute('max')) || 99;
+
                         // Ensure value is within valid range
                         let value = parseInt(this.value);
                         if (isNaN(value) || value < 1) {
                             value = 1;
-                        } else if (value > 99) {
-                            value = 99;
+                        } else if (value > max) {
+                            value = max;
                         }
                         this.value = value;
 
+                        // Update visual indicators based on the new value
+                        if (quantityControl) {
+                            if (value >= max) {
+                                quantityControl.classList.add('at-limit');
+                                const increaseBtn = quantityControl.querySelector('[data-action="increase"]');
+                                if (increaseBtn) {
+                                    increaseBtn.disabled = true;
+                                }
+                            } else {
+                                quantityControl.classList.remove('at-limit');
+                                const increaseBtn = quantityControl.querySelector('[data-action="increase"]');
+                                if (increaseBtn) {
+                                    increaseBtn.disabled = false;
+                                }
+                            }
+                        }
+
+                        // Add animation to the input
+                        this.classList.add('updated');
+                        setTimeout(() => {
+                            this.classList.remove('updated');
+                        }, 500);
+
                         // Automatically update the cart
                         updateCart(this);
+                    });
+
+                    // Prevent manual typing of invalid values
+                    input.addEventListener('keydown', function(e) {
+                        // Allow: backspace, delete, tab, escape, enter, and numbers
+                        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                            // Allow: Ctrl+A, Ctrl+C, Ctrl+V
+                            (e.keyCode === 65 && e.ctrlKey === true) ||
+                            (e.keyCode === 67 && e.ctrlKey === true) ||
+                            (e.keyCode === 86 && e.ctrlKey === true) ||
+                            // Allow: home, end, left, right
+                            (e.keyCode >= 35 && e.keyCode <= 39) ||
+                            // Allow numbers
+                            (e.keyCode >= 48 && e.keyCode <= 57) ||
+                            (e.keyCode >= 96 && e.keyCode <= 105)) {
+                            return;
+                        }
+                        e.preventDefault();
                     });
                 });
             }
 
             // Initial attachment of event listeners
             attachQuantityButtonListeners();
+
+            // Handle item selection checkboxes for order summary
+            const selectAllCheckbox = document.getElementById('select-all-items');
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+            const deliveryOptions = document.querySelectorAll('.delivery-option');
+            const summarySubtotalElement = document.getElementById('summary-subtotal');
+            const summaryTotalElement = document.getElementById('summary-total');
+            const selectedItemsJsonInput = document.getElementById('selected-items-json');
+            const deliveryOptionInput = document.getElementById('delivery-option-input');
+            const checkoutForm = document.getElementById('checkout-form');
+
+            // Function to update the order summary based on selected items
+            function updateOrderSummary() {
+                // Calculate subtotal based on selected items
+                let subtotal = 0;
+                const selectedItems = [];
+
+                itemCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        subtotal += parseFloat(checkbox.dataset.price);
+                        selectedItems.push(checkbox.value);
+                    }
+                });
+
+                // Format subtotal
+                const formattedSubtotal = new Intl.NumberFormat('en-PH', {
+                    style: 'currency',
+                    currency: 'PHP',
+                    minimumFractionDigits: 2
+                }).format(subtotal).replace('PHP', '₱');
+
+                // Update subtotal display
+                if (summarySubtotalElement) {
+                    summarySubtotalElement.textContent = formattedSubtotal;
+                }
+
+                // Get selected delivery option
+                let deliveryOption = 'pickup'; // Default to pickup
+                deliveryOptions.forEach(option => {
+                    if (option.checked) {
+                        deliveryOption = option.value;
+                    }
+                });
+
+                // Calculate total (with or without delivery fee)
+                let total = subtotal;
+                if (deliveryOption === 'delivery') {
+                    total += 50; // Add delivery fee only for home delivery
+                }
+
+                // Format total
+                const formattedTotal = new Intl.NumberFormat('en-PH', {
+                    style: 'currency',
+                    currency: 'PHP',
+                    minimumFractionDigits: 2
+                }).format(total).replace('PHP', '₱');
+
+                // Update total display
+                if (summaryTotalElement) {
+                    summaryTotalElement.textContent = formattedTotal;
+                }
+
+                // Update hidden input with selected items
+                if (selectedItemsJsonInput) {
+                    selectedItemsJsonInput.value = JSON.stringify(selectedItems);
+                }
+
+                // Update delivery option input
+                if (deliveryOptionInput) {
+                    deliveryOptionInput.value = deliveryOption;
+                }
+
+                // Disable checkout button if no items selected
+                if (checkoutForm) {
+                    const checkoutButton = checkoutForm.querySelector('button[name="checkout"]');
+                    if (checkoutButton) {
+                        checkoutButton.disabled = selectedItems.length === 0;
+
+                        if (selectedItems.length === 0) {
+                            checkoutButton.classList.add('btn-secondary');
+                            checkoutButton.classList.remove('btn-primary');
+                        } else {
+                            checkoutButton.classList.add('btn-primary');
+                            checkoutButton.classList.remove('btn-secondary');
+                        }
+                    }
+                }
+            }
+
+            // Add event listeners to checkboxes
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+
+                    // Update all item checkboxes
+                    itemCheckboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+
+                    // Update order summary
+                    updateOrderSummary();
+                });
+            }
+
+            // Add event listeners to individual item checkboxes
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    // Check if all checkboxes are checked
+                    const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+
+                    // Update select all checkbox
+                    if (selectAllCheckbox) {
+                        selectAllCheckbox.checked = allChecked;
+                    }
+
+                    // Update order summary
+                    updateOrderSummary();
+                });
+            });
+
+            // Add event listeners to delivery option radio buttons
+            deliveryOptions.forEach(option => {
+                option.addEventListener('change', function() {
+                    updateOrderSummary();
+                });
+            });
+
+            // Initialize order summary
+            updateOrderSummary();
 
             // Handle order details modal
             const orderDetailsModal = document.getElementById('orderDetailsModal');
