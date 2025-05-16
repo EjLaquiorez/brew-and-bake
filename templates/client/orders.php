@@ -113,162 +113,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Handle checkout
-    if (isset($_POST['checkout'])) {
-        // Check if cart is empty
-        if (empty($_SESSION['cart'])) {
-            $errorMessage = "Your cart is empty. Please add items before checkout.";
-        } else {
-            // Process checkout
-            try {
-                // Get selected items from the form
-                $selectedItems = [];
-                $deliveryOption = 'pickup'; // Default to pickup (no fee)
-
-                if (isset($_POST['selected_items_json']) && !empty($_POST['selected_items_json'])) {
-                    $selectedItems = json_decode($_POST['selected_items_json'], true);
-
-                    // If no items selected, show error
-                    if (empty($selectedItems)) {
-                        $errorMessage = "Please select at least one item to checkout.";
-                        // Don't proceed with checkout
-                        throw new Exception($errorMessage);
-                    }
-                }
-
-                // Get delivery option
-                if (isset($_POST['delivery_option'])) {
-                    $deliveryOption = $_POST['delivery_option'];
-                }
-
-                // Filter cart items to only include selected items
-                $selectedCartItems = [];
-                $selectedTotalAmount = 0;
-
-                foreach ($cartItems as $item) {
-                    if (in_array($item['id'], $selectedItems)) {
-                        $selectedCartItems[] = $item;
-                        $selectedTotalAmount += $item['subtotal'];
-                    }
-                }
-
-                // First, verify stock availability for all selected items
-                $stockErrors = [];
-                $productUpdates = [];
-
-                foreach ($selectedCartItems as $item) {
-                    // Check current stock
-                    $stmt = $conn->prepare("SELECT stock FROM products WHERE id = ? AND status = 'active'");
-                    $stmt->execute([$item['id']]);
-                    $product = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                    if (!$product) {
-                        $stockErrors[] = "Product '{$item['name']}' is no longer available.";
-                        continue;
-                    }
-
-                    if ($product['stock'] < $item['quantity']) {
-                        if ($product['stock'] <= 0) {
-                            $stockErrors[] = "'{$item['name']}' is out of stock.";
-                        } else {
-                            $stockErrors[] = "Only {$product['stock']} units of '{$item['name']}' available.";
-                            // Update cart with available quantity
-                            $_SESSION['cart'][$item['id']] = $product['stock'];
-                            $productUpdates[$item['id']] = $product['stock'];
-                        }
-                    }
-                }
-
-                // If there are stock errors, don't proceed with checkout
-                if (!empty($stockErrors)) {
-                    $errorMessage = "Cannot complete checkout due to stock limitations:<br>" . implode("<br>", $stockErrors);
-
-                    // If we updated any quantities, we need to refresh the page
-                    if (!empty($productUpdates)) {
-                        $_SESSION['error'] = $errorMessage;
-                        header("Location: orders.php");
-                        exit;
-                    }
-
-                    // Otherwise just show the error and continue
-                    // No need to do anything else here, the error message is already set
-                }
-
-                // Start transaction
-                $conn->beginTransaction();
-
-                // Check if user ID is available
-                if (!$userId) {
-                    throw new Exception("User ID not available. Please log in again.");
-                }
-
-                // Calculate final total amount
-                $finalTotalAmount = $selectedTotalAmount;
-                $deliveryFee = 0;
-
-                // Add delivery fee only if delivery option is selected
-                if ($deliveryOption === 'delivery') {
-                    $deliveryFee = 50;
-                    $finalTotalAmount += $deliveryFee;
-                }
-
-                // Create order record
-                $stmt = $conn->prepare("INSERT INTO orders (client_id, order_date, total_price, status, payment_status, created_at)
-                                        VALUES (?, NOW(), ?, 'pending', 'unpaid', NOW())");
-                $stmt->execute([$userId, $finalTotalAmount]);
-
-                $orderId = $conn->lastInsertId();
-
-                // Add order items and update stock
-                $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price, created_at)
-                                        VALUES (?, ?, ?, ?, NOW())");
-
-                $updateStockStmt = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
-
-                foreach ($selectedCartItems as $item) {
-                    $stmt->execute([
-                        $orderId,
-                        $item['id'],
-                        $item['quantity'],
-                        $item['price']
-                    ]);
-
-                    // Update product stock
-                    $updateStockStmt->execute([$item['quantity'], $item['id']]);
-
-                    // Remove the item from the cart
-                    unset($_SESSION['cart'][$item['id']]);
-                }
-
-                // Create a payment record
-                $stmt = $conn->prepare("INSERT INTO payments (order_id, amount, payment_method, payment_status, transaction_date)
-                                        VALUES (?, ?, 'cash', 'pending', NOW())");
-                $stmt->execute([$orderId, $finalTotalAmount]);
-
-                // Commit transaction
-                $conn->commit();
-
-                // Note: We've already removed the selected items from the cart in the loop above
-                // If cart is now empty, initialize it as an empty array
-                if (empty($_SESSION['cart'])) {
-                    $_SESSION['cart'] = [];
-                }
-
-                // Set success message
-                $itemCount = count($selectedCartItems);
-                $deliveryMessage = ($deliveryOption === 'delivery') ? " with home delivery" : " for in-store pickup";
-                $_SESSION['success'] = "Your order with $itemCount item" . ($itemCount > 1 ? "s" : "") . $deliveryMessage . " has been placed successfully! Order #" . $orderId;
-
-                // Redirect to prevent form resubmission
-                header("Location: orders.php");
-                exit;
-
-            } catch (PDOException $e) {
-                // Rollback transaction on error
-                $conn->rollBack();
-                $errorMessage = "Error processing your order: " . $e->getMessage();
-            }
-        }
+    // Handle checkout - empty cart check
+    if (isset($_POST['checkout']) && empty($_SESSION['cart'])) {
+        $errorMessage = "Your cart is empty. Please add items before checkout.";
     }
 }
 
@@ -448,6 +295,199 @@ if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
         }
     } catch (PDOException $e) {
         $errorMessage = "Error fetching cart items: " . $e->getMessage();
+    }
+}
+
+// Process checkout after cart items and user ID are available
+if (isset($_POST['checkout']) && !empty($cartItems) && $userId) {
+    try {
+        // Get selected items from the form
+        $selectedItems = [];
+        $deliveryOption = 'pickup'; // Default to pickup (no fee)
+        $paymentMethod = 'cod'; // Default to Cash on Delivery
+
+        if (isset($_POST['selected_items_json']) && !empty($_POST['selected_items_json'])) {
+            $selectedItems = json_decode($_POST['selected_items_json'], true);
+
+            // If no items selected, show error
+            if (empty($selectedItems)) {
+                $errorMessage = "Please select at least one item to checkout.";
+                // Don't proceed with checkout
+                throw new Exception($errorMessage);
+            }
+        }
+
+        // Get delivery option
+        if (isset($_POST['delivery_option'])) {
+            $deliveryOption = $_POST['delivery_option'];
+        }
+
+        // Get payment method
+        if (isset($_POST['payment_method'])) {
+            $paymentMethod = $_POST['payment_method'];
+
+            // Validate payment method
+            $validPaymentMethods = ['cod', 'gcash', 'maya'];
+            if (!in_array($paymentMethod, $validPaymentMethods)) {
+                $paymentMethod = 'cod'; // Default to COD if invalid
+            }
+        }
+
+        // Filter cart items to only include selected items
+        $selectedCartItems = [];
+        $selectedTotalAmount = 0;
+
+        foreach ($cartItems as $item) {
+            if (in_array($item['id'], $selectedItems)) {
+                $selectedCartItems[] = $item;
+                $selectedTotalAmount += $item['subtotal'];
+            }
+        }
+
+        // First, verify stock availability for all selected items
+        $stockErrors = [];
+        $productUpdates = [];
+
+        foreach ($selectedCartItems as $item) {
+            // Check current stock
+            $stmt = $conn->prepare("SELECT stock FROM products WHERE id = ? AND status = 'active'");
+            $stmt->execute([$item['id']]);
+            $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$product) {
+                $stockErrors[] = "Product '{$item['name']}' is no longer available.";
+                continue;
+            }
+
+            if ($product['stock'] < $item['quantity']) {
+                if ($product['stock'] <= 0) {
+                    $stockErrors[] = "'{$item['name']}' is out of stock.";
+                } else {
+                    $stockErrors[] = "Only {$product['stock']} units of '{$item['name']}' available.";
+                    // Update cart with available quantity
+                    $_SESSION['cart'][$item['id']] = $product['stock'];
+                    $productUpdates[$item['id']] = $product['stock'];
+                }
+            }
+        }
+
+        // If there are stock errors, don't proceed with checkout
+        if (!empty($stockErrors)) {
+            $errorMessage = "Cannot complete checkout due to stock limitations:<br>" . implode("<br>", $stockErrors);
+
+            // If we updated any quantities, we need to refresh the page
+            if (!empty($productUpdates)) {
+                $_SESSION['error'] = $errorMessage;
+                header("Location: orders.php");
+                exit;
+            }
+        } else {
+            // Start transaction
+            $conn->beginTransaction();
+
+            // Calculate final total amount
+            $finalTotalAmount = $selectedTotalAmount;
+            $deliveryFee = 0;
+
+            // Add delivery fee only if delivery option is selected
+            if ($deliveryOption === 'delivery') {
+                $deliveryFee = 50;
+                $finalTotalAmount += $deliveryFee;
+            }
+
+            // Create order record
+            $stmt = $conn->prepare("INSERT INTO orders (client_id, order_date, total_price, status, payment_status, created_at)
+                                    VALUES (?, NOW(), ?, 'pending', 'unpaid', NOW())");
+            $stmt->execute([$userId, $finalTotalAmount]);
+
+            $orderId = $conn->lastInsertId();
+
+            // Add order items and update stock
+            $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price, created_at)
+                                    VALUES (?, ?, ?, ?, NOW())");
+
+            $updateStockStmt = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+
+            foreach ($selectedCartItems as $item) {
+                $stmt->execute([
+                    $orderId,
+                    $item['id'],
+                    $item['quantity'],
+                    $item['price']
+                ]);
+
+                // Update product stock
+                $updateStockStmt->execute([$item['quantity'], $item['id']]);
+
+                // Remove the item from the cart
+                unset($_SESSION['cart'][$item['id']]);
+            }
+
+            // Map payment method to database value
+            $paymentMethodMap = [
+                'cod' => 'cash',
+                'gcash' => 'gcash',
+                'maya' => 'credit_card'  // Map Maya to credit_card since it's not in the allowed values
+            ];
+
+            // Get payment status based on method
+            // For digital payments, we'll use 'pending' as well, but we'll handle them differently in the UI
+            $paymentStatus = 'pending';
+
+            // Create a payment record
+            $stmt = $conn->prepare("INSERT INTO payments (order_id, amount, payment_method, payment_status, transaction_date)
+                                    VALUES (?, ?, ?, ?, NOW())");
+            $stmt->execute([
+                $orderId,
+                $finalTotalAmount,
+                $paymentMethodMap[$paymentMethod],
+                $paymentStatus
+            ]);
+
+            // Commit transaction
+            $conn->commit();
+
+            // If cart is now empty, initialize it as an empty array
+            if (empty($_SESSION['cart'])) {
+                $_SESSION['cart'] = [];
+            }
+
+            // Set success message
+            $itemCount = count($selectedCartItems);
+            $deliveryMessage = ($deliveryOption === 'delivery') ? " with home delivery" : " for in-store pickup";
+
+            // Get payment method display name
+            $paymentMethodDisplay = [
+                'cod' => 'Cash on Delivery',
+                'gcash' => 'GCash',
+                'maya' => 'Maya'
+            ];
+
+            $paymentMethodText = isset($paymentMethodDisplay[$paymentMethod]) ? $paymentMethodDisplay[$paymentMethod] : 'Cash on Delivery';
+
+            // Create success message
+            $_SESSION['success'] = "Your order with $itemCount item" . ($itemCount > 1 ? "s" : "") .
+                                  $deliveryMessage . " has been placed successfully! " .
+                                  "Payment method: $paymentMethodText. Order #" . $orderId;
+
+            // Add additional instructions for digital payment methods
+            if ($paymentMethod !== 'cod') {
+                $_SESSION['info'] = "Please complete your payment using $paymentMethodText. " .
+                                   "Your order will be processed once payment is confirmed.";
+            }
+
+            // Redirect to prevent form resubmission
+            header("Location: orders.php");
+            exit;
+        }
+    } catch (PDOException $e) {
+        // Rollback transaction on error
+        if (isset($conn) && $conn->inTransaction()) {
+            $conn->rollBack();
+        }
+        $errorMessage = "Error processing your order: " . $e->getMessage();
+    } catch (Exception $e) {
+        $errorMessage = $e->getMessage();
     }
 }
 
@@ -1550,6 +1590,34 @@ try {
                                                 <span id="delivery-fee" class="text-muted">₱50.00</span>
                                             </div>
                                         </div>
+
+                                        <div class="mb-3 pb-2 border-bottom">
+                                            <h6 class="mb-2 fw-bold">Payment Method</h6>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input payment-method" type="radio" name="payment_method" id="payment-method-cod" value="cod" checked>
+                                                <label class="form-check-label" for="payment-method-cod">
+                                                    Cash on Delivery (COD)
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input payment-method" type="radio" name="payment_method" id="payment-method-gcash" value="gcash">
+                                                <label class="form-check-label d-flex align-items-center" for="payment-method-gcash">
+                                                    <span class="me-2">GCash</span>
+                                                    <span class="badge bg-primary" style="background-color: #0063FB !important;">
+                                                        <i class="bi bi-wallet2"></i>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input payment-method" type="radio" name="payment_method" id="payment-method-maya" value="maya">
+                                                <label class="form-check-label d-flex align-items-center" for="payment-method-maya">
+                                                    <span class="me-2">Maya</span>
+                                                    <span class="badge bg-primary" style="background-color: #6435C9 !important;">
+                                                        <i class="bi bi-credit-card"></i>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
                                         <div class="summary-total">
                                             <span>Total</span>
                                             <span id="summary-total">₱<?= number_format($totalAmount, 2) ?></span>
@@ -1560,7 +1628,8 @@ try {
                                                 <i class="bi bi-info-circle"></i>
                                                 <div class="alert-content">
                                                     <p class="mb-1">Select items to include in your order using the checkboxes.</p>
-                                                    <p class="mb-0">Choose between in-store pickup (free) or home delivery (₱50.00).</p>
+                                                    <p class="mb-1">Choose between in-store pickup (free) or home delivery (₱50.00).</p>
+                                                    <p class="mb-0">Select your preferred payment method: Cash on Delivery, GCash, or Maya.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -1570,8 +1639,9 @@ try {
                                                 <!-- Hidden fields to store selected items -->
                                                 <input type="hidden" name="selected_items_json" id="selected-items-json" value="">
                                                 <input type="hidden" name="delivery_option" id="delivery-option-input" value="pickup">
+                                                <input type="hidden" name="payment_method" id="payment-method-input" value="cod">
 
-                                                <button type="submit" name="checkout" class="btn btn-primary w-100">
+                                                <button type="submit" name="checkout" id="checkout-button" class="btn btn-primary w-100">
                                                     <i class="bi bi-credit-card me-2"></i> Proceed to Checkout
                                                 </button>
                                             </form>
@@ -2052,10 +2122,12 @@ try {
             const selectAllCheckbox = document.getElementById('select-all-items');
             const itemCheckboxes = document.querySelectorAll('.item-checkbox');
             const deliveryOptions = document.querySelectorAll('.delivery-option');
+            const paymentMethods = document.querySelectorAll('.payment-method');
             const summarySubtotalElement = document.getElementById('summary-subtotal');
             const summaryTotalElement = document.getElementById('summary-total');
             const selectedItemsJsonInput = document.getElementById('selected-items-json');
             const deliveryOptionInput = document.getElementById('delivery-option-input');
+            const paymentMethodInput = document.getElementById('payment-method-input');
             const checkoutForm = document.getElementById('checkout-form');
 
             // Function to update the order summary based on selected items
@@ -2119,6 +2191,44 @@ try {
                     deliveryOptionInput.value = deliveryOption;
                 }
 
+                // Get selected payment method
+                let paymentMethod = 'cod'; // Default to COD
+                paymentMethods.forEach(option => {
+                    if (option.checked) {
+                        paymentMethod = option.value;
+                    }
+                });
+
+                // Update payment method input
+                if (paymentMethodInput) {
+                    paymentMethodInput.value = paymentMethod;
+                }
+
+                // Update checkout button text based on payment method
+                const checkoutButton = document.getElementById('checkout-button');
+                if (checkoutButton) {
+                    let buttonIcon = '<i class="bi bi-credit-card me-2"></i>';
+                    let buttonText = 'Proceed to Checkout';
+
+                    switch (paymentMethod) {
+                        case 'gcash':
+                            buttonIcon = '<i class="bi bi-wallet2 me-2"></i>';
+                            buttonText = 'Pay with GCash';
+                            break;
+                        case 'maya':
+                            buttonIcon = '<i class="bi bi-credit-card me-2"></i>';
+                            buttonText = 'Pay with Maya';
+                            break;
+                        case 'cod':
+                        default:
+                            buttonIcon = '<i class="bi bi-cash-coin me-2"></i>';
+                            buttonText = 'Place Order (COD)';
+                            break;
+                    }
+
+                    checkoutButton.innerHTML = buttonIcon + buttonText;
+                }
+
                 // Disable checkout button if no items selected
                 if (checkoutForm) {
                     const checkoutButton = checkoutForm.querySelector('button[name="checkout"]');
@@ -2169,6 +2279,13 @@ try {
 
             // Add event listeners to delivery option radio buttons
             deliveryOptions.forEach(option => {
+                option.addEventListener('change', function() {
+                    updateOrderSummary();
+                });
+            });
+
+            // Add event listeners to payment method radio buttons
+            paymentMethods.forEach(option => {
                 option.addEventListener('change', function() {
                     updateOrderSummary();
                 });
