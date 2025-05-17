@@ -48,7 +48,7 @@ if ($userId) {
                 $user['address'] = $addressData['address'];
                 $user['phone'] = $addressData['phone'] ?? '';
                 $user['city'] = $addressData['city'] ?? 'Manila';
-                $user['state'] = $addressData['state'] ?? '';
+                $user['province'] = $addressData['province'] ?? '';
                 $user['postal_code'] = $addressData['postal_code'] ?? '1000';
                 $user['country'] = $addressData['country'] ?? 'Philippines';
             }
@@ -119,7 +119,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                     $addressId = $stmt->fetchColumn();
 
                     if ($addressId) {
-                        // Update existing address
+                        // Check if fullname column exists in client_addresses table
+                        $stmt = $conn->prepare("
+                            SELECT COUNT(*)
+                            FROM information_schema.columns
+                            WHERE table_schema = DATABASE()
+                            AND table_name = 'client_addresses'
+                            AND column_name = 'fullname'
+                        ");
+                        $stmt->execute();
+                        $fullnameColumnExists = $stmt->fetchColumn() > 0;
+
+                        // Update existing address (normalized version without fullname)
                         $stmt = $conn->prepare("
                             UPDATE client_addresses
                             SET phone = ?
@@ -127,7 +138,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                         ");
                         $stmt->execute([$phone, $addressId]);
                     } else {
-                        // Create new address record
+                        // Check if fullname column exists in client_addresses table
+                        $stmt = $conn->prepare("
+                            SELECT COUNT(*)
+                            FROM information_schema.columns
+                            WHERE table_schema = DATABASE()
+                            AND table_name = 'client_addresses'
+                            AND column_name = 'fullname'
+                        ");
+                        $stmt->execute();
+                        $fullnameColumnExists = $stmt->fetchColumn() > 0;
+
+                        // Create new address record (normalized version without fullname)
                         $stmt = $conn->prepare("
                             INSERT INTO client_addresses
                             (client_id, address, city, postal_code, country, phone, is_default)
@@ -143,17 +165,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                         ]);
                     }
                 } else {
-                    // Create the client_addresses table if it doesn't exist
+                    // Create the client_addresses table if it doesn't exist (normalized version)
                     $stmt = $conn->prepare("
                         CREATE TABLE IF NOT EXISTS client_addresses (
                             id INT NOT NULL AUTO_INCREMENT,
                             client_id INT NOT NULL,
                             address TEXT NOT NULL,
                             city VARCHAR(100) NOT NULL DEFAULT 'Manila',
-                            state VARCHAR(100) NULL,
+                            province VARCHAR(100) NULL,
                             postal_code VARCHAR(20) NOT NULL DEFAULT '1000',
                             country VARCHAR(100) NOT NULL DEFAULT 'Philippines',
                             phone VARCHAR(20) NULL,
+                            latitude VARCHAR(20) NULL DEFAULT '9.994295',
+                            longitude VARCHAR(20) NULL DEFAULT '118.918419',
+                            address_type VARCHAR(20) NOT NULL DEFAULT 'Home',
                             is_default BOOLEAN NOT NULL DEFAULT 1,
                             created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
                             updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -163,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                     ");
                     $stmt->execute();
 
-                    // Insert new address record
+                    // Insert new address record (normalized version without fullname)
                     $stmt = $conn->prepare("
                         INSERT INTO client_addresses
                         (client_id, address, phone, is_default)
@@ -197,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                     $user['address'] = $addressData['address'];
                     $user['phone'] = $addressData['phone'] ?? '';
                     $user['city'] = $addressData['city'] ?? 'Manila';
-                    $user['state'] = $addressData['state'] ?? '';
+                    $user['province'] = $addressData['province'] ?? '';
                     $user['postal_code'] = $addressData['postal_code'] ?? '1000';
                     $user['country'] = $addressData['country'] ?? 'Philippines';
                 }
@@ -251,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_address'])) {
     $addressId = !empty($_POST['address_id']) ? $_POST['address_id'] : null;
     $address = trim($_POST['address']);
     $city = trim($_POST['city']);
-    $state = trim($_POST['state'] ?? '');
+    $state = trim($_POST['province'] ?? ''); // Keep variable name for compatibility
     $postalCode = trim($_POST['postal_code']);
     $country = trim($_POST['country']);
     $modalPhone = trim($_POST['modal_phone'] ?? '');
@@ -298,12 +323,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_address'])) {
                         client_id INT NOT NULL,
                         address TEXT NOT NULL,
                         city VARCHAR(100) NOT NULL DEFAULT 'Manila',
-                        state VARCHAR(100) NULL,
+                        province VARCHAR(100) NULL,
                         postal_code VARCHAR(20) NOT NULL DEFAULT '1000',
                         country VARCHAR(100) NOT NULL DEFAULT 'Philippines',
                         phone VARCHAR(20) NULL,
                         latitude VARCHAR(20) NULL DEFAULT '9.994295',
                         longitude VARCHAR(20) NULL DEFAULT '118.918419',
+                        address_type VARCHAR(20) NOT NULL DEFAULT 'Home',
                         is_default BOOLEAN NOT NULL DEFAULT 1,
                         created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -326,30 +352,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_address'])) {
 
             // Check if we're updating an existing address or creating a new one
             if ($addressId) {
-                // Update existing address
+                // Update existing address (normalized version without fullname)
                 $stmt = $conn->prepare("
                     UPDATE client_addresses
-                    SET address = ?, city = ?, state = ?, postal_code = ?, country = ?, phone = ?,
-                        latitude = ?, longitude = ?, is_default = ?
+                    SET address = ?, city = ?, province = ?, postal_code = ?, country = ?, phone = ?,
+                        latitude = ?, longitude = ?, address_type = ?, is_default = ?
                     WHERE id = ? AND client_id = ?
                 ");
                 $stmt->execute([
                     $address, $city, $state, $postalCode, $country, $modalPhone,
-                    $latitude, $longitude, $isDefault,
+                    $latitude, $longitude, 'Home', $isDefault,
                     $addressId, $userId
                 ]);
 
                 $successMessage = "Address updated successfully!";
             } else {
-                // Insert new address
+                // Insert new address (normalized version without fullname)
                 $stmt = $conn->prepare("
                     INSERT INTO client_addresses
-                    (client_id, address, city, state, postal_code, country, phone, latitude, longitude, is_default)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (client_id, address, city, province, postal_code, country, phone, latitude, longitude, address_type, is_default)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 $stmt->execute([
                     $userId, $address, $city, $state, $postalCode, $country, $modalPhone,
-                    $latitude, $longitude, $isDefault
+                    $latitude, $longitude, 'Home', $isDefault
                 ]);
 
                 $successMessage = "Address added successfully!";
@@ -759,7 +785,7 @@ if (isset($_SESSION['error'])) {
                                         <p class="mb-1"><?= htmlspecialchars($addressData['address']) ?></p>
                                         <p class="mb-1">
                                             <?= htmlspecialchars($addressData['city']) ?>,
-                                            <?= !empty($addressData['state']) ? htmlspecialchars($addressData['state']) . ', ' : '' ?>
+                                            <?= !empty($addressData['province']) ? htmlspecialchars($addressData['province']) . ', ' : '' ?>
                                             <?= htmlspecialchars($addressData['postal_code']) ?>
                                         </p>
                                         <p class="mb-1"><?= htmlspecialchars($addressData['country']) ?></p>
@@ -821,8 +847,8 @@ if (isset($_SESSION['error'])) {
                                         <input type="text" class="form-control" id="city" name="city" value="<?= htmlspecialchars($addressData['city'] ?? 'Manila') ?>" required>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="state" class="form-label">Province/State</label>
-                                        <input type="text" class="form-control" id="state" name="state" value="<?= htmlspecialchars($addressData['state'] ?? '') ?>">
+                                        <label for="province" class="form-label">Province</label>
+                                        <input type="text" class="form-control" id="province" name="province" value="<?= htmlspecialchars($addressData['province'] ?? '') ?>">
                                     </div>
                                 </div>
 
