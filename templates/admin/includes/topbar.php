@@ -4,6 +4,11 @@
  * This file contains the topbar with notifications, messages, and user profile dropdowns
  */
 
+// Include settings if not already included
+if (!isset($settings)) {
+    require_once __DIR__ . "/../../includes/settings.php";
+}
+
 // Get the current page title
 $page_title = '';
 $current_page = basename($_SERVER['PHP_SELF']);
@@ -163,9 +168,9 @@ switch ($current_page) {
         <!-- User Profile Dropdown -->
         <div class="topbar-profile" id="userProfileIcon">
             <div class="topbar-avatar">
-                <?= substr($_SESSION['user']['name'] ?? 'A', 0, 1) ?>
+                <?= substr($_SESSION['user_name'] ?? 'A', 0, 1) ?>
             </div>
-            <span class="topbar-user d-none d-md-block"><?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?></span>
+            <span class="topbar-user d-none d-md-block"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></span>
             <i class="bi bi-chevron-down topbar-dropdown"></i>
 
             <!-- User Menu Dropdown -->

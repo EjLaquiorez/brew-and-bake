@@ -24,33 +24,25 @@ if (isset($_SESSION['error'])) {
     unset($_SESSION['error']);
 }
 
-// Fetch statistics
+// Get current user
+$currentUser = $_SESSION['user'] ?? [];
+
+// Get current date
+$currentDate = date('F j, Y');
+
+// Fetch dashboard statistics
 try {
-    // Products statistics
-    $totalProducts = $conn->query("SELECT COUNT(*) FROM products")->fetchColumn();
-    $activeProducts = $conn->query("SELECT COUNT(*) FROM products WHERE status = 'active'")->fetchColumn();
-    $lowStockProducts = $conn->query("SELECT COUNT(*) FROM products WHERE stock < 10")->fetchColumn();
-
-    // Orders statistics (placeholder - will be implemented when orders table exists)
-    $totalOrders = 0;
-    $pendingOrders = 0;
-    $completedOrders = 0;
-    $totalRevenue = 0;
-
-    // Recent products
-    $stmt = $conn->prepare("
-        SELECT * FROM products
-        ORDER BY created_at DESC
-        LIMIT 5
-    ");
+    // Check if products table exists
+    $stmt = $conn->prepare("SHOW TABLES LIKE 'products'");
     $stmt->execute();
-    $recentProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $productsTableExists = $stmt->rowCount() > 0;
 
-    // Top selling products (placeholder - will be implemented when orders table exists)
-    $topProducts = [];
+    // Check if orders table exists
+    $stmt = $conn->prepare("SHOW TABLES LIKE 'orders'");
+    $stmt->execute();
+    $ordersTableExists = $stmt->rowCount() > 0;
 
-} catch (PDOException $e) {
-    $errorMessage = "Error fetching data: " . $e->getMessage();
+    // Initialize statistics
     $totalProducts = 0;
     $activeProducts = 0;
     $lowStockProducts = 0;
@@ -59,7 +51,280 @@ try {
     $completedOrders = 0;
     $totalRevenue = 0;
     $recentProducts = [];
-    $topProducts = [];
+    $recentOrders = [];
+
+    // Fetch product statistics
+    if ($productsTableExists) {
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM products");
+        $stmt->execute();
+        $totalProducts = $stmt->fetchColumn();
+
+        // Check if products table has a status column
+        $stmt = $conn->prepare("SHOW COLUMNS FROM products LIKE 'status'");
+        $stmt->execute();
+        $hasStatusColumn = $stmt->rowCount() > 0;
+
+        if ($hasStatusColumn) {
+            // Get active products count (considering various status names)
+            $activeStatuses = ['active', 'available', 'published', 'visible', '1'];
+            $activeProducts = 0;
+
+            foreach ($activeStatuses as $status) {
+                if (is_numeric($status)) {
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE status = ?");
+                } else {
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE LOWER(status) = ?");
+                }
+                $stmt->execute([$status]);
+                $activeProducts += $stmt->fetchColumn();
+            }
+        } else {
+            // If no status column, assume all products are active
+            $activeProducts = $totalProducts;
+        }
+
+        // Check which column contains the stock information
+        $stockColumn = null;
+        $possibleStockColumns = ['stock', 'quantity', 'inventory', 'qty', 'stock_level'];
+
+        foreach ($possibleStockColumns as $column) {
+            $stmt = $conn->prepare("SHOW COLUMNS FROM products LIKE ?");
+            $stmt->execute([$column]);
+            if ($stmt->rowCount() > 0) {
+                $stockColumn = $column;
+                break;
+            }
+        }
+
+        // If we found a stock column, count low stock products
+        if ($stockColumn) {
+            $stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE $stockColumn < 10");
+            $stmt->execute();
+            $lowStockProducts = $stmt->fetchColumn();
+        } else {
+            $lowStockProducts = 0;
+        }
+
+        // Fetch recent products
+        try {
+            // Check which columns exist in the products table
+            $stmt = $conn->prepare("DESCRIBE products");
+            $stmt->execute();
+            $productColumns = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+
+            // Check if categories table exists
+            $stmt = $conn->prepare("SHOW TABLES LIKE 'categories'");
+            $stmt->execute();
+            $categoriesTableExists = $stmt->rowCount() > 0;
+
+            // Determine if we can join with categories table
+            $canJoinWithCategories = false;
+            $joinCondition = "";
+
+            if ($categoriesTableExists) {
+                // Check which columns exist in the categories table
+                $stmt = $conn->prepare("DESCRIBE categories");
+                $stmt->execute();
+                $categoryColumns = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+
+                // Determine the join condition based on available columns
+                if (in_array('category_id', $productColumns) && in_array('id', $categoryColumns)) {
+                    $canJoinWithCategories = true;
+                    $joinCondition = "p.category_id = c.id";
+                } elseif (in_array('category', $productColumns) && in_array('name', $categoryColumns)) {
+                    $canJoinWithCategories = true;
+                    $joinCondition = "p.category = c.name";
+                }
+            }
+
+            // Determine the ORDER BY clause based on available columns
+            $orderByClause = "";
+            $possibleDateColumns = ['created_at', 'date_added', 'added_date', 'timestamp'];
+
+            foreach ($possibleDateColumns as $column) {
+                if (in_array($column, $productColumns)) {
+                    $orderByClause = "p.$column DESC";
+                    break;
+                }
+            }
+
+            // If no date column found, order by ID
+            if (empty($orderByClause) && in_array('id', $productColumns)) {
+                $orderByClause = "p.id DESC";
+            } elseif (empty($orderByClause)) {
+                // Fallback to a generic ORDER BY
+                $orderByClause = "1";
+            }
+
+            // Build the SQL query based on available columns
+            if ($canJoinWithCategories) {
+                $sql = "
+                    SELECT p.*, c.name as category_name
+                    FROM products p
+                    LEFT JOIN categories c ON $joinCondition
+                    ORDER BY $orderByClause
+                    LIMIT 5
+                ";
+            } else {
+                $sql = "
+                    SELECT *
+                    FROM products
+                    ORDER BY $orderByClause
+                    LIMIT 5
+                ";
+            }
+
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            $recentProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            // If there's an error with the recent products query, set to empty array
+            $recentProducts = [];
+        }
+    }
+
+    // Fetch order statistics
+    if ($ordersTableExists) {
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM orders");
+        $stmt->execute();
+        $totalOrders = $stmt->fetchColumn();
+
+        // Get pending orders count (considering various status names)
+        $pendingStatuses = ['pending', 'processing', 'waiting'];
+        $pendingOrders = 0;
+
+        foreach ($pendingStatuses as $status) {
+            $stmt = $conn->prepare("SELECT COUNT(*) FROM orders WHERE LOWER(status) = ?");
+            $stmt->execute([$status]);
+            $pendingOrders += $stmt->fetchColumn();
+        }
+
+        // Get completed orders count (considering various status names)
+        $completedStatuses = ['completed', 'delivered', 'finished'];
+        $completedOrders = 0;
+
+        foreach ($completedStatuses as $status) {
+            $stmt = $conn->prepare("SELECT COUNT(*) FROM orders WHERE LOWER(status) = ?");
+            $stmt->execute([$status]);
+            $completedOrders += $stmt->fetchColumn();
+        }
+
+        // Check which column contains the order total
+        $stmt = $conn->prepare("DESCRIBE orders");
+        $stmt->execute();
+        $orderColumns = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+
+        // Look for possible total column names
+        $possibleTotalColumns = ['total', 'total_amount', 'amount', 'price', 'order_total', 'grand_total'];
+        $totalColumn = null;
+
+        foreach ($possibleTotalColumns as $column) {
+            if (in_array($column, $orderColumns)) {
+                $totalColumn = $column;
+                break;
+            }
+        }
+
+        // If we found a total column, sum it
+        if ($totalColumn) {
+            $stmt = $conn->prepare("SELECT SUM($totalColumn) FROM orders");
+            $stmt->execute();
+            $totalRevenue = $stmt->fetchColumn() ?: 0;
+        } else {
+            // If no total column found, set revenue to 0
+            $totalRevenue = 0;
+        }
+
+        // Fetch recent orders
+        try {
+            // Check which columns exist in the orders table
+            $stmt = $conn->prepare("DESCRIBE orders");
+            $stmt->execute();
+            $orderColumns = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+
+            // Check which columns exist in the users table
+            $stmt = $conn->prepare("DESCRIBE users");
+            $stmt->execute();
+            $userColumns = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+
+            // Determine if we can join with users table
+            $canJoinWithUsers = false;
+            $joinCondition = "";
+
+            if (in_array('user_id', $orderColumns) && in_array('id', $userColumns)) {
+                $canJoinWithUsers = true;
+                $joinCondition = "o.user_id = u.id";
+            } elseif (in_array('client_id', $orderColumns) && in_array('id', $userColumns)) {
+                $canJoinWithUsers = true;
+                $joinCondition = "o.client_id = u.id";
+            } elseif (in_array('customer_id', $orderColumns) && in_array('id', $userColumns)) {
+                $canJoinWithUsers = true;
+                $joinCondition = "o.customer_id = u.id";
+            }
+
+            // Build the SQL query based on available columns
+            if ($canJoinWithUsers) {
+                // Check which columns exist in the users table to build the SELECT clause
+                $userSelectFields = [];
+
+                // Always include these fields if they exist
+                if (in_array('name', $userColumns)) {
+                    $userSelectFields[] = "u.name as customer_name";
+                }
+                if (in_array('email', $userColumns)) {
+                    $userSelectFields[] = "u.email";
+                }
+                if (in_array('phone', $userColumns)) {
+                    $userSelectFields[] = "u.phone as customer_phone";
+                } else if (in_array('contact_number', $userColumns)) {
+                    $userSelectFields[] = "u.contact_number as customer_phone";
+                } else if (in_array('mobile', $userColumns)) {
+                    $userSelectFields[] = "u.mobile as customer_phone";
+                }
+                if (in_array('first_name', $userColumns) && in_array('last_name', $userColumns)) {
+                    $userSelectFields[] = "CONCAT(u.first_name, ' ', u.last_name) as full_name";
+                }
+
+                // Build the SQL query with the available fields
+                $userSelectClause = !empty($userSelectFields) ? ", " . implode(", ", $userSelectFields) : "";
+
+                $sql = "
+                    SELECT o.*$userSelectClause
+                    FROM orders o
+                    LEFT JOIN users u ON $joinCondition
+                    ORDER BY o.created_at DESC
+                    LIMIT 5
+                ";
+            } else {
+                $sql = "
+                    SELECT *
+                    FROM orders
+                    ORDER BY created_at DESC
+                    LIMIT 5
+                ";
+            }
+
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            $recentOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            // If there's an error with the recent orders query, set to empty array
+            $recentOrders = [];
+        }
+    }
+} catch (PDOException $e) {
+    $errorMessage = "Error fetching dashboard data: " . $e->getMessage();
+
+    // Set default values in case of error
+    $totalProducts = 0;
+    $activeProducts = 0;
+    $lowStockProducts = 0;
+    $totalOrders = 0;
+    $pendingOrders = 0;
+    $completedOrders = 0;
+    $totalRevenue = 0;
+    $recentProducts = [];
+    $recentOrders = [];
 }
 ?>
 
@@ -72,104 +337,13 @@ try {
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Dashboard - Brew & Bake</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/admin.css?v=<?= time() ?>">
+    <?php include 'includes/css-includes.php'; ?>
 </head>
 <body>
 <!-- Admin Container -->
 <div class="admin-container">
     <!-- Sidebar -->
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <a href="#" class="sidebar-brand">
-                <div class="sidebar-logo">
-                    <i class="bi bi-cup-hot"></i>
-                </div>
-                <div>
-                    <h3 class="sidebar-title">Brew & Bake</h3>
-                    <p class="sidebar-subtitle">Admin Dashboard</p>
-                </div>
-            </a>
-            <button class="sidebar-close">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-
-        <div class="sidebar-nav">
-            <div class="nav-section">
-                <h6 class="nav-section-title">Main</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="dashboard.php" class="nav-link active">
-                            <i class="bi bi-speedometer2"></i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="orders.php" class="nav-link">
-                            <i class="bi bi-receipt"></i>
-                            Orders
-                            <span class="nav-badge">5</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="products.php" class="nav-link">
-                            <i class="bi bi-box-seam"></i>
-                            Products
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="categories.php" class="nav-link">
-                            <i class="bi bi-tags"></i>
-                            Categories
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h6 class="nav-section-title">Analytics</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="analytics.php" class="nav-link">
-                            <i class="bi bi-bar-chart-line"></i>
-                            Analytics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="sales.php" class="nav-link">
-                            <i class="bi bi-graph-up"></i>
-                            Sales
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h6 class="nav-section-title">Settings</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="profile.php" class="nav-link">
-                            <i class="bi bi-person"></i>
-                            Profile
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="settings.php" class="nav-link">
-                            <i class="bi bi-gear"></i>
-                            System Settings
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="sidebar-footer">
-            <?php include 'includes/sidebar-user-menu.php'; ?>
-        </div>
-    </aside>
+    <?php include 'includes/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="admin-main">
@@ -208,109 +382,252 @@ try {
                 </div>
             <?php endif; ?>
 
-            <!-- Include Welcome Card -->
-            <?php include 'includes/welcome-card.php'; ?>
+            <!-- Dashboard Header -->
+            <div class="page-header d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="text-muted">Welcome back, <?= htmlspecialchars($currentUser['name'] ?? 'Admin') ?>! Here's what's happening today.</p>
+                </div>
+                <div class="date-display">
+                    <i class="bi bi-calendar3 me-2"></i>
+                    <span><?= $currentDate ?></span>
+                </div>
+            </div>
 
             <!-- Statistics Overview -->
-            <div class="row mb-5">
-                <div class="col-12 mb-4">
-                    <h3 class="mb-4">Store Overview</h3>
-                </div>
-
-                <!-- Products Stats -->
-                <div class="col-md-3 col-sm-6 col-6 mb-4">
-                    <div class="stat-card primary fade-in delay-100">
-                        <div class="stat-icon">
-                            <i class="bi bi-box-seam"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($totalProducts) ?></h3>
-                            <p class="stat-label">Total Products</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3 col-sm-6 col-6 mb-4">
-                    <div class="stat-card success fade-in delay-200">
-                        <div class="stat-icon">
-                            <i class="bi bi-check-circle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($activeProducts) ?></h3>
-                            <p class="stat-label">Active Products</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3 col-sm-6 col-6 mb-4">
-                    <div class="stat-card warning fade-in delay-300">
-                        <div class="stat-icon">
-                            <i class="bi bi-exclamation-triangle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($lowStockProducts) ?></h3>
-                            <p class="stat-label">Low Stock Items</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3 col-sm-6 col-6 mb-4">
-                    <div class="stat-card info fade-in delay-400">
-                        <div class="stat-icon">
-                            <i class="bi bi-currency-dollar"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value">₱<?= number_format($totalRevenue, 2) ?></h3>
-                            <p class="stat-label">Total Revenue</p>
-                        </div>
-                    </div>
+            <div class="row mb-4">
+                <div class="col-12 mb-3">
+                    <h2 class="section-title">Store Overview</h2>
                 </div>
 
                 <!-- Orders Stats -->
-                <div class="col-md-4 col-sm-6 col-6 mb-4">
-                    <div class="stat-card secondary fade-in delay-500">
-                        <div class="stat-icon">
-                            <i class="bi bi-receipt"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($totalOrders) ?></h3>
-                            <p class="stat-label">Total Orders</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4 col-sm-6 col-6 mb-4">
-                    <div class="stat-card warning fade-in delay-600">
-                        <div class="stat-icon">
-                            <i class="bi bi-hourglass-split"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($pendingOrders) ?></h3>
-                            <p class="stat-label">Pending Orders</p>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stats-icon bg-primary bg-opacity-10 text-primary me-3">
+                                    <i class="bi bi-cart"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Total Orders</h6>
+                                    <h3 class="card-title mb-0"><?= number_format($totalOrders) ?></h3>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6 col-6 mb-4">
-                    <div class="stat-card success fade-in delay-700">
-                        <div class="stat-icon">
-                            <i class="bi bi-check2-all"></i>
+                <!-- Revenue Stats -->
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stats-icon bg-success bg-opacity-10 text-success me-3">
+                                    <i class="bi bi-cash-coin"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Total Revenue</h6>
+                                    <h3 class="card-title mb-0">₱<?= number_format($totalRevenue, 2) ?></h3>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($completedOrders) ?></h3>
-                            <p class="stat-label">Completed Orders</p>
+                    </div>
+                </div>
+
+                <!-- Products Stats -->
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stats-icon bg-info bg-opacity-10 text-info me-3">
+                                    <i class="bi bi-box"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Total Products</h6>
+                                    <h3 class="card-title mb-0"><?= number_format($totalProducts) ?></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Low Stock Stats -->
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stats-icon bg-warning bg-opacity-10 text-warning me-3">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Low Stock Items</h6>
+                                    <h3 class="card-title mb-0"><?= number_format($lowStockProducts) ?></h3>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Recent Activity -->
-            <div class="row mb-5">
+            <!-- Additional Stats Row -->
+            <div class="row mb-4">
+                <!-- Pending Orders -->
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stats-icon bg-warning bg-opacity-10 text-warning me-3">
+                                    <i class="bi bi-hourglass-split"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Pending Orders</h6>
+                                    <h3 class="card-title mb-0"><?= number_format($pendingOrders) ?></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed Orders -->
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stats-icon bg-success bg-opacity-10 text-success me-3">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Completed Orders</h6>
+                                    <h3 class="card-title mb-0"><?= number_format($completedOrders) ?></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Products -->
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stats-icon bg-info bg-opacity-10 text-info me-3">
+                                    <i class="bi bi-tag"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Active Products</h6>
+                                    <h3 class="card-title mb-0"><?= number_format($activeProducts) ?></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Section -->
+            <div class="row mb-4">
+                <!-- Recent Orders -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0"><i class="bi bi-cart me-2"></i>Recent Orders</h5>
+                            <a href="orders.php" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <?php if (count($recentOrders) > 0): ?>
+                                <div class="table-responsive">
+                                    <table class="table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($recentOrders as $order): ?>
+                                                <tr>
+                                                    <td>#<?= $order['id'] ?></td>
+                                                    <td>
+                                                        <div class="cell-with-image">
+                                                            <div class="cell-icon">
+                                                                <i class="bi bi-person"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="cell-title"><?= htmlspecialchars($order['customer_name'] ?? 'Guest') ?></div>
+                                                                <div class="cell-subtitle"><?= htmlspecialchars($order['email'] ?? 'No email') ?></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="fw-bold">
+                                                        <?php
+                                                        // Check which column contains the order total
+                                                        $orderTotal = 0;
+                                                        $possibleTotalColumns = ['total', 'total_amount', 'amount', 'price', 'order_total', 'grand_total'];
+                                                        foreach ($possibleTotalColumns as $column) {
+                                                            if (isset($order[$column])) {
+                                                                $orderTotal = $order[$column];
+                                                                break;
+                                                            }
+                                                        }
+                                                        ?>
+                                                        ₱<?= number_format($orderTotal, 2) ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        $statusClass = 'info';
+                                                        $status = isset($order['status']) ? strtolower($order['status']) : 'unknown';
+
+                                                        if ($status === 'completed' || $status === 'delivered' || $status === 'finished') {
+                                                            $statusClass = 'success';
+                                                        } elseif ($status === 'pending' || $status === 'processing' || $status === 'waiting') {
+                                                            $statusClass = 'warning';
+                                                        } elseif ($status === 'cancelled' || $status === 'canceled' || $status === 'failed') {
+                                                            $statusClass = 'danger';
+                                                        }
+                                                        ?>
+                                                        <span class="cell-badge <?= $statusClass ?>">
+                                                            <?= ucfirst($status) ?>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        // Check which column contains the order date
+                                                        $orderDate = '';
+                                                        $possibleDateColumns = ['created_at', 'date', 'order_date', 'created_date', 'timestamp'];
+                                                        foreach ($possibleDateColumns as $column) {
+                                                            if (isset($order[$column])) {
+                                                                $orderDate = date('M j, Y', strtotime($order[$column]));
+                                                                break;
+                                                            }
+                                                        }
+                                                        echo $orderDate ?: 'N/A';
+                                                        ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php else: ?>
+                                <div class="p-4 text-center">
+                                    <div class="mb-3">
+                                        <i class="bi bi-cart" style="font-size: 2rem; color: var(--color-gray-400);"></i>
+                                    </div>
+                                    <h5>No Recent Orders</h5>
+                                    <p class="text-muted">There are no recent orders to display.</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Recent Products -->
                 <div class="col-lg-6 mb-4">
-                    <div class="card fade-in-left">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-box-seam"></i> Recent Products</h5>
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0"><i class="bi bi-box me-2"></i>Recent Products</h5>
                             <a href="products.php" class="btn btn-sm btn-outline-primary">View All</a>
                         </div>
                         <div class="card-body p-0">
@@ -320,8 +637,9 @@ try {
                                         <thead>
                                             <tr>
                                                 <th>Product</th>
+                                                <th>Category</th>
                                                 <th>Price</th>
-                                                <th>Status</th>
+                                                <th>Stock</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -338,18 +656,49 @@ try {
                                                                     <i class="bi bi-image"></i>
                                                                 </div>
                                                             <?php endif; ?>
-                                                            <div class="cell-image-content">
-                                                                <h6 class="cell-title"><?= htmlspecialchars($product['name']) ?></h6>
-                                                                <p class="cell-subtitle"><?= htmlspecialchars($product['category']) ?></p>
+                                                            <div>
+                                                                <div class="cell-title"><?= htmlspecialchars($product['name']) ?></div>
+                                                                <div class="cell-subtitle"><?= htmlspecialchars(substr($product['description'] ?? '', 0, 30)) . (strlen($product['description'] ?? '') > 30 ? '...' : '') ?></div>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td>
-                                                        <span class="fw-bold">₱<?= number_format($product['price'], 2) ?></span>
+                                                        <span class="cell-badge primary">
+                                                            <?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?>
+                                                        </span>
+                                                    </td>
+                                                    <td class="fw-bold">
+                                                        <?php
+                                                        // Check which column contains the price information
+                                                        $productPrice = 0;
+                                                        $possiblePriceColumns = ['price', 'unit_price', 'selling_price', 'retail_price', 'cost'];
+
+                                                        foreach ($possiblePriceColumns as $column) {
+                                                            if (isset($product[$column])) {
+                                                                $productPrice = $product[$column];
+                                                                break;
+                                                            }
+                                                        }
+                                                        ?>
+                                                        ₱<?= number_format($productPrice, 2) ?>
                                                     </td>
                                                     <td>
-                                                        <span class="cell-badge <?= $product['status'] === 'active' ? 'success' : 'warning' ?>">
-                                                            <?= ucfirst($product['status']) ?>
+                                                        <?php
+                                                        // Check which column contains the stock information
+                                                        $productStock = 'N/A';
+                                                        $isLowStock = false;
+                                                        $possibleStockColumns = ['stock', 'quantity', 'inventory', 'qty', 'stock_level'];
+
+                                                        foreach ($possibleStockColumns as $column) {
+                                                            if (isset($product[$column])) {
+                                                                $productStock = $product[$column];
+                                                                $isLowStock = $productStock < 10;
+                                                                break;
+                                                            }
+                                                        }
+                                                        ?>
+                                                        <span class="fw-bold <?= $isLowStock ? 'text-warning' : '' ?>">
+                                                            <?= htmlspecialchars($productStock) ?>
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -359,18 +708,25 @@ try {
                                 </div>
                             <?php else: ?>
                                 <div class="p-4 text-center">
-                                    <p class="text-muted mb-0">No products found.</p>
+                                    <div class="mb-3">
+                                        <i class="bi bi-box" style="font-size: 2rem; color: var(--color-gray-400);"></i>
+                                    </div>
+                                    <h5>No Recent Products</h5>
+                                    <p class="text-muted">There are no recent products to display.</p>
                                 </div>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <!-- Quick Actions and System Status -->
+            <div class="row mb-4">
                 <!-- Quick Actions -->
                 <div class="col-lg-6 mb-4">
-                    <div class="card fade-in-right">
+                    <div class="card h-100">
                         <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-lightning"></i> Quick Actions</h5>
+                            <h5 class="card-title mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-3">
@@ -378,25 +734,24 @@ try {
                                     <i class="bi bi-plus-lg me-2"></i> Add New Product
                                 </a>
                                 <a href="orders.php" class="btn btn-secondary">
-                                    <i class="bi bi-receipt me-2"></i> View Orders
+                                    <i class="bi bi-cart me-2"></i> View Orders
                                 </a>
                                 <a href="analytics.php" class="btn btn-info">
-                                    <i class="bi bi-bar-chart me-2"></i> View Analytics
+                                    <i class="bi bi-graph-up me-2"></i> View Analytics
                                 </a>
                                 <a href="settings.php" class="btn btn-light">
                                     <i class="bi bi-gear me-2"></i> System Settings
                                 </a>
-                                <a href="../../fix_instructions.html" class="btn btn-warning">
-                                    <i class="bi bi-tools me-2"></i> Fix Client Addresses
-                                </a>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- System Status -->
-                    <div class="card mt-4 fade-in-right delay-300">
+                <!-- System Status -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
                         <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-info-circle"></i> System Status</h5>
+                            <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>System Status</h5>
                         </div>
                         <div class="card-body">
                             <ul class="list-group list-group-flush">
@@ -420,6 +775,13 @@ try {
                                         Security Status
                                     </div>
                                     <span class="cell-badge success">Secure</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-clock-history text-success me-2"></i>
+                                        Last System Update
+                                    </div>
+                                    <span><?= date('M j, Y') ?></span>
                                 </li>
                             </ul>
                         </div>

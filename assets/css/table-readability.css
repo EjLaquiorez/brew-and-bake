@@ -1,0 +1,254 @@
+/* 
+ * Table Readability Improvements for Brew & Bake
+ * This file contains CSS enhancements to improve table readability
+ */
+
+/* Base table styles */
+.readable-table {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Table header */
+.readable-table thead th {
+    background-color: #111827;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1rem;
+    border-bottom: none;
+    vertical-align: middle;
+    position: relative;
+}
+
+/* Add subtle dividers between header cells */
+.readable-table thead th:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Table body */
+.readable-table tbody tr {
+    background-color: white;
+    transition: background-color 0.2s ease;
+}
+
+.readable-table tbody tr:hover {
+    background-color: rgba(245, 158, 11, 0.05);
+}
+
+/* Alternating row colors */
+.readable-table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(249, 250, 251, 0.7);
+}
+
+.readable-table-striped tbody tr:nth-of-type(odd):hover {
+    background-color: rgba(245, 158, 11, 0.05);
+}
+
+/* Table cells */
+.readable-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-top: 1px solid #f3f4f6;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Improve readability of numeric data */
+.readable-table td.numeric {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+}
+
+/* Improve readability of dates */
+.readable-table td.date {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Status indicators */
+.readable-table .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.readable-table .status-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: rgb(6, 95, 70);
+}
+
+.readable-table .status-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: rgb(146, 64, 14);
+}
+
+.readable-table .status-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: rgb(153, 27, 27);
+}
+
+.readable-table .status-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: rgb(30, 64, 175);
+}
+
+.readable-table .status-neutral {
+    background-color: rgba(107, 114, 128, 0.1);
+    color: rgb(55, 65, 81);
+}
+
+/* Cell with image and text */
+.readable-table .cell-with-image {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.readable-table .cell-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+    background-color: #f3f4f6;
+}
+
+.readable-table .cell-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+}
+
+.readable-table .cell-title {
+    font-weight: 600;
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.readable-table .cell-subtitle {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+/* Actions column */
+.readable-table .actions-cell {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.readable-table .action-btn {
+    padding: 0.25rem;
+    border-radius: 4px;
+    background-color: transparent;
+    color: var(--text-tertiary);
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    margin-left: 0.25rem;
+}
+
+.readable-table .action-btn:hover {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.readable-table .action-btn-edit:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.readable-table .action-btn-delete:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Empty state */
+.readable-table-empty {
+    padding: 3rem;
+    text-align: center;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.readable-table-empty-icon {
+    font-size: 2.5rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+}
+
+.readable-table-empty-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.readable-table-empty-message {
+    color: var(--text-tertiary);
+    max-width: 300px;
+    margin: 0 auto 1.5rem;
+}
+
+/* Responsive tables */
+@media (max-width: 768px) {
+    .readable-table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .readable-table th,
+    .readable-table td {
+        padding: 0.75rem;
+        font-size: 0.75rem;
+    }
+    
+    .readable-table .cell-image,
+    .readable-table .cell-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .readable-table .cell-title {
+        font-size: 0.75rem;
+    }
+    
+    .readable-table .cell-subtitle {
+        font-size: 0.7rem;
+    }
+    
+    .readable-table .status-indicator {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.7rem;
+    }
+}

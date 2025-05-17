@@ -34,29 +34,38 @@ $page_descriptions = [
 $page_description = $page_descriptions[$current_page] ?? '';
 ?>
 
+<?php
+// Set up variables for the readable card component
+$card_title = "Welcome back, " . htmlspecialchars($_SESSION['user_name'] ?? 'Admin') . "!";
+$card_content = "<p class='welcome-subtitle mb-3 leading-relaxed'>" . $page_description . "</p>
+                <div class='mt-4'>
+                    <a href='products.php' class='btn btn-light btn-sm mt-2'>
+                        <i class='bi bi-plus-lg me-1'></i> Add New Product
+                    </a>
+                    <a href='orders.php' class='btn btn-outline-light btn-sm mt-2 ms-2'>
+                        <i class='bi bi-cart me-1'></i> View Orders
+                    </a>
+                </div>";
+$card_footer = "<div class='text-end'>
+                    <h4 class='mb-1 welcome-time font-medium' id='currentTime'></h4>
+                    <p class='welcome-date mb-0 text-tertiary' id='currentDate'></p>
+                </div>";
+$card_class = "welcome-card fade-in";
+$card_body_class = "p-4 p-md-5";
+?>
+
 <div class="row mb-5">
     <div class="col-12 mb-4">
-        <div class="card card-primary fade-in">
-            <div class="card-body p-4 p-md-5">
-                <div class="d-flex justify-content-between align-items-center flex-wrap">
-                    <div>
-                        <h2 class="mb-2">Welcome back, <?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?>!</h2>
-                        <p class="text-muted mb-0"><?= $page_description ?></p>
-                    </div>
-                    <div class="text-end mt-3 mt-md-0">
-                        <h4 class="mb-1 font-medium" id="currentTime"></h4>
-                        <p class="text-muted mb-0">Wednesday, May 14, 2025</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?php include '../../templates/includes/components/readable_card.php'; ?>
     </div>
 </div>
 
 <script>
-// Update the current time
-function updateTime() {
+// Update the current time and date
+function updateDateTime() {
     const now = new Date();
+
+    // Update time
     let hours = now.getHours();
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const seconds = now.getSeconds().toString().padStart(2, '0');
@@ -67,9 +76,21 @@ function updateTime() {
 
     document.getElementById('currentTime').textContent =
         hours + ':' + minutes + ':' + seconds + ' ' + ampm;
+
+    // Update date
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    const dayName = days[now.getDay()];
+    const monthName = months[now.getMonth()];
+    const date = now.getDate();
+    const year = now.getFullYear();
+
+    document.getElementById('currentDate').textContent =
+        dayName + ', ' + monthName + ' ' + date + ', ' + year;
 }
 
 // Update time immediately and then every second
-updateTime();
-setInterval(updateTime, 1000);
+updateDateTime();
+setInterval(updateDateTime, 1000);
 </script>

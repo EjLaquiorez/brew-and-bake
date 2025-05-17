@@ -42,16 +42,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Verify password
         if (password_verify($password, $user['password'])) {
+            // For debugging - log the password verification
+            error_log("Password verification successful for {$user['email']}");
+
             // Check if account is verified
             if ($user['verification_status'] == 1) {
-                // Set session or remember me cookie
+                // Set session variables
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_role'] = $user['role'];
+                $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_email'] = $user['email'];
+
+                // Set remember me cookie if requested
                 if ($remember) {
-                    setRememberMe($user['id'], $user['role']);
-                } else {
-                    $_SESSION['user_id'] = $user['id'];
-                    $_SESSION['user_role'] = $user['role'];
-                    $_SESSION['user_name'] = $user['name'];
-                    $_SESSION['user_email'] = $user['email'];
+                    createRememberMeToken($user['id']);
                 }
 
                 // Set success response
@@ -97,8 +101,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log("Verification link for {$user['email']}: {$verificationLink}");
             }
         } else {
-            // Invalid password - don't reveal this information
+            // Invalid password - don't reveal this information in production
+            // For debugging, log the password verification failure
+            error_log("Password verification failed for {$user['email']}");
+            error_log("Provided password: " . substr($password, 0, 3) . "***");
+            error_log("Stored hash: " . substr($user['password'], 0, 20) . "...");
+
             $response['message'] = 'Invalid email or password.';
+
+            // For debugging only - remove in production
+            if (isset($_GET['debug']) && $_GET['debug'] === 'true') {
+                $response['debug'] = [
+                    'email_exists' => true,
+                    'password_match' => false,
+                    'hash_info' => password_get_info($user['password'])
+                ];
+            }
         }
     } catch (PDOException $e) {
         // Log the error but don't expose details to the user

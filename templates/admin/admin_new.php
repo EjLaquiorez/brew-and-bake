@@ -78,104 +78,7 @@ $recentProducts = array_slice($products, 0, 5);
 <!-- Admin Container -->
 <div class="admin-container">
     <!-- Sidebar -->
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <a href="#" class="sidebar-brand">
-                <div class="sidebar-logo">
-                    <i class="bi bi-cup-hot"></i>
-                </div>
-                <div>
-                    <h3 class="sidebar-title">Brew & Bake</h3>
-                    <p class="sidebar-subtitle">Admin Dashboard</p>
-                </div>
-            </a>
-            <button class="sidebar-close">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-
-        <div class="sidebar-nav">
-            <div class="nav-section">
-                <h6 class="nav-section-title">Main</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="dashboard.php" class="nav-link">
-                            <i class="bi bi-speedometer2"></i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="orders.php" class="nav-link">
-                            <i class="bi bi-receipt"></i>
-                            Orders
-                            <span class="nav-badge">5</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="admin.php" class="nav-link active">
-                            <i class="bi bi-box-seam"></i>
-                            Products
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="categories.php" class="nav-link">
-                            <i class="bi bi-tags"></i>
-                            Categories
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h6 class="nav-section-title">Analytics</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="analytics.php" class="nav-link">
-                            <i class="bi bi-bar-chart-line"></i>
-                            Analytics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="sales.php" class="nav-link">
-                            <i class="bi bi-graph-up"></i>
-                            Sales
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h6 class="nav-section-title">Settings</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="profile.php" class="nav-link">
-                            <i class="bi bi-person"></i>
-                            Profile
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="settings.php" class="nav-link">
-                            <i class="bi bi-gear"></i>
-                            System Settings
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="sidebar-footer">
-            <div class="user-menu">
-                <div class="user-avatar">
-                    <?= substr($_SESSION['user']['name'] ?? 'A', 0, 1) ?>
-                </div>
-                <div class="user-info">
-                    <h6 class="user-name"><?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?></h6>
-                    <p class="user-role">Administrator</p>
-                </div>
-                <i class="bi bi-chevron-down user-menu-toggle"></i>
-            </div>
-        </div>
-    </aside>
+    <?php include 'includes/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="admin-main">
@@ -261,7 +164,7 @@ $recentProducts = array_slice($products, 0, 5);
                 <div class="col-md-3 col-sm-6 mb-4">
                     <div class="stat-card primary fade-in delay-100">
                         <div class="stat-icon">
-                            <i class="bi bi-box-seam"></i>
+                            <i class="bi bi-box"></i>
                         </div>
                         <div class="stat-content">
                             <h3 class="stat-value"><?= number_format($stats['total_products']) ?></h3>
@@ -324,7 +227,7 @@ $recentProducts = array_slice($products, 0, 5);
                 <div class="col-12">
                     <div class="table-container fade-in-up">
                         <div class="table-header">
-                            <h5 class="table-title"><i class="bi bi-box-seam"></i> All Products</h5>
+                            <h5 class="table-title"><i class="bi bi-box"></i> All Products</h5>
                             <div class="table-actions">
                                 <button class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-filter"></i> Filter
@@ -416,7 +319,7 @@ $recentProducts = array_slice($products, 0, 5);
                         <?php else: ?>
                             <div class="p-5 text-center">
                                 <div class="mb-4">
-                                    <i class="bi bi-box-seam" style="font-size: 3rem; color: var(--color-gray-400);"></i>
+                                    <i class="bi bi-box" style="font-size: 3rem; color: var(--color-gray-400);"></i>
                                 </div>
                                 <h4>No Products Found</h4>
                                 <p class="text-muted mb-4">You haven't added any products yet. Start by adding your first product!</p>

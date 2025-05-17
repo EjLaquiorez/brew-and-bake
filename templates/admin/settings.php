@@ -3,6 +3,16 @@ session_start();
 require_once "../includes/auth.php";
 require_once "../includes/db.php";
 
+// Try to include the regular settings file
+$use_fallback = false;
+try {
+    require_once "../includes/settings.php";
+} catch (Exception $e) {
+    // If there's an error, use the fallback settings
+    $use_fallback = true;
+    require_once "../includes/settings_fallback.php";
+}
+
 // Security check
 if (!isLoggedIn() || getCurrentUserRole() !== 'admin') {
     $_SESSION['error'] = "Access denied. Admin privileges required.";
@@ -24,65 +34,181 @@ if (isset($_SESSION['error'])) {
     unset($_SESSION['error']);
 }
 
-// Placeholder settings data
-$generalSettings = [
-    'site_name' => 'Brew & Bake',
-    'site_description' => 'Artisanal coffee and baked goods',
-    'contact_email' => 'info@brewandbake.com',
-    'contact_phone' => '+63 912 345 6789',
-    'address' => '123 Main Street, Manila, Philippines',
-    'business_hours' => 'Monday - Sunday: 7:00 AM - 10:00 PM',
-    'currency' => 'PHP',
-    'tax_rate' => 12,
-    'timezone' => 'Asia/Manila'
-];
-
-$emailSettings = [
-    'smtp_host' => 'smtp.example.com',
-    'smtp_port' => 587,
-    'smtp_username' => 'notifications@brewandbake.com',
-    'smtp_encryption' => 'tls',
-    'from_email' => 'no-reply@brewandbake.com',
-    'from_name' => 'Brew & Bake'
-];
-
-$paymentSettings = [
-    'payment_methods' => ['Cash', 'Credit Card', 'Digital Wallet', 'Bank Transfer'],
-    'default_payment' => 'Cash',
-    'min_order_amount' => 100
-];
-
-$notificationSettings = [
-    'order_notifications' => true,
-    'inventory_alerts' => true,
-    'customer_feedback' => true,
-    'marketing_updates' => false,
-    'system_alerts' => true
-];
+// Get settings from the database
+$generalSettings = $settings->getCategory('general');
+$emailSettings = $settings->getCategory('email');
+$paymentSettings = $settings->getCategory('payment');
+$orderSettings = $settings->getCategory('order');
+$notificationSettings = $settings->getCategory('notification');
+$socialSettings = $settings->getCategory('social');
+$systemSettings = $settings->getCategory('system');
 
 // Handle settings update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
+    $updated = false;
 
     switch ($action) {
         case 'update_general':
-            // In a real application, this would update the database
-            $successMessage = "General settings updated successfully.";
+            // Update general settings
+            foreach ($_POST as $key => $value) {
+                if ($key !== 'action') {
+                    $updated = $settings->set('general', $key, $value) || $updated;
+                }
+            }
+
+            if ($updated) {
+                $successMessage = "General settings updated successfully.";
+                // Refresh settings
+                $generalSettings = $settings->getCategory('general');
+            } else {
+                $errorMessage = "Failed to update general settings.";
+            }
             break;
 
         case 'update_email':
-            // In a real application, this would update the database
-            $successMessage = "Email settings updated successfully.";
+            // Update email settings
+            foreach ($_POST as $key => $value) {
+                if ($key !== 'action') {
+                    $updated = $settings->set('email', $key, $value) || $updated;
+                }
+            }
+
+            if ($updated) {
+                $successMessage = "Email settings updated successfully.";
+                // Refresh settings
+                $emailSettings = $settings->getCategory('email');
+            } else {
+                $errorMessage = "Failed to update email settings.";
+            }
             break;
 
         case 'update_payment':
-            // In a real application, this would update the database
-            $successMessage = "Payment settings updated successfully.";
+            // Update payment settings
+            foreach ($_POST as $key => $value) {
+                if ($key !== 'action') {
+                    // Handle payment_methods as JSON array
+                    if ($key === 'payment_methods' && is_array($value)) {
+                        $value = json_encode($value);
+                    }
+                    $updated = $settings->set('payment', $key, $value) || $updated;
+                }
+            }
+
+            if ($updated) {
+                $successMessage = "Payment settings updated successfully.";
+                // Refresh settings
+                $paymentSettings = $settings->getCategory('payment');
+            } else {
+                $errorMessage = "Failed to update payment settings.";
+            }
+            break;
+
+        case 'update_order':
+            // Update order settings
+            foreach ($_POST as $key => $value) {
+                if ($key !== 'action') {
+                    $updated = $settings->set('order', $key, $value) || $updated;
+                }
+            }
+
+            if ($updated) {
+                $successMessage = "Order settings updated successfully.";
+                // Refresh settings
+                $orderSettings = $settings->getCategory('order');
+            } else {
+                $errorMessage = "Failed to update order settings.";
+            }
             break;
 
         case 'update_notifications':
-            // In a real application, this would update the database
-            $successMessage = "Notification settings updated successfully.";
+            // Update notification settings
+            foreach ($_POST as $key => $value) {
+                if ($key !== 'action') {
+                    // Convert checkbox values to boolean
+                    if ($value === 'on') {
+                        $value = '1';
+                    }
+                    $updated = $settings->set('notification', $key, $value) || $updated;
+                }
+            }
+
+            // Handle unchecked checkboxes (not included in $_POST)
+            $checkboxes = [
+                'order_notifications', 'inventory_alerts', 'customer_feedback',
+                'marketing_updates', 'system_alerts'
+            ];
+
+            foreach ($checkboxes as $checkbox) {
+                if (!isset($_POST[$checkbox])) {
+                    $updated = $settings->set('notification', $checkbox, '0') || $updated;
+                }
+            }
+
+            if ($updated) {
+                $successMessage = "Notification settings updated successfully.";
+                // Refresh settings
+                $notificationSettings = $settings->getCategory('notification');
+            } else {
+                $errorMessage = "Failed to update notification settings.";
+            }
+            break;
+
+        case 'update_social':
+            // Update social media settings
+            foreach ($_POST as $key => $value) {
+                if ($key !== 'action') {
+                    $updated = $settings->set('social', $key, $value) || $updated;
+                }
+            }
+
+            if ($updated) {
+                $successMessage = "Social media settings updated successfully.";
+                // Refresh settings
+                $socialSettings = $settings->getCategory('social');
+            } else {
+                $errorMessage = "Failed to update social media settings.";
+            }
+            break;
+
+        case 'update_system':
+            // Update system settings
+            foreach ($_POST as $key => $value) {
+                if ($key !== 'action') {
+                    // Convert checkbox values to boolean
+                    if ($value === 'on') {
+                        $value = '1';
+                    }
+                    $updated = $settings->set('system', $key, $value) || $updated;
+                }
+            }
+
+            // Handle unchecked checkboxes (not included in $_POST)
+            $checkboxes = [
+                'maintenance_mode', 'cache_enabled', 'debug_mode'
+            ];
+
+            foreach ($checkboxes as $checkbox) {
+                if (!isset($_POST[$checkbox])) {
+                    $updated = $settings->set('system', $checkbox, '0') || $updated;
+                }
+            }
+
+            if ($updated) {
+                $successMessage = "System settings updated successfully.";
+                // Clear cache if settings were updated
+                $settings->clearCache();
+                // Refresh settings
+                $systemSettings = $settings->getCategory('system');
+            } else {
+                $errorMessage = "Failed to update system settings.";
+            }
+            break;
+
+        case 'clear_cache':
+            // Clear settings cache
+            $settings->clearCache();
+            $successMessage = "Settings cache cleared successfully.";
             break;
 
         default:
@@ -100,104 +226,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>System Settings - Brew & Bake</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/admin.css?v=<?= time() ?>">
+    <?php include 'includes/css-includes.php'; ?>
 </head>
 <body>
 <!-- Admin Container -->
 <div class="admin-container">
     <!-- Sidebar -->
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <a href="#" class="sidebar-brand">
-                <div class="sidebar-logo">
-                    <i class="bi bi-cup-hot"></i>
-                </div>
-                <div>
-                    <h3 class="sidebar-title">Brew & Bake</h3>
-                    <p class="sidebar-subtitle">Admin Dashboard</p>
-                </div>
-            </a>
-            <button class="sidebar-close">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-
-        <div class="sidebar-nav">
-            <div class="nav-section">
-                <h6 class="nav-section-title">Main</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="dashboard.php" class="nav-link">
-                            <i class="bi bi-speedometer2"></i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="orders.php" class="nav-link">
-                            <i class="bi bi-receipt"></i>
-                            Orders
-                            <span class="nav-badge">5</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="products.php" class="nav-link">
-                            <i class="bi bi-box-seam"></i>
-                            Products
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="categories.php" class="nav-link">
-                            <i class="bi bi-tags"></i>
-                            Categories
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h6 class="nav-section-title">Analytics</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="analytics.php" class="nav-link">
-                            <i class="bi bi-bar-chart-line"></i>
-                            Analytics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="sales.php" class="nav-link">
-                            <i class="bi bi-graph-up"></i>
-                            Sales
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h6 class="nav-section-title">Settings</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="profile.php" class="nav-link">
-                            <i class="bi bi-person"></i>
-                            Profile
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="settings.php" class="nav-link active">
-                            <i class="bi bi-gear"></i>
-                            System Settings
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="sidebar-footer">
-            <?php include 'includes/sidebar-user-menu.php'; ?>
-        </div>
-    </aside>
+    <?php include 'includes/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="admin-main">
@@ -236,26 +271,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
             <?php endif; ?>
 
-            <!-- Settings Overview -->
-            <div class="row mb-5">
-                <div class="col-12 mb-4">
-                    <div class="card card-primary fade-in">
-                        <div class="card-body p-5">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-2">System Settings</h2>
-                                    <p class="text-muted mb-0">Configure your store settings and preferences</p>
-                                </div>
-                                <div>
-                                    <button class="btn btn-outline-primary" id="backupBtn">
-                                        <i class="bi bi-download me-2"></i> Backup Settings
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Include Page Header -->
+            <?php include 'includes/page-header.php'; ?>
 
             <div class="row mb-5">
                 <!-- Settings Navigation -->
@@ -449,9 +466,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                         <div class="mb-4">
                                             <label class="form-label">Payment Methods</label>
                                             <div class="payment-methods-list">
-                                                <?php foreach (['Cash', 'Credit Card', 'Digital Wallet', 'Bank Transfer'] as $method): ?>
+                                                <?php
+                                                // Get available payment methods
+                                                $availableMethods = ['Cash', 'GCash', 'Maya', 'Credit Card', 'Bank Transfer'];
+
+                                                // Parse payment methods from JSON if needed
+                                                $paymentMethodsArray = $paymentSettings['payment_methods'] ?? [];
+                                                if (is_string($paymentMethodsArray)) {
+                                                    $paymentMethodsArray = json_decode($paymentMethodsArray, true) ?: [];
+                                                }
+
+                                                foreach ($availableMethods as $method):
+                                                ?>
                                                     <div class="form-check mb-2">
-                                                        <input class="form-check-input" type="checkbox" id="payment_<?= strtolower(str_replace(' ', '_', $method)) ?>" name="payment_methods[]" value="<?= $method ?>" <?= in_array($method, $paymentSettings['payment_methods']) ? 'checked' : '' ?>>
+                                                        <input class="form-check-input" type="checkbox"
+                                                               id="payment_<?= strtolower(str_replace(' ', '_', $method)) ?>"
+                                                               name="payment_methods[]"
+                                                               value="<?= $method ?>"
+                                                               <?= in_array($method, $paymentMethodsArray) ? 'checked' : '' ?>>
                                                         <label class="form-check-label" for="payment_<?= strtolower(str_replace(' ', '_', $method)) ?>">
                                                             <?= $method ?>
                                                         </label>
@@ -464,8 +496,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                             <div class="col-md-6 mb-3 mb-md-0">
                                                 <label for="default_payment" class="form-label">Default Payment Method</label>
                                                 <select class="form-select" id="default_payment" name="default_payment">
-                                                    <?php foreach ($paymentSettings['payment_methods'] as $method): ?>
-                                                        <option value="<?= $method ?>" <?= $paymentSettings['default_payment'] === $method ? 'selected' : '' ?>><?= $method ?></option>
+                                                    <?php
+                                                    $defaultPayment = $paymentSettings['default_payment'] ?? 'Cash';
+                                                    foreach ($availableMethods as $method):
+                                                    ?>
+                                                        <option value="<?= $method ?>" <?= $defaultPayment === $method ? 'selected' : '' ?>><?= $method ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -567,28 +602,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                     <h5 class="card-title"><i class="bi bi-tools"></i> Maintenance</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="maintenance-options">
-                                        <div class="maintenance-item">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="maintenance-title">Maintenance Mode</h6>
-                                                    <p class="maintenance-description">Enable maintenance mode to temporarily disable the website for visitors.</p>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" id="maintenance_mode">
+                                    <form action="settings.php" method="post">
+                                        <input type="hidden" name="action" value="update_system">
+
+                                        <div class="maintenance-options">
+                                            <div class="maintenance-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="maintenance-title">Maintenance Mode</h6>
+                                                        <p class="maintenance-description">Enable maintenance mode to temporarily disable the website for visitors.</p>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode" <?= $systemSettings['maintenance_mode'] ? 'checked' : '' ?>>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
+                                            <div class="maintenance-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="maintenance-title">Cache Settings</h6>
+                                                        <p class="maintenance-description">Enable caching to improve performance.</p>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" <?= $systemSettings['cache_enabled'] ? 'checked' : '' ?>>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-3 mb-4">
+                                                    <label for="cache_duration" class="form-label">Cache Duration (seconds)</label>
+                                                    <input type="number" class="form-control" id="cache_duration" name="cache_duration" value="<?= htmlspecialchars($systemSettings['cache_duration']) ?>" min="60" step="60">
+                                                    <div class="form-text">Recommended: 3600 seconds (1 hour)</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="maintenance-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="maintenance-title">Debug Mode</h6>
+                                                        <p class="maintenance-description">Enable debug mode to show detailed error messages.</p>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="debug_mode" name="debug_mode" <?= $systemSettings['debug_mode'] ? 'checked' : '' ?>>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="maintenance-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="maintenance-title">Pagination Limit</h6>
+                                                        <p class="maintenance-description">Default number of items to show per page.</p>
+                                                    </div>
+                                                    <div style="width: 100px;">
+                                                        <input type="number" class="form-control" id="pagination_limit" name="pagination_limit" value="<?= htmlspecialchars($systemSettings['pagination_limit']) ?>" min="5" max="100" step="5">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex justify-content-end mt-4">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-save me-2"></i> Save System Settings
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+
+                                    <hr class="my-4">
+
+                                    <div class="maintenance-options">
                                         <div class="maintenance-item">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div>
                                                     <h6 class="maintenance-title">Clear Cache</h6>
                                                     <p class="maintenance-description">Clear system cache to refresh data and improve performance.</p>
                                                 </div>
-                                                <button class="btn btn-outline-primary btn-sm">
-                                                    <i class="bi bi-trash me-2"></i> Clear Cache
-                                                </button>
+                                                <form action="settings.php" method="post">
+                                                    <input type="hidden" name="action" value="clear_cache">
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm" id="clearCacheBtn">
+                                                        <i class="bi bi-trash me-2"></i> Clear Cache
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
 
@@ -598,7 +692,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                                     <h6 class="maintenance-title">Optimize Database</h6>
                                                     <p class="maintenance-description">Optimize database tables to improve performance.</p>
                                                 </div>
-                                                <button class="btn btn-outline-primary btn-sm">
+                                                <button class="btn btn-outline-primary btn-sm" id="optimizeDatabaseBtn">
                                                     <i class="bi bi-database-check me-2"></i> Optimize
                                                 </button>
                                             </div>
@@ -632,13 +726,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                             <h6 class="backup-title">Create Backup</h6>
                                             <p class="backup-description">Create a backup of your database and settings.</p>
                                             <div class="d-flex gap-3 mt-3">
-                                                <button class="btn btn-outline-primary">
+                                                <button type="button" class="btn btn-outline-primary backup-btn" data-backup-type="Database">
                                                     <i class="bi bi-database me-2"></i> Database Only
                                                 </button>
-                                                <button class="btn btn-outline-primary">
+                                                <button type="button" class="btn btn-outline-primary backup-btn" data-backup-type="Files">
                                                     <i class="bi bi-file-earmark me-2"></i> Files Only
                                                 </button>
-                                                <button class="btn btn-primary">
+                                                <button type="button" class="btn btn-primary backup-btn" data-backup-type="Full">
                                                     <i class="bi bi-cloud-arrow-up me-2"></i> Full Backup
                                                 </button>
                                             </div>
@@ -652,7 +746,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                             <div class="mb-3 mt-3">
                                                 <input class="form-control" type="file" id="backupFile">
                                             </div>
-                                            <button class="btn btn-primary">
+                                            <button type="button" class="btn btn-primary" id="restoreBackupBtn">
                                                 <i class="bi bi-cloud-arrow-down me-2"></i> Restore Backup
                                             </button>
                                         </div>
@@ -662,29 +756,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                         <div class="backup-item">
                                             <h6 class="backup-title">Scheduled Backups</h6>
                                             <p class="backup-description">Configure automatic scheduled backups.</p>
-                                            <div class="form-check form-switch mb-3 mt-3">
-                                                <input class="form-check-input" type="checkbox" id="scheduled_backups">
-                                                <label class="form-check-label" for="scheduled_backups">
-                                                    Enable Scheduled Backups
-                                                </label>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="backup_frequency" class="form-label">Frequency</label>
-                                                    <select class="form-select" id="backup_frequency">
-                                                        <option value="daily">Daily</option>
-                                                        <option value="weekly">Weekly</option>
-                                                        <option value="monthly">Monthly</option>
-                                                    </select>
+                                            <form action="settings.php" method="post">
+                                                <input type="hidden" name="action" value="update_system">
+
+                                                <div class="form-check form-switch mb-3 mt-3">
+                                                    <input class="form-check-input" type="checkbox" id="scheduled_backups" name="scheduled_backups" <?= isset($systemSettings['scheduled_backups']) && $systemSettings['scheduled_backups'] ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="scheduled_backups">
+                                                        Enable Scheduled Backups
+                                                    </label>
                                                 </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="backup_time" class="form-label">Time</label>
-                                                    <input type="time" class="form-control" id="backup_time" value="00:00">
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="backup_frequency" class="form-label">Frequency</label>
+                                                        <select class="form-select" id="backup_frequency" name="backup_frequency">
+                                                            <option value="daily" <?= isset($systemSettings['backup_frequency']) && $systemSettings['backup_frequency'] === 'daily' ? 'selected' : '' ?>>Daily</option>
+                                                            <option value="weekly" <?= isset($systemSettings['backup_frequency']) && $systemSettings['backup_frequency'] === 'weekly' ? 'selected' : '' ?>>Weekly</option>
+                                                            <option value="monthly" <?= isset($systemSettings['backup_frequency']) && $systemSettings['backup_frequency'] === 'monthly' ? 'selected' : '' ?>>Monthly</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="backup_time" class="form-label">Time</label>
+                                                        <input type="time" class="form-control" id="backup_time" name="backup_time" value="<?= isset($systemSettings['backup_time']) ? htmlspecialchars($systemSettings['backup_time']) : '00:00' ?>">
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <button class="btn btn-primary">
-                                                <i class="bi bi-save me-2"></i> Save Schedule
-                                            </button>
+                                                <button type="submit" class="btn btn-primary" id="saveScheduleBtn">
+                                                    <i class="bi bi-save me-2"></i> Save Schedule
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>

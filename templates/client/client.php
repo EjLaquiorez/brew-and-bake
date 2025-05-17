@@ -1,6 +1,7 @@
 <?php
 require_once "../includes/auth.php";
 require_once "../includes/db.php";
+require_once "../../includes/product_helpers.php"; // Include the product helpers
 
 // Check if user is logged in
 $isLoggedIn = isLoggedIn();
@@ -663,6 +664,34 @@ function getCategoryImage($categoryName) {
             color: #dee2e6;
             font-size: 3rem;
             z-index: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .product-image-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 70%);
+            z-index: 1;
+        }
+
+        .product-image-placeholder i {
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .product-image-placeholder span {
+            position: relative;
+            z-index: 2;
+            font-size: 2.5rem;
+            font-weight: 700;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
 
         .product-details-container {
@@ -1010,9 +1039,7 @@ function getCategoryImage($categoryName) {
                                     <?php if (!empty($product['image'])): ?>
                                         <img src="../../assets/images/products/<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>">
                                     <?php else: ?>
-                                        <div class="no-image">
-                                            <i class="bi bi-cup-hot"></i>
-                                        </div>
+                                        <?= getTempProductImageHtml($product['name'], $product['category_name'] ?? 'Uncategorized') ?>
                                     <?php endif; ?>
                                 </div>
                                 <div class="product-info">
@@ -1030,6 +1057,7 @@ function getCategoryImage($categoryName) {
                                                 data-product-name="<?= htmlspecialchars($product['name']) ?>"
                                                 data-product-price="<?= $product['price'] ?>"
                                                 data-product-image="<?= !empty($product['image']) ? htmlspecialchars($product['image']) : '' ?>"
+                                                data-product-category="<?= htmlspecialchars(ucfirst($product['category_name'] ?? 'Uncategorized')) ?>"
                                                 data-product-stock="<?= $product['stock'] ?>">
                                                 <i class="bi bi-cart-plus"></i> Order Now
                                                 <?php if ($product['stock'] <= 0): ?>
@@ -1060,9 +1088,7 @@ function getCategoryImage($categoryName) {
                                             <?php if (!empty($product['image'])): ?>
                                                 <img src="../../assets/images/products/<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>">
                                             <?php else: ?>
-                                                <div class="no-image">
-                                                    <i class="bi bi-cup-hot"></i>
-                                                </div>
+                                                <?= getTempProductImageHtml($product['name'], $category['name']) ?>
                                             <?php endif; ?>
                                         </div>
                                         <div class="product-info">
@@ -1357,7 +1383,7 @@ function getCategoryImage($categoryName) {
                             <div class="col-5">
                                 <div class="product-image-container">
                                     <img id="modal-product-image" src="" alt="Product" class="img-fluid rounded">
-                                    <div class="product-image-placeholder">
+                                    <div class="product-image-placeholder" id="modal-product-placeholder">
                                         <i class="bi bi-cup-hot"></i>
                                     </div>
                                 </div>
@@ -1786,15 +1812,48 @@ function getCategoryImage($categoryName) {
 
                     // Set product image or show placeholder
                     const imageElement = document.getElementById('modal-product-image');
-                    const placeholderElement = document.querySelector('.product-image-placeholder');
+                    const placeholderElement = document.getElementById('modal-product-placeholder');
 
                     if (productImage) {
+                        // Use actual product image
                         imageElement.src = '../../assets/images/products/' + productImage;
                         imageElement.style.display = 'block';
                         placeholderElement.style.display = 'none';
                     } else {
+                        // Use temporary product image
                         imageElement.style.display = 'none';
                         placeholderElement.style.display = 'flex';
+
+                        // Generate temporary product image based on product name and category
+                        fetch(`../../includes/get_temp_image.php?name=${encodeURIComponent(productName)}&category=${encodeURIComponent(productCategory)}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    // Update placeholder with the generated image data
+                                    placeholderElement.innerHTML = '';
+                                    placeholderElement.style.backgroundColor = data.background;
+
+                                    if (data.type === 'icon') {
+                                        const icon = document.createElement('i');
+                                        icon.className = `bi ${data.icon}`;
+                                        icon.style.color = data.text;
+                                        placeholderElement.appendChild(icon);
+                                    } else {
+                                        const text = document.createElement('span');
+                                        text.textContent = data.initials;
+                                        text.style.color = data.text;
+                                        placeholderElement.appendChild(text);
+                                    }
+                                } else {
+                                    // Fallback to default icon
+                                    placeholderElement.innerHTML = '<i class="bi bi-cup-hot"></i>';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error generating temp image:', error);
+                                // Fallback to default icon
+                                placeholderElement.innerHTML = '<i class="bi bi-cup-hot"></i>';
+                            });
                     }
 
                     // Reset quantity to 1

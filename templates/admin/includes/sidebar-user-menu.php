@@ -1,10 +1,16 @@
+<?php
+// Include settings if not already included
+if (!isset($settings)) {
+    require_once __DIR__ . "/../../includes/settings.php";
+}
+?>
 <div class="user-menu" id="sidebarUserMenuToggle">
     <div class="user-avatar">
-        <?= substr($_SESSION['user']['name'] ?? 'A', 0, 1) ?>
+        <?= substr($_SESSION['user_name'] ?? 'A', 0, 1) ?>
     </div>
     <div class="user-info">
-        <h6 class="user-name"><?= htmlspecialchars($_SESSION['user']['name'] ?? 'Admin') ?></h6>
-        <p class="user-role">Administrator</p>
+        <h6 class="user-name"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></h6>
+        <p class="user-role"><?= htmlspecialchars($_SESSION['user_role'] ?? 'Administrator') ?></p>
     </div>
     <i class="bi bi-chevron-down user-menu-toggle"></i>
 </div>

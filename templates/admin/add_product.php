@@ -40,28 +40,32 @@ if (isset($_POST['save'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Product - Brew & Bake</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="../../assets/css/add_product.css">
+    <?php include 'includes/css-includes.php'; ?>
+    <link rel="stylesheet" href="../../assets/css/admin-products.css">
 </head>
 <body>
-    <nav class="navbar navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="products.php">
-                <i class="bi bi-cup-hot"></i> Brew & Bake Admin
-            </a>
-            <a href="../includes/logout.php" class="btn btn-outline-light">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </div>
-    </nav>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <?php include 'includes/sidebar.php'; ?>
 
-    <div class="container mt-4">
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="bi bi-plus-circle"></i> Add New Product</h5>
-            </div>
-            <div class="card-body">
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Include Topbar -->
+            <?php include 'includes/topbar.php'; ?>
+
+            <!-- Content Area -->
+            <div class="admin-content">
+                <!-- Include Page Header -->
+                <?php include 'includes/page-header.php'; ?>
+
+                <!-- Add Product Form -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="card fade-in">
+                            <div class="card-header">
+                                <h5 class="card-title"><i class="bi bi-plus-circle"></i> Add New Product</h5>
+                            </div>
+                            <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label class="form-label">
@@ -121,10 +125,14 @@ if (isset($_POST['save'])) {
                         </a>
                     </div>
                 </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php include 'includes/footer-scripts.php'; ?>
 </body>
 </html>

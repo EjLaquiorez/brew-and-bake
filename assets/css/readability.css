@@ -1,0 +1,252 @@
+/* 
+ * Readability Improvements for Brew & Bake
+ * This file contains CSS enhancements to improve text readability and visual hierarchy
+ */
+
+:root {
+    /* Font size variables for better scaling */
+    --font-size-xs: 0.75rem;    /* 12px */
+    --font-size-sm: 0.875rem;   /* 14px */
+    --font-size-base: 1rem;     /* 16px */
+    --font-size-md: 1.125rem;   /* 18px */
+    --font-size-lg: 1.25rem;    /* 20px */
+    --font-size-xl: 1.5rem;     /* 24px */
+    --font-size-2xl: 1.875rem;  /* 30px */
+    --font-size-3xl: 2.25rem;   /* 36px */
+    
+    /* Line height variables */
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
+    
+    /* Spacing variables */
+    --spacing-xs: 0.25rem;      /* 4px */
+    --spacing-sm: 0.5rem;       /* 8px */
+    --spacing-md: 1rem;         /* 16px */
+    --spacing-lg: 1.5rem;       /* 24px */
+    --spacing-xl: 2rem;         /* 32px */
+    
+    /* Text colors for better contrast */
+    --text-primary: #111827;    /* Dark gray for main text */
+    --text-secondary: #4B5563;  /* Medium gray for secondary text */
+    --text-tertiary: #6B7280;   /* Light gray for less important text */
+    --text-light: #F9FAFB;      /* Off-white for text on dark backgrounds */
+    
+    /* Background colors */
+    --bg-light: #FFFFFF;        /* White background */
+    --bg-off-white: #F9FAFB;    /* Off-white background */
+    --bg-light-gray: #F3F4F6;   /* Light gray background */
+    --bg-highlight: #FEF3C7;    /* Light yellow for highlighting */
+}
+
+/* Base Typography Improvements */
+body {
+    font-family: 'Poppins', sans-serif;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    color: var(--text-primary);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    color: var(--text-primary);
+}
+
+h1 {
+    font-size: var(--font-size-3xl);
+    letter-spacing: -0.025em;
+}
+
+h2 {
+    font-size: var(--font-size-2xl);
+    letter-spacing: -0.025em;
+}
+
+h3 {
+    font-size: var(--font-size-xl);
+}
+
+h4 {
+    font-size: var(--font-size-lg);
+}
+
+h5 {
+    font-size: var(--font-size-md);
+}
+
+h6 {
+    font-size: var(--font-size-base);
+}
+
+/* Paragraph spacing */
+p {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    line-height: var(--line-height-relaxed);
+}
+
+/* Small text */
+small, .text-small {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+}
+
+/* Links */
+a {
+    color: #f59e0b;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+    color: #d97706;
+    text-decoration: underline;
+}
+
+/* Lists */
+ul, ol {
+    padding-left: var(--spacing-xl);
+    margin-bottom: var(--spacing-md);
+}
+
+li {
+    margin-bottom: var(--spacing-xs);
+}
+
+/* Card text improvements */
+.card-title {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+}
+
+.card-text {
+    color: var(--text-secondary);
+    line-height: var(--line-height-relaxed);
+}
+
+/* Table text improvements */
+.table th {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.table td {
+    color: var(--text-secondary);
+}
+
+/* Form label improvements */
+.form-label {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+/* Alert text improvements */
+.alert-title {
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.alert-text {
+    margin-bottom: 0;
+}
+
+/* Improved readability for code blocks */
+pre, code {
+    font-family: 'Courier New', monospace;
+    background-color: var(--bg-light-gray);
+    border-radius: 4px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+pre {
+    padding: var(--spacing-md);
+    overflow-x: auto;
+}
+
+/* Blockquote styling */
+blockquote {
+    border-left: 4px solid #f59e0b;
+    padding-left: var(--spacing-md);
+    margin-left: 0;
+    margin-right: 0;
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+/* Text selection */
+::selection {
+    background-color: rgba(245, 158, 11, 0.2);
+}
+
+/* Improved focus styles for accessibility */
+:focus {
+    outline: 2px solid #f59e0b;
+    outline-offset: 2px;
+}
+
+/* Content container with improved readability */
+.readable-container {
+    max-width: 70ch;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Text utilities */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-tertiary { color: var(--text-tertiary) !important; }
+.text-light { color: var(--text-light) !important; }
+
+/* Font weight utilities */
+.font-light { font-weight: 300 !important; }
+.font-normal { font-weight: 400 !important; }
+.font-medium { font-weight: 500 !important; }
+.font-semibold { font-weight: 600 !important; }
+.font-bold { font-weight: 700 !important; }
+
+/* Line height utilities */
+.leading-tight { line-height: var(--line-height-tight) !important; }
+.leading-normal { line-height: var(--line-height-normal) !important; }
+.leading-relaxed { line-height: var(--line-height-relaxed) !important; }
+
+/* Letter spacing utilities */
+.tracking-tight { letter-spacing: -0.025em !important; }
+.tracking-normal { letter-spacing: 0 !important; }
+.tracking-wide { letter-spacing: 0.025em !important; }
+
+/* Text alignment with improved spacing */
+.text-justify {
+    text-align: justify;
+    hyphens: auto;
+}
+
+/* Responsive font sizes */
+@media (max-width: 768px) {
+    h1 { font-size: var(--font-size-2xl); }
+    h2 { font-size: var(--font-size-xl); }
+    h3 { font-size: var(--font-size-lg); }
+    body { font-size: 0.9375rem; } /* 15px */
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    :root {
+        --text-primary: #000000;
+        --text-secondary: #333333;
+        --text-tertiary: #555555;
+        --text-light: #FFFFFF;
+    }
+    
+    a {
+        text-decoration: underline;
+    }
+}

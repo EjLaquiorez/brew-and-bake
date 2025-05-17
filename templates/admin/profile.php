@@ -71,100 +71,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/admin.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="../../assets/css/admin-theme.css?v=<?= time() ?>">
 </head>
 <body>
 <!-- Admin Container -->
 <div class="admin-container">
     <!-- Sidebar -->
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <a href="#" class="sidebar-brand">
-                <div class="sidebar-logo">
-                    <i class="bi bi-cup-hot"></i>
-                </div>
-                <div>
-                    <h3 class="sidebar-title">Brew & Bake</h3>
-                    <p class="sidebar-subtitle">Admin Dashboard</p>
-                </div>
-            </a>
-            <button class="sidebar-close">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-
-        <div class="sidebar-nav">
-            <div class="nav-section">
-                <h6 class="nav-section-title">Main</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="dashboard.php" class="nav-link">
-                            <i class="bi bi-speedometer2"></i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="orders.php" class="nav-link">
-                            <i class="bi bi-receipt"></i>
-                            Orders
-                            <span class="nav-badge">5</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="products.php" class="nav-link">
-                            <i class="bi bi-box-seam"></i>
-                            Products
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="categories.php" class="nav-link">
-                            <i class="bi bi-tags"></i>
-                            Categories
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h6 class="nav-section-title">Analytics</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="analytics.php" class="nav-link">
-                            <i class="bi bi-bar-chart-line"></i>
-                            Analytics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="sales.php" class="nav-link">
-                            <i class="bi bi-graph-up"></i>
-                            Sales
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h6 class="nav-section-title">Settings</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="profile.php" class="nav-link active">
-                            <i class="bi bi-person"></i>
-                            Profile
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="settings.php" class="nav-link">
-                            <i class="bi bi-gear"></i>
-                            System Settings
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="sidebar-footer">
-            <?php include 'includes/sidebar-user-menu.php'; ?>
-        </div>
-    </aside>
+    <?php include 'includes/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="admin-main">
@@ -202,6 +115,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
+
+            <!-- Include Page Header -->
+            <?php include 'includes/page-header.php'; ?>
 
             <div class="page-header mb-4">
                 <div class="row align-items-center">
@@ -315,7 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 <div class="activity-row">
                                     <div class="activity-icon-sm primary">
-                                        <i class="bi bi-box-seam"></i>
+                                        <i class="bi bi-box"></i>
                                     </div>
                                     <div class="activity-content-compact">
                                         <h6 class="activity-title-sm">Product Added</h6>
@@ -326,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 <div class="activity-row">
                                     <div class="activity-icon-sm info">
-                                        <i class="bi bi-receipt"></i>
+                                        <i class="bi bi-cart"></i>
                                     </div>
                                     <div class="activity-content-compact">
                                         <h6 class="activity-title-sm">Order Processed</h6>

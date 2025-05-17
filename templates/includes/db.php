@@ -4,19 +4,18 @@ $db = "brew_and_bake";
 $user = "root";
 $pass = "admin";
 
-// First try to connect using PDO
+// Try to connect using PDO first
 try {
     $conn = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $connection_type = 'pdo';
-} catch(PDOException $e) {
+} catch(Exception $e) {
     // If PDO fails, try mysqli as fallback
     try {
-        $mysqli = new mysqli($host, $user, $pass, $db);
-        if ($mysqli->connect_error) {
-            die("Connection failed: " . $mysqli->connect_error);
+        $conn = new mysqli($host, $user, $pass, $db);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
         }
-        $conn = $mysqli;
         $connection_type = 'mysqli';
     } catch(Exception $e) {
         die("All connection attempts failed. Last error: " . $e->getMessage());

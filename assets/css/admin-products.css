@@ -1,0 +1,508 @@
+/*
+ * Brew & Bake Admin - Products Page Specific Styles
+ * Ensures consistent styling and proper responsiveness for the products page
+ * Matches dashboard styling patterns for a unified admin experience
+ */
+
+/* Product Card Styles - Matching Dashboard Card Styling */
+.product-card {
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+    margin-bottom: 1.5rem;
+    background-color: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: none;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.product-card .card-body {
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.product-image-container {
+    height: 180px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-gray-100);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.product-image {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+.product-placeholder {
+    font-size: 3rem;
+    color: var(--color-gray-400);
+}
+
+/* Product Card Elements - Enhanced to Match Dashboard */
+.product-card .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-gray-900);
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.product-card:hover .card-title {
+    color: var(--color-primary);
+}
+
+.product-card .text-muted {
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.product-card .card-text {
+    font-size: 0.875rem;
+    color: var(--color-gray-700);
+    margin-bottom: 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+}
+
+.product-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.stock-info {
+    display: flex;
+    align-items: center;
+}
+
+.stock-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+    position: relative;
+}
+
+.stock-indicator::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background-color: currentColor;
+    opacity: 0.2;
+}
+
+.stock-high {
+    background-color: var(--color-success);
+}
+
+.stock-medium {
+    background-color: var(--color-warning);
+}
+
+.stock-low {
+    background-color: var(--color-danger);
+}
+
+.stock-text {
+    font-size: 0.8rem;
+    color: var(--color-gray-600);
+}
+
+.product-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 10;
+    transform: translateY(-5px);
+}
+
+.product-card:hover .product-actions {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    color: var(--color-gray-700);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+}
+
+.action-btn.edit:hover {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.action-btn.delete:hover {
+    background-color: var(--color-danger);
+    color: white;
+}
+
+.product-checkbox {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+}
+
+.product-checkbox .form-check-input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+}
+
+.product-status {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    z-index: 10;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.product-card:hover .product-status {
+    transform: scale(1.1);
+}
+
+.product-status.active {
+    background-color: var(--color-success);
+    color: white;
+}
+
+.product-status.inactive {
+    background-color: var(--color-gray-400);
+    color: white;
+}
+
+/* Batch Toolbar Styling - Match Dashboard Cards */
+.batch-toolbar {
+    background-color: var(--color-gray-50);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--color-gray-200);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.batch-toolbar:hover {
+    box-shadow: var(--shadow-md);
+}
+
+/* Search and Filter Form Styling */
+.search-filter-form .form-control,
+.search-filter-form .form-select {
+    border-radius: var(--radius-md);
+    border-color: var(--color-gray-300);
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+    box-shadow: none;
+    transition: all 0.3s ease;
+}
+
+.search-filter-form .form-control:focus,
+.search-filter-form .form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.15);
+}
+
+.search-filter-form .input-group-text {
+    background-color: var(--color-white);
+    border-color: var(--color-gray-300);
+    color: var(--color-gray-500);
+}
+
+.search-filter-form .btn {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+/* Category Tabs - Styled like Dashboard Navigation */
+.category-tabs {
+    display: flex;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-gray-200);
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    gap: 0.5rem;
+}
+
+.category-tabs::-webkit-scrollbar {
+    height: 5px;
+}
+
+.category-tabs::-webkit-scrollbar-thumb {
+    background-color: var(--color-gray-300);
+    border-radius: 10px;
+}
+
+.category-tabs .nav-link {
+    white-space: nowrap;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-md);
+    color: var(--color-gray-700);
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--color-gray-50);
+    border: 1px solid var(--color-gray-200);
+}
+
+.category-tabs .nav-link::before {
+    content: '';
+    position: absolute;
+    left: -100%;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(139, 69, 19, 0.1), transparent);
+    transition: all 0.3s ease;
+}
+
+.category-tabs .nav-link:hover {
+    color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.category-tabs .nav-link:hover::before {
+    left: 0;
+}
+
+.category-tabs .nav-link i {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.category-tabs .nav-link:hover i {
+    transform: scale(1.2);
+}
+
+.category-tabs .nav-link.active {
+    background-color: var(--color-primary);
+    color: white;
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+}
+
+.category-tabs .nav-link.active i {
+    color: white;
+}
+
+.category-tabs .badge {
+    margin-left: 0.5rem;
+    transition: all 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Styles - Matching Dashboard Responsiveness */
+@media (max-width: 1400px) {
+    .product-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .product-image-container {
+        height: 170px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .product-card .card-body {
+        padding: 1rem;
+    }
+
+    .product-image-container {
+        height: 160px;
+    }
+
+    .product-card .card-title {
+        font-size: 1.1rem;
+    }
+
+    .category-tabs .nav-link {
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .product-image-container {
+        height: 150px;
+    }
+
+    .category-tabs .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    /* Adjust grid layout for better tablet view */
+    .tab-content .col-lg-4 {
+        width: 50%;
+    }
+
+    /* Ensure batch toolbar is responsive */
+    .batch-toolbar {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-card {
+        margin-bottom: 1rem;
+    }
+
+    .product-card .card-title {
+        font-size: 1rem;
+    }
+
+    .product-card .card-body {
+        padding: 0.875rem;
+    }
+
+    .product-image-container {
+        height: 140px;
+    }
+
+    .product-actions {
+        opacity: 1; /* Always visible on mobile */
+    }
+
+    .category-tabs {
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .category-tabs .nav-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    /* Adjust search and filter form */
+    .search-filter-form {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Make product grid more compact */
+    .tab-content .row {
+        margin-right: -8px;
+        margin-left: -8px;
+    }
+
+    .tab-content .col-md-6 {
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+}
+
+@media (max-width: 576px) {
+    .product-image-container {
+        height: 120px;
+    }
+
+    .product-card .card-body {
+        padding: 0.75rem;
+    }
+
+    .product-card .card-text {
+        display: none; /* Hide description on very small screens */
+    }
+
+    .category-tabs {
+        margin-bottom: 0.75rem;
+    }
+
+    .category-tabs .nav-link {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.75rem;
+        border-radius: 4px;
+    }
+
+    .category-tabs .badge {
+        display: none; /* Hide badges on very small screens */
+    }
+
+    /* Adjust product grid for very small screens */
+    .tab-content .col-sm-6 {
+        width: 100%;
+    }
+
+    /* Improve page header on small screens */
+    .page-header {
+        margin-bottom: 0.75rem;
+    }
+
+    .page-header .page-title {
+        font-size: 1.5rem;
+    }
+
+    /* Make stats cards more compact */
+    .stats-card {
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-card .card-body {
+        padding: 0.75rem;
+    }
+}

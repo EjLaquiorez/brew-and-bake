@@ -61,6 +61,55 @@ function deleteCookie($name) {
 }
 
 /**
+ * Create a remember me token and store it in the database
+ * @param int $userId User ID
+ * @return bool Whether the token was created successfully
+ */
+function createRememberMeToken($userId) {
+    global $conn;
+
+    try {
+        // Generate a secure random token
+        $token = bin2hex(random_bytes(32));
+
+        // Set expiry date (30 days from now)
+        $expiresAt = date('Y-m-d H:i:s', time() + COOKIE_EXPIRY);
+
+        // Get user role
+        $stmt = $conn->prepare("SELECT role FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $role = $stmt->fetchColumn();
+
+        if (!$role) {
+            error_log("Could not find role for user ID: $userId");
+            return false;
+        }
+
+        // Delete any existing tokens for this user
+        $stmt = $conn->prepare("DELETE FROM remember_tokens WHERE user_id = ?");
+        $stmt->execute([$userId]);
+
+        // Store token in database
+        $stmt = $conn->prepare("INSERT INTO remember_tokens (user_id, token, expires_at) VALUES (?, ?, ?)");
+        $success = $stmt->execute([$userId, $token, $expiresAt]);
+
+        if (!$success) {
+            error_log("Failed to store remember me token in database for user ID: $userId");
+            return false;
+        }
+
+        // Set the cookies
+        $cookieSuccess = setSecureCookie('remember_token', $token);
+        $cookieSuccess = $cookieSuccess && setSecureCookie('user_id', $userId);
+
+        return $cookieSuccess;
+    } catch (Exception $e) {
+        error_log("Error creating remember me token: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
  * Set remember me cookie with additional security
  * @param int $userId User ID
  * @param string $role User role
@@ -68,17 +117,11 @@ function deleteCookie($name) {
  */
 function setRememberMe($userId, $role) {
     try {
-        // Generate a secure random token
-        $token = bin2hex(random_bytes(32));
-        
-        // Store token in database (you should implement this)
-        // storeTokenInDatabase($userId, $token);
-        
-        // Set the cookies
-        $success = setSecureCookie('remember_token', $token);
-        $success = $success && setSecureCookie('user_role', $role);
-        
+        // Create token in database
+        $success = createRememberMeToken($userId);
+
         if ($success) {
+            // Set session variables
             $_SESSION['user_id'] = $userId;
             $_SESSION['user_role'] = $role;
             return true;
@@ -95,19 +138,55 @@ function setRememberMe($userId, $role) {
  * @return bool
  */
 function isLoggedIn() {
+    global $conn;
+
     try {
         // Check session first
         if (isset($_SESSION['user_id'])) {
             return true;
         }
-        
+
         // Check remember me cookie
-        if (isset($_COOKIE['remember_token'])) {
-            // Here you would validate the token against your database
-            // For now, we'll just check if it exists
-            return true;
+        if (isset($_COOKIE['remember_token']) && isset($_COOKIE['user_id'])) {
+            $token = $_COOKIE['remember_token'];
+            $userId = $_COOKIE['user_id'];
+
+            // Validate token against database
+            $stmt = $conn->prepare("
+                SELECT u.id, u.name, u.email, u.role
+                FROM remember_tokens rt
+                JOIN users u ON rt.user_id = u.id
+                WHERE rt.token = ?
+                AND rt.user_id = ?
+                AND rt.expires_at > NOW()
+            ");
+            $stmt->execute([$token, $userId]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user) {
+                // Valid token found, set session variables
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_role'] = $user['role'];
+                $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_email'] = $user['email'];
+
+                // Extend the token expiry
+                $expiresAt = date('Y-m-d H:i:s', time() + COOKIE_EXPIRY);
+                $stmt = $conn->prepare("UPDATE remember_tokens SET expires_at = ? WHERE token = ?");
+                $stmt->execute([$expiresAt, $token]);
+
+                // Refresh the cookie
+                setSecureCookie('remember_token', $token);
+                setSecureCookie('user_id', $userId);
+
+                return true;
+            } else {
+                // Invalid or expired token, clear cookies
+                deleteCookie('remember_token');
+                deleteCookie('user_id');
+            }
         }
-        
+
         return false;
     } catch (Exception $e) {
         error_log("Error checking login status: " . $e->getMessage());
@@ -120,13 +199,29 @@ function isLoggedIn() {
  * @return bool Whether the logout was successful
  */
 function logout() {
+    global $conn;
+
     try {
-        // Clear remember me cookies
+        // Remove remember me token from database
         if (isset($_COOKIE['remember_token'])) {
+            $token = $_COOKIE['remember_token'];
+
+            try {
+                $stmt = $conn->prepare("DELETE FROM remember_tokens WHERE token = ?");
+                $stmt->execute([$token]);
+            } catch (PDOException $e) {
+                error_log("Error removing remember token from database: " . $e->getMessage());
+                // Continue with logout even if database operation fails
+            }
+
+            // Clear cookies
             deleteCookie('remember_token');
-            deleteCookie('user_role');
+            deleteCookie('user_id');
         }
-        
+
+        // Store user ID before clearing session
+        $userId = $_SESSION['user_id'] ?? null;
+
         // Clear session
         $_SESSION = array();
         if (ini_get("session.use_cookies")) {
@@ -142,6 +237,18 @@ function logout() {
             );
         }
         session_destroy();
+
+        // If we have a user ID, remove all their remember tokens
+        if ($userId) {
+            try {
+                $stmt = $conn->prepare("DELETE FROM remember_tokens WHERE user_id = ?");
+                $stmt->execute([$userId]);
+            } catch (PDOException $e) {
+                error_log("Error removing all user tokens from database: " . $e->getMessage());
+                // Continue with logout even if database operation fails
+            }
+        }
+
         return true;
     } catch (Exception $e) {
         error_log("Error during logout: " . $e->getMessage());

@@ -1175,10 +1175,22 @@ function getCategoryImage($categoryName) {
             const loginForm = document.querySelector('form[action="templates/includes/login_process.php"]');
             if (loginForm) {
                 loginForm.addEventListener('submit', function(e) {
+                    // Allow form to submit normally if JavaScript is disabled
                     e.preventDefault();
 
                     const formData = new FormData(this);
                     formData.append('remember', document.getElementById('rememberMe').checked ? '1' : '0');
+
+                    // Show loading state
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalBtnText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing in...';
+
+                    // Clear previous errors
+                    const errorDiv = document.querySelector('.login-error');
+                    errorDiv.style.display = 'none';
+                    errorDiv.textContent = '';
 
                     fetch('templates/includes/login_handler.php', {
                         method: 'POST',
@@ -1186,6 +1198,12 @@ function getCategoryImage($categoryName) {
                     })
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Login response:', data);
+
+                        // Reset button state
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+
                         if (data.success) {
                             // Redirect on successful login
                             window.location.href = data.redirect;
@@ -1202,12 +1220,31 @@ function getCategoryImage($categoryName) {
 
                             // If verification needed, show verification info
                             if (data.verification_link) {
-                                const verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
-                                document.querySelector('.verification-link-container').style.display = 'block';
-                                document.querySelector('.verification-link').href = data.verification_link;
-                                document.querySelector('.verification-link').textContent = data.verification_link;
-                                document.querySelector('.qr-code-image').src = data.qr_code;
-                                verificationModal.show();
+                                // Store verification info in session storage for verification_required.php
+                                sessionStorage.setItem('verification_email', document.getElementById('login_email').value);
+                                sessionStorage.setItem('verification_token', data.verification_link.split('token=')[1]);
+
+                                // Add verification button to error message
+                                errorContainer.innerHTML += '<div class="mt-2"><a href="templates/views/verification_required.php" class="btn btn-sm btn-warning">Verify Email</a></div>';
+
+                                // Also show verification modal if it exists
+                                const verificationModal = document.getElementById('verificationModal');
+                                if (verificationModal) {
+                                    const bsModal = new bootstrap.Modal(verificationModal);
+                                    const linkContainer = document.querySelector('.verification-link-container');
+                                    if (linkContainer) linkContainer.style.display = 'block';
+
+                                    const linkElement = document.querySelector('.verification-link');
+                                    if (linkElement) {
+                                        linkElement.href = data.verification_link;
+                                        linkElement.textContent = data.verification_link;
+                                    }
+
+                                    const qrImage = document.querySelector('.qr-code-image');
+                                    if (qrImage) qrImage.src = data.qr_code;
+
+                                    bsModal.show();
+                                }
                             }
                         }
                     })

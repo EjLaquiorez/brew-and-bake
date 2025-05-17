@@ -72,6 +72,7 @@ $createdDate = !empty($product['created_at']) ? date('F j, Y, g:i a', strtotime(
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/admin.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="../../assets/css/admin-theme.css?v=<?= time() ?>">
 </head>
 <body>
 <!-- Admin Container -->
@@ -204,6 +205,9 @@ $createdDate = !empty($product['created_at']) ? date('F j, Y, g:i a', strtotime(
                 </div>
             <?php endif; ?>
 
+            <!-- Include Page Header -->
+            <?php include 'includes/page-header.php'; ?>
+
             <!-- Product Details -->
             <div class="row mb-5">
                 <div class="col-12 mb-4">
@@ -220,6 +224,10 @@ $createdDate = !empty($product['created_at']) ? date('F j, Y, g:i a', strtotime(
                             <a href="edit_product.php?id=<?= $product['id'] ?>" class="btn btn-primary">
                                 <i class="bi bi-pencil me-2"></i>
                                 Edit Product
+                            </a>
+                            <a href="manage_product_images.php?id=<?= $product['id'] ?>" class="btn btn-outline-primary">
+                                <i class="bi bi-images me-2"></i>
+                                Manage Image
                             </a>
                         </div>
                     </div>

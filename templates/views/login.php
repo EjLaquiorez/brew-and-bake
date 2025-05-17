@@ -12,40 +12,27 @@ if (isset($_SESSION['logout_message'])) {
     unset($_SESSION['logout_message']);
 }
 
-if (isset($_POST['login'])) {
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
-    $remember = isset($_POST['remember']);
+// Display login error if exists
+if (isset($_SESSION['login_error'])) {
+    $alert = "<div class='alert alert-danger'>⚠️ " . htmlspecialchars($_SESSION['login_error']) . "</div>";
+    unset($_SESSION['login_error']);
+}
 
-    // Check if user exists
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+// Check if user is already logged in
+if (isLoggedIn()) {
+    $role = getCurrentUserRole();
 
-    if ($user['verification_status'] == 1) {
-        if ($remember) {
-            setRememberMe($user['id'], $user['role']);
-        } else {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_role'] = $user['role'];
-        }
-
-        // Role-based redirect
-        switch ($user['role']) {
-            case 'admin':
-                header("Location: /brew-and-bake/templates/admin/dashboard.php");
-                exit;
-            case 'staff':
-                header("Location: /brew-and-bake/templates/staff/staff.php");
-                exit;
-            case 'client':
-                header("Location: /brew-and-bake/templates/client/client.php");
-                exit;
-            default:
-                $alert = "<div class='alert alert-warning'>Invalid user role.</div>";
-        }
-    } else {
-        $alert = "<div class='alert alert-warning'>⚠️ Please verify your email address first.</div>";
+    // Role-based redirect
+    switch ($role) {
+        case 'admin':
+            header("Location: /brew-and-bake/templates/admin/dashboard.php");
+            exit;
+        case 'staff':
+            header("Location: /brew-and-bake/templates/staff/staff.php");
+            exit;
+        case 'client':
+            header("Location: /brew-and-bake/templates/client/client.php");
+            exit;
     }
 }
 ?>
@@ -81,7 +68,7 @@ if (isset($_POST['login'])) {
 
                     <?= $alert ?>
 
-                    <form action="" method="POST">
+                    <form action="../includes/login_process.php" method="POST">
                         <div class="mb-4">
                             <div class="input-group">
                                 <span class="input-group-text">

@@ -1,65 +1,163 @@
 <?php
 session_start();
-require_once "../includes/auth.php";
-require_once "../includes/db.php";
-
-// Security check
-if (!isLoggedIn() || getCurrentUserRole() !== 'admin') {
-    $_SESSION['error'] = "Access denied. Admin privileges required.";
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     header("Location: ../../views/login.php");
     exit;
 }
 
+require_once "../includes/db.php";
+
 // Initialize variables
-$successMessage = '';
-$errorMessage = '';
+$successMessage = isset($_SESSION['success']) ? $_SESSION['success'] : '';
+$errorMessage = isset($_SESSION['error']) ? $_SESSION['error'] : '';
+unset($_SESSION['success'], $_SESSION['error']);
 
-// Handle messages
-if (isset($_SESSION['success'])) {
-    $successMessage = $_SESSION['success'];
-    unset($_SESSION['success']);
-}
-if (isset($_SESSION['error'])) {
-    $errorMessage = $_SESSION['error'];
-    unset($_SESSION['error']);
+// Handle batch operations
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['batch_action']) && isset($_POST['selected_products'])) {
+        $action = $_POST['batch_action'];
+        $selectedProducts = $_POST['selected_products'];
+
+        if (!empty($selectedProducts)) {
+            try {
+                switch ($action) {
+                    case 'delete':
+                        $placeholders = implode(',', array_fill(0, count($selectedProducts), '?'));
+                        $stmt = $conn->prepare("UPDATE products SET status = 'inactive' WHERE id IN ($placeholders)");
+                        $stmt->execute($selectedProducts);
+                        $successMessage = count($selectedProducts) . " product(s) deleted successfully.";
+                        break;
+                    case 'activate':
+                        $placeholders = implode(',', array_fill(0, count($selectedProducts), '?'));
+                        $stmt = $conn->prepare("UPDATE products SET status = 'active' WHERE id IN ($placeholders)");
+                        $stmt->execute($selectedProducts);
+                        $successMessage = count($selectedProducts) . " product(s) activated successfully.";
+                        break;
+                    case 'deactivate':
+                        $placeholders = implode(',', array_fill(0, count($selectedProducts), '?'));
+                        $stmt = $conn->prepare("UPDATE products SET status = 'inactive' WHERE id IN ($placeholders)");
+                        $stmt->execute($selectedProducts);
+                        $successMessage = count($selectedProducts) . " product(s) deactivated successfully.";
+                        break;
+                }
+            } catch (PDOException $e) {
+                $errorMessage = "Error performing batch operation: " . $e->getMessage();
+            }
+        } else {
+            $errorMessage = "No products selected for batch operation.";
+        }
+    }
 }
 
-// Fetch products with error handling
+// Get filter parameters
+$category = isset($_GET['category']) ? $_GET['category'] : '';
+$status = isset($_GET['status']) ? $_GET['status'] : '';
+$search = isset($_GET['search']) ? $_GET['search'] : '';
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'name_asc';
+
+// Fetch categories for filter
 try {
-    $stmt = $conn->prepare("
+    $stmt = $conn->query("SELECT id, name FROM categories ORDER BY name ASC");
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $categories = [];
+    $errorMessage = "Error fetching categories: " . $e->getMessage();
+}
+
+// Fetch products with category information
+try {
+    // Build the query
+    $query = "
         SELECT p.*, c.name as category_name
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
-        ORDER BY p.created_at DESC
-    ");
-    $stmt->execute();
+        WHERE 1=1
+    ";
+    $params = [];
+
+    if (!empty($category)) {
+        $query .= " AND p.category_id = ?";
+        $params[] = $category;
+    }
+
+    if (!empty($status)) {
+        $query .= " AND p.status = ?";
+        $params[] = $status;
+    }
+
+    if (!empty($search)) {
+        $query .= " AND (p.name LIKE ? OR p.description LIKE ?)";
+        $params[] = "%$search%";
+        $params[] = "%$search%";
+    }
+
+    // Add sorting
+    switch ($sort) {
+        case 'price_asc':
+            $query .= " ORDER BY p.price ASC";
+            break;
+        case 'price_desc':
+            $query .= " ORDER BY p.price DESC";
+            break;
+        case 'stock_asc':
+            $query .= " ORDER BY p.stock ASC";
+            break;
+        case 'stock_desc':
+            $query .= " ORDER BY p.stock DESC";
+            break;
+        case 'name_desc':
+            $query .= " ORDER BY p.name DESC";
+            break;
+        default: // name_asc
+            $query .= " ORDER BY p.name ASC";
+    }
+
+    $stmt = $conn->prepare($query);
+    $stmt->execute($params);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Group products by category for tabs
+    $productsByCategory = [];
+    foreach ($products as $product) {
+        $categoryName = $product['category_name'] ?? 'Uncategorized';
+        if (!isset($productsByCategory[$categoryName])) {
+            $productsByCategory[$categoryName] = [];
+        }
+        $productsByCategory[$categoryName][] = $product;
+    }
+
+    // Sort categories alphabetically
+    ksort($productsByCategory);
+
 } catch (PDOException $e) {
-    $errorMessage = "Error fetching products: " . $e->getMessage();
     $products = [];
+    $productsByCategory = [];
+    $errorMessage = "Error fetching products: " . $e->getMessage();
 }
 
-// Get statistics
-try {
-    $stats = [
-        'total_products' => $conn->query("SELECT COUNT(*) FROM products")->fetchColumn(),
-        'total_orders' => 0, // Will be implemented when orders table is created
-        'total_revenue' => 0, // Will be implemented when orders table is created
-        'active_products' => $conn->query("SELECT COUNT(*) FROM products WHERE status = 'active'")->fetchColumn(),
-        'low_stock' => $conn->query("SELECT COUNT(*) FROM products WHERE stock < 10")->fetchColumn()
-    ];
-} catch (PDOException $e) {
-    $stats = [
-        'total_products' => 0,
-        'total_orders' => 0,
-        'total_revenue' => 0,
-        'active_products' => 0,
-        'low_stock' => 0
-    ];
-}
+// Function to get category image
+function getCategoryImage($categoryName) {
+    $defaultImage = "category-default.jpg";
+    $categoryName = strtolower($categoryName);
 
-// Get recent products
-$recentProducts = array_slice($products, 0, 5);
+    // Check for available PNG images in categories folder
+    if ($categoryName == 'coffee') {
+        return "coffee.png";
+    } elseif ($categoryName == 'cake' || $categoryName == 'cakes') {
+        return "cake.png";
+    } elseif ($categoryName == 'pastry' || $categoryName == 'pastries') {
+        return "pastries.png";
+    } elseif ($categoryName == 'beverage' || $categoryName == 'beverages' || $categoryName == 'non-coffee drinks') {
+        return "beverage.png";
+    } elseif ($categoryName == 'sandwich' || $categoryName == 'sandwiches') {
+        return "sandwich.png";
+    } elseif ($categoryName == 'other baked goods') {
+        return "baked-goods.png";
+    }
+
+    // Return default image if no match
+    return $defaultImage;
+}
 ?>
 
 <!DOCTYPE html>
@@ -67,419 +165,673 @@ $recentProducts = array_slice($products, 0, 5);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>Products - Brew & Bake</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/admin.css?v=<?= time() ?>">
+    <title>Product Management - Brew & Bake Admin</title>
+    <?php include 'includes/css-includes.php'; ?>
+    <style>
+        /* Additional page-specific styles */
+        .product-image-container {
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .product-image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .product-card {
+            transition: all 0.3s ease;
+            height: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-card:hover .product-actions {
+            opacity: 1;
+        }
+
+        .product-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+        }
+
+        .category-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            font-weight: 500;
+            border-radius: 0;
+            border-bottom: 3px solid transparent;
+        }
+
+        .category-tabs .nav-link.active {
+            color: #111827;
+            border-bottom: 3px solid #f59e0b;
+            background-color: transparent;
+        }
+
+        .category-tabs .nav-link:hover:not(.active) {
+            border-bottom: 3px solid #e5e7eb;
+        }
+
+        .stock-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+
+        .product-checkbox {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 20;
+        }
+
+        .batch-toolbar {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e9ecef;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 992px) {
+            .product-actions {
+                opacity: 1;
+            }
+
+            .admin-content {
+                padding: 1rem;
+            }
+
+            .category-tabs .nav-link {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-content {
+                padding: 0.75rem;
+            }
+
+            .product-image-container {
+                height: 140px;
+            }
+
+            .product-card .card-body {
+                padding: 0.875rem;
+            }
+
+            .card-header, .card-body {
+                padding: 0.75rem !important;
+            }
+
+            .category-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+                margin-bottom: 1rem;
+                padding-bottom: 5px;
+            }
+
+            .category-tabs::-webkit-scrollbar {
+                height: 3px;
+            }
+
+            .category-tabs::-webkit-scrollbar-thumb {
+                background-color: rgba(0,0,0,0.2);
+                border-radius: 3px;
+            }
+
+            .category-tabs .nav-link {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .batch-toolbar {
+                padding: 0.75rem;
+            }
+
+            .batch-toolbar .d-flex {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .page-header > div:last-child {
+                width: 100%;
+            }
+
+            .page-header > div:last-child .btn {
+                width: 100%;
+            }
+        }
+
+        /* Specific styles for screens 742px and smaller */
+        @media (max-width: 742px) {
+            .admin-content {
+                padding: 0.5rem;
+            }
+
+            .card {
+                margin-bottom: 0.75rem;
+            }
+
+            .card-header, .card-body {
+                padding: 0.625rem !important;
+            }
+
+            /* Adjust search and filter form */
+            .col-md-4, .col-md-3, .col-md-2, .col-md-1 {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            /* Make product grid 2 columns on small screens */
+            .col-sm-6 {
+                width: 50%;
+                padding-left: 0.25rem;
+                padding-right: 0.25rem;
+            }
+
+            .product-card {
+                margin-bottom: 0.75rem;
+            }
+
+            .product-image-container {
+                height: 120px;
+            }
+
+            .product-card .card-body {
+                padding: 0.625rem !important;
+            }
+
+            .product-card .card-title {
+                font-size: 0.9rem;
+                margin-bottom: 0.25rem;
+            }
+
+            .product-card .card-text {
+                font-size: 0.75rem;
+                margin-bottom: 0.5rem;
+                max-height: 2.4em;
+                overflow: hidden;
+            }
+
+            /* Stack batch operations toolbar vertically */
+            .batch-toolbar .row {
+                flex-direction: column;
+            }
+
+            .batch-toolbar .col-md-6 {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            .batch-toolbar .d-flex {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .batch-toolbar .text-md-end {
+                text-align: left !important;
+            }
+
+            /* Adjust form elements for better mobile viewing */
+            .form-select, .form-control, .btn {
+                font-size: 0.875rem;
+                padding: 0.375rem 0.5rem;
+            }
+
+            /* Very small screens (under 576px) */
+            @media (max-width: 576px) {
+                .col-sm-6 {
+                    width: 100%; /* 1 column layout for very small screens */
+                }
+
+                .product-image-container {
+                    height: 140px; /* Slightly larger images for 1 column layout */
+                }
+
+                /* Hide product description on very small screens */
+                .product-card .card-text {
+                    display: none;
+                }
+
+                /* Make batch action select full width */
+                .batch-toolbar select.form-select {
+                    width: 100% !important;
+                    margin-right: 0 !important;
+                    margin-bottom: 0.5rem;
+                }
+
+                .batch-toolbar .form-check {
+                    width: 100%;
+                    margin-bottom: 0.5rem;
+                }
+
+                .batch-toolbar button {
+                    width: 100%;
+                }
+            }
+        }
+    </style>
 </head>
 <body>
-<!-- Admin Container -->
-<div class="admin-container">
-    <!-- Sidebar -->
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <a href="#" class="sidebar-brand">
-                <div class="sidebar-logo">
-                    <i class="bi bi-cup-hot"></i>
-                </div>
-                <div>
-                    <h3 class="sidebar-title">Brew & Bake</h3>
-                    <p class="sidebar-subtitle">Admin Dashboard</p>
-                </div>
-            </a>
-            <button class="sidebar-close">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <?php include 'includes/sidebar.php'; ?>
 
-        <div class="sidebar-nav">
-            <div class="nav-section">
-                <h6 class="nav-section-title">Main</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="dashboard.php" class="nav-link">
-                            <i class="bi bi-speedometer2"></i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="orders.php" class="nav-link">
-                            <i class="bi bi-receipt"></i>
-                            Orders
-                            <span class="nav-badge">5</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="products.php" class="nav-link active">
-                            <i class="bi bi-box-seam"></i>
-                            Products
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="categories.php" class="nav-link">
-                            <i class="bi bi-tags"></i>
-                            Categories
-                        </a>
-                    </li>
-                </ul>
-            </div>
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Include Topbar -->
+            <?php include 'includes/topbar.php'; ?>
 
-            <div class="nav-section">
-                <h6 class="nav-section-title">Analytics</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="analytics.php" class="nav-link">
-                            <i class="bi bi-bar-chart-line"></i>
-                            Analytics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="sales.php" class="nav-link">
-                            <i class="bi bi-graph-up"></i>
-                            Sales
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h6 class="nav-section-title">Settings</h6>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="profile.php" class="nav-link">
-                            <i class="bi bi-person"></i>
-                            Profile
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="settings.php" class="nav-link">
-                            <i class="bi bi-gear"></i>
-                            System Settings
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="sidebar-footer">
-            <?php include 'includes/sidebar-user-menu.php'; ?>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="admin-main">
-        <!-- Include Topbar -->
-        <?php include 'includes/topbar.php'; ?>
-
-        <!-- Content Area -->
-        <div class="admin-content">
-            <?php if ($successMessage): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <div class="alert-icon">
-                        <div class="alert-icon-symbol">
-                            <i class="bi bi-check-lg"></i>
-                        </div>
-                        <div class="alert-content">
-                            <h6 class="alert-title">Success</h6>
-                            <p class="alert-text"><?= htmlspecialchars($successMessage) ?></p>
-                        </div>
+            <!-- Content Area -->
+            <div class="admin-content">
+                <!-- Page Header -->
+                <div class="page-header d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="page-title">Product Management</h1>
+                        <p class="text-muted">Manage your products, categories, and inventory</p>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($errorMessage): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <div class="alert-icon">
-                        <div class="alert-icon-symbol">
-                            <i class="bi bi-exclamation-triangle"></i>
-                        </div>
-                        <div class="alert-content">
-                            <h6 class="alert-title">Error</h6>
-                            <p class="alert-text"><?= htmlspecialchars($errorMessage) ?></p>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
-
-            <!-- Include Welcome Card -->
-            <?php include 'includes/welcome-card.php'; ?>
-
-            <!-- Statistics -->
-            <div class="row mb-5">
-                <div class="col-12 mb-4">
-                    <h3 class="mb-4">Product Statistics</h3>
-                </div>
-
-                <div class="col-md-3 col-sm-6 col-6 mb-4">
-                    <div class="stat-card primary fade-in delay-100">
-                        <div class="stat-icon">
-                            <i class="bi bi-box-seam"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($stats['total_products']) ?></h3>
-                            <p class="stat-label">Total Products</p>
-                        </div>
+                    <div class="d-flex gap-2">
+                        <a href="manage_product_images_list.php" class="btn btn-outline-primary">
+                            <i class="bi bi-images me-2"></i>Manage Images
+                        </a>
+                        <a href="add_product.php" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-2"></i>Add New Product
+                        </a>
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 col-6 mb-4">
-                    <div class="stat-card success fade-in delay-200">
-                        <div class="stat-icon">
-                            <i class="bi bi-check-circle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($stats['active_products']) ?></h3>
-                            <p class="stat-label">Active Products</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3 col-sm-6 col-6 mb-4">
-                    <div class="stat-card warning fade-in delay-300">
-                        <div class="stat-icon">
-                            <i class="bi bi-exclamation-triangle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value"><?= number_format($stats['low_stock']) ?></h3>
-                            <p class="stat-label">Low Stock Items</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3 col-sm-6 col-6 mb-4">
-                    <div class="stat-card info fade-in delay-400">
-                        <div class="stat-icon">
-                            <i class="bi bi-currency-dollar"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 class="stat-value">₱<?= number_format($stats['total_revenue'], 2) ?></h3>
-                            <p class="stat-label">Total Revenue</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Products Management -->
-            <div class="row mb-5">
-                <div class="col-12 mb-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-                        <div>
-                            <h3 class="mb-1">Product Management</h3>
-                            <p class="text-muted mb-0">View, edit, and manage your product inventory</p>
-                        </div>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <div class="d-flex flex-grow-1">
-                                <input type="text" class="form-control" placeholder="Search products..." id="productSearch">
+                <!-- Alert Messages -->
+                <?php if (!empty($successMessage)): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="alert-icon">
+                            <div class="alert-icon-symbol">
+                                <i class="bi bi-check-lg"></i>
                             </div>
-                            <a href="add_product.php" class="btn btn-primary">
-                                <i class="bi bi-plus-lg me-md-2"></i>
-                                <span class="d-none d-md-inline">Add Product</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12">
-                    <div class="table-container fade-in-up">
-                        <div class="table-header">
-                            <h5 class="table-title"><i class="bi bi-box-seam"></i> All Products</h5>
-                            <div class="table-actions">
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-filter"></i> Filter
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-download"></i> Export
-                                </button>
+                            <div class="alert-content">
+                                <h6 class="alert-title">Success</h6>
+                                <p class="alert-text"><?= htmlspecialchars($successMessage) ?></p>
                             </div>
                         </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
 
-                        <?php if (count($products) > 0): ?>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Category</th>
-                                            <th>Price</th>
-                                            <th>Stock</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($products as $product): ?>
-                                            <tr>
-                                                <td>
-                                                    <div class="cell-with-image">
-                                                        <?php if (!empty($product['image'])): ?>
-                                                            <img src="../../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
-                                                                class="cell-image"
-                                                                alt="<?= htmlspecialchars($product['name']) ?>">
+                <?php if (!empty($errorMessage)): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div class="alert-icon">
+                            <div class="alert-icon-symbol">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h6 class="alert-title">Error</h6>
+                                <p class="alert-text"><?= htmlspecialchars($errorMessage) ?></p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Search and Filter Form -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form action="" method="GET" class="row g-3">
+                            <!-- Search Input -->
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" name="search" placeholder="Search products..." value="<?= htmlspecialchars($search) ?>">
+                                </div>
+                            </div>
+
+                            <!-- Category Filter -->
+                            <div class="col-lg-3 col-md-6 col-12">
+                                <select class="form-select" name="category">
+                                    <option value="">All Categories</option>
+                                    <?php foreach ($categories as $cat): ?>
+                                        <option value="<?= $cat['id'] ?>" <?= $category == $cat['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars(ucfirst($cat['name'])) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <!-- Status Filter -->
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <select class="form-select" name="status">
+                                    <option value="">All Status</option>
+                                    <option value="active" <?= $status === 'active' ? 'selected' : '' ?>>Active</option>
+                                    <option value="inactive" <?= $status === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                                </select>
+                            </div>
+
+                            <!-- Sort Order -->
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <select class="form-select" name="sort">
+                                    <option value="name_asc" <?= $sort === 'name_asc' ? 'selected' : '' ?>>Name (A-Z)</option>
+                                    <option value="name_desc" <?= $sort === 'name_desc' ? 'selected' : '' ?>>Name (Z-A)</option>
+                                    <option value="price_asc" <?= $sort === 'price_asc' ? 'selected' : '' ?>>Price (Low-High)</option>
+                                    <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>>Price (High-Low)</option>
+                                    <option value="stock_asc" <?= $sort === 'stock_asc' ? 'selected' : '' ?>>Stock (Low-High)</option>
+                                    <option value="stock_desc" <?= $sort === 'stock_desc' ? 'selected' : '' ?>>Stock (High-Low)</option>
+                                </select>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="col-lg-1 col-md-4 col-12">
+                                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Batch Operations Toolbar -->
+                <form action="" method="POST" id="batch-form">
+                    <div class="batch-toolbar mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6 col-md-8 col-12 mb-2 mb-lg-0">
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <div class="form-check me-3 mb-2 mb-md-0">
+                                        <input class="form-check-input" type="checkbox" id="select-all">
+                                        <label class="form-check-label" for="select-all">Select All</label>
+                                    </div>
+                                    <div class="d-flex flex-grow-1 flex-wrap">
+                                        <select class="form-select me-2 mb-2 mb-md-0" name="batch_action" style="width: auto; min-width: 150px;">
+                                            <option value="">Batch Actions</option>
+                                            <option value="activate">Activate</option>
+                                            <option value="deactivate">Deactivate</option>
+                                            <option value="delete">Delete</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-secondary" id="apply-batch">Apply</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-4 col-12 text-lg-end text-md-end text-start">
+                                <span class="text-muted"><?= count($products) ?> products found</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Tabs -->
+                    <ul class="nav nav-tabs category-tabs mb-4">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#all-products">All Products</a>
+                        </li>
+                        <?php foreach ($productsByCategory as $catName => $catProducts): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#category-<?= md5($catName) ?>">
+                                    <?= htmlspecialchars(ucfirst($catName)) ?>
+                                    <span class="badge bg-secondary"><?= count($catProducts) ?></span>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- All Products Tab -->
+                        <div class="tab-pane fade show active" id="all-products">
+                            <div class="row">
+                                <?php if (empty($products)): ?>
+                                    <div class="col-12 text-center py-5">
+                                        <i class="bi bi-box" style="font-size: 3rem; color: #d1d5db;"></i>
+                                        <h4 class="mt-3">No products found</h4>
+                                        <p class="text-muted">Try adjusting your search or filter criteria</p>
+                                    </div>
+                                <?php else: ?>
+                                    <?php foreach ($products as $product): ?>
+                                        <div class="col-xl-3 col-lg-4 col-md-4 col-sm-6 col-xs-12">
+                                            <div class="product-card">
+                                                <!-- Product Checkbox -->
+                                                <div class="product-checkbox">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input product-select" type="checkbox" name="selected_products[]" value="<?= $product['id'] ?>">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Product Status Badge -->
+                                                <?php if ($product['status'] === 'inactive'): ?>
+                                                    <div class="product-status">
+                                                        <span class="badge bg-danger">Inactive</span>
+                                                    </div>
+                                                <?php endif; ?>
+
+                                                <!-- Product Image -->
+                                                <div class="product-image-container">
+                                                    <?php if (!empty($product['image'])): ?>
+                                                        <img src="../../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
+                                                             alt="<?= htmlspecialchars($product['name']) ?>">
+                                                    <?php else: ?>
+                                                        <?php
+                                                        $categoryImage = getCategoryImage($product['category_name']);
+                                                        if (!empty($categoryImage)):
+                                                        ?>
+                                                            <img src="../../assets/images/categories/<?= $categoryImage ?>"
+                                                                 alt="<?= htmlspecialchars($product['name']) ?>"
+                                                                 style="opacity: 0.7;">
                                                         <?php else: ?>
-                                                            <div class="cell-icon">
-                                                                <i class="bi bi-image"></i>
+                                                            <div class="text-center text-muted">
+                                                                <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                                                <p>No image</p>
                                                             </div>
                                                         <?php endif; ?>
-                                                        <div class="cell-image-content">
-                                                            <h6 class="cell-title"><?= htmlspecialchars($product['name']) ?></h6>
-                                                            <p class="cell-subtitle"><?= htmlspecialchars(substr($product['description'], 0, 60)) . (strlen($product['description']) > 60 ? '...' : '') ?></p>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <!-- Product Info -->
+                                                <div class="card-body">
+                                                    <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
+                                                    <p class="card-text text-muted small">
+                                                        <?= htmlspecialchars(substr($product['description'] ?? '', 0, 60)) . (strlen($product['description'] ?? '') > 60 ? '...' : '') ?>
+                                                    </p>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="fw-bold text-primary">₱<?= number_format($product['price'], 2) ?></span>
+                                                        <span class="badge bg-<?= $product['stock'] < 10 ? 'warning' : 'info' ?>">
+                                                            Stock: <?= $product['stock'] ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Product Actions -->
+                                                <div class="product-actions">
+                                                    <a href="edit_product.php?id=<?= $product['id'] ?>" class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="manage_product_images.php?id=<?= $product['id'] ?>" class="btn btn-sm btn-info">
+                                                        <i class="bi bi-image"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Category Tabs -->
+                        <?php foreach ($productsByCategory as $catName => $catProducts): ?>
+                            <div class="tab-pane fade" id="category-<?= md5($catName) ?>">
+                                <div class="row">
+                                    <?php if (empty($catProducts)): ?>
+                                        <div class="col-12 text-center py-5">
+                                            <i class="bi bi-box" style="font-size: 3rem; color: #d1d5db;"></i>
+                                            <h4 class="mt-3">No products found in this category</h4>
+                                        </div>
+                                    <?php else: ?>
+                                        <?php foreach ($catProducts as $product): ?>
+                                            <div class="col-xl-3 col-lg-4 col-md-4 col-sm-6 col-xs-12">
+                                                <div class="product-card">
+                                                    <!-- Product Checkbox -->
+                                                    <div class="product-checkbox">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input product-select" type="checkbox" name="selected_products[]" value="<?= $product['id'] ?>">
                                                         </div>
                                                     </div>
-                                                </td>
-                                                <td>
-                                                    <span class="cell-badge primary">
-                                                        <?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span class="fw-bold">₱<?= number_format($product['price'], 2) ?></span>
-                                                </td>
-                                                <td>
-                                                    <span class="fw-bold <?= $product['stock'] < 10 ? 'text-warning' : '' ?>">
-                                                        <?= htmlspecialchars($product['stock']) ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span class="cell-badge <?= $product['status'] === 'active' ? 'success' : 'warning' ?>">
-                                                        <?= ucfirst($product['status']) ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div class="cell-actions">
-                                                        <a href="view_product.php?id=<?= $product['id'] ?>" class="action-button view">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
-                                                        <a href="edit_product.php?id=<?= $product['id'] ?>" class="action-button edit">
+
+                                                    <!-- Product Status Badge -->
+                                                    <?php if ($product['status'] === 'inactive'): ?>
+                                                        <div class="product-status">
+                                                            <span class="badge bg-danger">Inactive</span>
+                                                        </div>
+                                                    <?php endif; ?>
+
+                                                    <!-- Product Image -->
+                                                    <div class="product-image-container">
+                                                        <?php if (!empty($product['image'])): ?>
+                                                            <img src="../../assets/images/products/<?= htmlspecialchars($product['image']) ?>"
+                                                                 alt="<?= htmlspecialchars($product['name']) ?>">
+                                                        <?php else: ?>
+                                                            <?php
+                                                            $categoryImage = getCategoryImage($product['category_name']);
+                                                            if (!empty($categoryImage)):
+                                                            ?>
+                                                                <img src="../../assets/images/categories/<?= $categoryImage ?>"
+                                                                     alt="<?= htmlspecialchars($product['name']) ?>"
+                                                                     style="opacity: 0.7;">
+                                                            <?php else: ?>
+                                                                <div class="text-center text-muted">
+                                                                    <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                                                    <p>No image</p>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        <?php endif; ?>
+                                                    </div>
+
+                                                    <!-- Product Info -->
+                                                    <div class="card-body">
+                                                        <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
+                                                        <p class="card-text text-muted small">
+                                                            <?= htmlspecialchars(substr($product['description'] ?? '', 0, 60)) . (strlen($product['description'] ?? '') > 60 ? '...' : '') ?>
+                                                        </p>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="fw-bold text-primary">₱<?= number_format($product['price'], 2) ?></span>
+                                                            <span class="badge bg-<?= $product['stock'] < 10 ? 'warning' : 'info' ?>">
+                                                                Stock: <?= $product['stock'] ?>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Product Actions -->
+                                                    <div class="product-actions">
+                                                        <a href="edit_product.php?id=<?= $product['id'] ?>" class="btn btn-sm btn-primary">
                                                             <i class="bi bi-pencil"></i>
                                                         </a>
-                                                        <button type="button" class="action-button delete" onclick="confirmDelete(<?= $product['id'] ?>)">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
+                                                        <a href="manage_product_images.php?id=<?= $product['id'] ?>" class="btn btn-sm btn-info">
+                                                            <i class="bi bi-image"></i>
+                                                        </a>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </div>
+                                            </div>
                                         <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="table-footer">
-                                <div class="pagination-info">
-                                    Showing <span class="fw-bold"><?= count($products) ?></span> of <span class="fw-bold"><?= count($products) ?></span> products
-                                </div>
-                                <div class="pagination-controls">
-                                    <button class="pagination-button disabled">
-                                        <i class="bi bi-chevron-left"></i>
-                                    </button>
-                                    <button class="pagination-button active">1</button>
-                                    <button class="pagination-button disabled">
-                                        <i class="bi bi-chevron-right"></i>
-                                    </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                        <?php else: ?>
-                            <div class="p-5 text-center">
-                                <div class="mb-4">
-                                    <i class="bi bi-box-seam" style="font-size: 3rem; color: var(--color-gray-400);"></i>
-                                </div>
-                                <h4>No Products Found</h4>
-                                <p class="text-muted mb-4">You haven't added any products yet. Start by adding your first product!</p>
-                                <a href="add_product.php" class="btn btn-primary">
-                                    <i class="bi bi-plus-lg me-2"></i> Add New Product
-                                </a>
-                            </div>
-                        <?php endif; ?>
+                        <?php endforeach; ?>
                     </div>
-                </div>
+                </form>
             </div>
-        </div>
-    </main>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
-                    Confirm Delete
-                </h5>
-                <button type="button" class="modal-close" data-bs-dismiss="modal">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this product? This action cannot be undone.</p>
-                <div class="alert alert-warning">
-                    <div class="alert-icon">
-                        <div class="alert-icon-symbol">
-                            <i class="bi bi-info-circle"></i>
-                        </div>
-                        <div class="alert-content">
-                            <p class="alert-text mb-0">Deleting this product will remove it from your inventory and any associated orders.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">
-                    <i class="bi bi-trash me-2"></i> Delete Product
-                </a>
-            </div>
-        </div>
+        </main>
     </div>
-</div>
 
-<?php include 'includes/footer-scripts.php'; ?>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Delete confirmation
-        window.confirmDelete = function(productId) {
-            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            document.getElementById('confirmDeleteBtn').href = `delete_product.php?id=${productId}`;
-            modal.show();
-        };
+    <!-- Include Footer Scripts -->
+    <?php include 'includes/footer-scripts.php'; ?>
 
-        // Product search functionality
-        const productSearch = document.getElementById('productSearch');
-        if (productSearch) {
-            productSearch.addEventListener('keyup', function() {
-                const searchValue = this.value.toLowerCase();
-                const tableRows = document.querySelectorAll('tbody tr');
+    <!-- Page-specific JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select All Checkbox
+            const selectAllCheckbox = document.getElementById('select-all');
+            const productCheckboxes = document.querySelectorAll('.product-select');
 
-                tableRows.forEach(row => {
-                    const productName = row.querySelector('.cell-title').textContent.toLowerCase();
-                    const productDesc = row.querySelector('.cell-subtitle').textContent.toLowerCase();
-                    const productCategory = row.querySelector('.cell-badge').textContent.toLowerCase();
-                    const productStock = row.querySelectorAll('td')[3].textContent.trim().toLowerCase();
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+                    productCheckboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                });
+            }
 
-                    if (productName.includes(searchValue) ||
-                        productDesc.includes(searchValue) ||
-                        productCategory.includes(searchValue) ||
-                        productStock.includes(searchValue)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
+            // Batch Actions Form Validation
+            const batchForm = document.getElementById('batch-form');
+            const batchActionSelect = document.querySelector('select[name="batch_action"]');
+            const applyBatchBtn = document.getElementById('apply-batch');
+
+            if (batchForm && applyBatchBtn) {
+                batchForm.addEventListener('submit', function(e) {
+                    // Check if an action is selected
+                    if (!batchActionSelect.value) {
+                        e.preventDefault();
+                        alert('Please select a batch action.');
+                        return false;
+                    }
+
+                    // Check if any products are selected
+                    const selectedProducts = document.querySelectorAll('.product-select:checked');
+                    if (selectedProducts.length === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one product.');
+                        return false;
+                    }
+
+                    // Confirm delete action
+                    if (batchActionSelect.value === 'delete' && !confirm('Are you sure you want to delete the selected products?')) {
+                        e.preventDefault();
+                        return false;
                     }
                 });
+            }
 
-                // Update pagination info
-                const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])');
-                const paginationInfo = document.querySelector('.pagination-info');
-                if (paginationInfo) {
-                    paginationInfo.innerHTML = `Showing <span class="fw-bold">${visibleRows.length}</span> of <span class="fw-bold">${tableRows.length}</span> products`;
-                }
+            // Update select all checkbox state when individual checkboxes change
+            productCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = document.querySelectorAll('.product-select:checked').length === productCheckboxes.length;
+                    if (selectAllCheckbox) {
+                        selectAllCheckbox.checked = allChecked;
+                        selectAllCheckbox.indeterminate = !allChecked && document.querySelectorAll('.product-select:checked').length > 0;
+                    }
+                });
             });
-        }
-    });
-</script>
+        });
+    </script>
 </body>
 </html>
