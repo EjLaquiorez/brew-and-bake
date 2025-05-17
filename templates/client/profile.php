@@ -620,6 +620,90 @@ if (isset($_SESSION['error'])) {
             border: 1px solid var(--color-gray-300);
         }
 
+        /* Style for Leaflet geocoder control */
+        .leaflet-control-geocoder {
+            border: none !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+            z-index: 1000 !important;
+        }
+
+        .leaflet-control-geocoder-icon {
+            width: 36px !important;
+            height: 36px !important;
+            background-size: 20px !important;
+            border-radius: 4px !important;
+            background-color: white !important;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2) !important;
+        }
+
+        .leaflet-control-geocoder-form {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .leaflet-control-geocoder-form input {
+            font-family: 'Poppins', sans-serif !important;
+            font-size: 14px !important;
+            padding: 10px 12px !important;
+            width: 300px !important;
+            border: 1px solid var(--color-gray-300) !important;
+            border-radius: 4px !important;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1) !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .leaflet-control-geocoder-form input:focus {
+            border-color: var(--color-secondary) !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25) !important;
+            outline: none !important;
+        }
+
+        .leaflet-control-geocoder-form-no-error {
+            color: var(--color-gray-600) !important;
+            background-color: white !important;
+            padding: 8px 12px !important;
+            border-radius: 4px !important;
+            margin-top: 4px !important;
+            font-family: 'Poppins', sans-serif !important;
+            font-size: 13px !important;
+        }
+
+        .leaflet-control-geocoder-alternatives {
+            width: 300px !important;
+            max-height: 300px !important;
+            overflow-y: auto !important;
+            background: white !important;
+            border-radius: 4px !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+            margin-top: 4px !important;
+        }
+
+        .leaflet-control-geocoder-alternatives li {
+            padding: 10px 12px !important;
+            border-bottom: 1px solid var(--color-gray-200) !important;
+            font-family: 'Poppins', sans-serif !important;
+            font-size: 13px !important;
+            transition: background-color 0.2s ease !important;
+        }
+
+        .leaflet-control-geocoder-alternatives li:hover {
+            background-color: var(--color-gray-100) !important;
+            cursor: pointer !important;
+        }
+
+        .leaflet-control-geocoder-alternatives li:last-child {
+            border-bottom: none !important;
+        }
+
+        /* Add a hint text below the map */
+        .map-hint {
+            font-size: 12px;
+            color: var(--color-gray-600);
+            margin-top: -15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 767.98px) {
             .account-title {
@@ -822,17 +906,16 @@ if (isset($_SESSION['error'])) {
                                 <input type="hidden" name="latitude" id="latitude" value="<?= $addressData['latitude'] ?? '9.994295' ?>">
                                 <input type="hidden" name="longitude" id="longitude" value="<?= $addressData['longitude'] ?? '118.918419' ?>">
 
-                                <div class="mb-3">
-                                    <label for="map-search" class="form-label">Search Location</label>
-                                    <div class="input-group mb-3">
-                                        <input type="text" class="form-control" id="map-search" placeholder="Search for a location...">
-                                        <button class="btn btn-outline-secondary" type="button" id="get-current-location">
-                                            <i class="bi bi-geo"></i> Current Location
-                                        </button>
-                                    </div>
+                                <div class="mb-3 d-flex justify-content-end">
+                                    <button class="btn btn-outline-secondary" type="button" id="get-current-location">
+                                        <i class="bi bi-geo"></i> Use My Current Location
+                                    </button>
                                 </div>
 
                                 <div id="modal-map-container" class="modal-map-container"></div>
+                                <div class="map-hint">
+                                    <i class="bi bi-info-circle me-1"></i> Search for a location using the search box in the map, or click anywhere on the map to set your address
+                                </div>
 
                                 <div class="row">
                                     <div class="col-md-12 mb-3">
@@ -1076,77 +1159,177 @@ if (isset($_SESSION['error'])) {
                     reverseGeocode(e.latlng.lat, e.latlng.lng);
                 });
 
-                // Initialize geocoder
+                // Initialize geocoder with enhanced options
                 geocoder = L.Control.geocoder({
-                    defaultMarkGeocode: false
+                    defaultMarkGeocode: false,
+                    position: 'topleft',
+                    placeholder: 'Search for a location...',
+                    errorMessage: 'No results found',
+                    suggestMinLength: 3,
+                    suggestTimeout: 250,
+                    queryMinLength: 3,
+                    geocoder: L.Control.Geocoder.nominatim({
+                        geocodingQueryParams: {
+                            countrycodes: 'ph', // Focus on Philippines
+                            limit: 8,
+                            addressdetails: 1,
+                            namedetails: 1
+                        }
+                    }),
+                    expand: 'click'
                 }).addTo(map);
+
+                // Automatically expand the geocoder control when the map loads
+                setTimeout(function() {
+                    const geocoderButton = document.querySelector('.leaflet-control-geocoder-icon');
+                    if (geocoderButton) {
+                        geocoderButton.click();
+                    }
+                }, 500);
+
+                // Variable to store the current search polygon
+                let searchPolygon = null;
 
                 // Handle geocoding results
                 geocoder.on('markgeocode', function(e) {
-                    const bbox = e.geocode.bbox;
-                    const poly = L.polygon([
-                        bbox.getSouthEast(),
-                        bbox.getNorthEast(),
-                        bbox.getNorthWest(),
-                        bbox.getSouthWest()
-                    ]).addTo(map);
-                    map.fitBounds(poly.getBounds());
-                    marker.setLatLng(e.geocode.center);
-                    latInput.value = e.geocode.center.lat.toFixed(6);
-                    lngInput.value = e.geocode.center.lng.toFixed(6);
-                    updateAddressFields(e.geocode);
-                });
+                    // Remove previous search polygon if exists
+                    if (searchPolygon && map.hasLayer(searchPolygon)) {
+                        map.removeLayer(searchPolygon);
+                    }
 
-                // Initialize search box
-                const searchInput = document.getElementById('map-search');
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        geocoder.options.geocoder.geocode(searchInput.value, function(results) {
-                            if (results.length > 0) {
-                                const result = results[0];
-                                marker.setLatLng(result.center);
-                                map.setView(result.center, 15);
-                                latInput.value = result.center.lat.toFixed(6);
-                                lngInput.value = result.center.lng.toFixed(6);
-                                updateAddressFields(result);
-                            }
+                    // Create a new polygon for the search result
+                    if (e.geocode.bbox) {
+                        searchPolygon = L.polygon([
+                            e.geocode.bbox.getSouthEast(),
+                            e.geocode.bbox.getNorthEast(),
+                            e.geocode.bbox.getNorthWest(),
+                            e.geocode.bbox.getSouthWest()
+                        ], {
+                            color: '#3388ff',
+                            weight: 2,
+                            opacity: 0.5,
+                            fillOpacity: 0.1
+                        }).addTo(map);
+
+                        // Fit map to bounds with some padding
+                        map.fitBounds(searchPolygon.getBounds(), {
+                            padding: [50, 50],
+                            maxZoom: 16
                         });
                     }
+
+                    // Update marker position
+                    marker.setLatLng(e.geocode.center);
+
+                    // Update coordinate inputs
+                    latInput.value = e.geocode.center.lat.toFixed(6);
+                    lngInput.value = e.geocode.center.lng.toFixed(6);
+
+                    // Update address fields
+                    updateAddressFields(e.geocode);
+
+                    // Also perform reverse geocoding to get more detailed address information
+                    reverseGeocode(e.geocode.center.lat, e.geocode.center.lng);
                 });
 
-                // Get current location
+                // No need for custom search input as we're using the Leaflet geocoder control
+
+                // Get current location with improved feedback
                 const getCurrentLocationBtn = document.getElementById('get-current-location');
                 getCurrentLocationBtn.addEventListener('click', function() {
+                    // Show loading state
+                    const originalBtnText = getCurrentLocationBtn.innerHTML;
+                    getCurrentLocationBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Getting location...';
+                    getCurrentLocationBtn.disabled = true;
+
                     if (navigator.geolocation) {
                         navigator.geolocation.getCurrentPosition(
                             function(position) {
                                 const lat = position.coords.latitude;
                                 const lng = position.coords.longitude;
+
+                                // Remove previous search polygon if exists
+                                if (searchPolygon && map.hasLayer(searchPolygon)) {
+                                    map.removeLayer(searchPolygon);
+                                }
+
+                                // Update marker position
                                 marker.setLatLng([lat, lng]);
-                                map.setView([lat, lng], 15);
+
+                                // Zoom to location with animation
+                                map.flyTo([lat, lng], 16, {
+                                    duration: 1.5
+                                });
+
+                                // Update coordinate inputs
                                 latInput.value = lat.toFixed(6);
                                 lngInput.value = lng.toFixed(6);
+
+                                // Get address details
                                 reverseGeocode(lat, lng);
+
+                                // Add a small pulse animation to the marker
+                                marker.bindPopup('Your current location').openPopup();
+
+                                // Reset button
+                                getCurrentLocationBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i> Location found';
+                                setTimeout(() => {
+                                    getCurrentLocationBtn.innerHTML = originalBtnText;
+                                    getCurrentLocationBtn.disabled = false;
+                                }, 2000);
                             },
                             function(error) {
                                 let errorMessage = 'Unable to get your location.';
                                 switch (error.code) {
                                     case error.PERMISSION_DENIED:
-                                        errorMessage = 'Location access denied. Please enable location services.';
+                                        errorMessage = 'Location access denied. Please enable location services in your browser settings.';
                                         break;
                                     case error.POSITION_UNAVAILABLE:
-                                        errorMessage = 'Location information is unavailable.';
+                                        errorMessage = 'Location information is unavailable. Please try again.';
                                         break;
                                     case error.TIMEOUT:
-                                        errorMessage = 'Location request timed out.';
+                                        errorMessage = 'Location request timed out. Please try again.';
                                         break;
                                 }
-                                alert(errorMessage);
+
+                                // Show error in a more user-friendly way
+                                const mapContainer = document.getElementById('modal-map-container');
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'alert alert-warning alert-dismissible fade show position-absolute';
+                                errorDiv.style.top = '10px';
+                                errorDiv.style.left = '10px';
+                                errorDiv.style.right = '10px';
+                                errorDiv.style.zIndex = '1000';
+                                errorDiv.innerHTML = `
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i> ${errorMessage}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                `;
+                                mapContainer.appendChild(errorDiv);
+
+                                // Reset button
+                                getCurrentLocationBtn.innerHTML = originalBtnText;
+                                getCurrentLocationBtn.disabled = false;
+
+                                // Auto-dismiss the alert after 5 seconds
+                                setTimeout(() => {
+                                    if (errorDiv.parentNode) {
+                                        errorDiv.parentNode.removeChild(errorDiv);
+                                    }
+                                }, 5000);
+                            },
+                            {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0
                             }
                         );
                     } else {
-                        alert('Geolocation is not supported by your browser.');
+                        // Reset button
+                        getCurrentLocationBtn.innerHTML = originalBtnText;
+                        getCurrentLocationBtn.disabled = false;
+
+                        // Show error
+                        alert('Geolocation is not supported by your browser. Please search for your location manually.');
                     }
                 });
 
@@ -1157,26 +1340,87 @@ if (isset($_SESSION['error'])) {
             }
 
             function reverseGeocode(lat, lng) {
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
-                    .then(response => response.json())
+                // Show loading indicator if available
+                const loadingIndicator = document.getElementById('search-loading');
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'block';
+                }
+
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
+                        // Hide loading indicator
+                        if (loadingIndicator) {
+                            loadingIndicator.style.display = 'none';
+                        }
+
                         if (data && data.address) {
                             const address = data.address;
                             let fullAddress = [];
 
-                            // Build address string
-                            if (address.road) fullAddress.push(address.road);
+                            // Build address string with more details
                             if (address.house_number) fullAddress.push(address.house_number);
+                            if (address.road) fullAddress.push(address.road);
+                            if (address.neighbourhood) fullAddress.push(address.neighbourhood);
                             if (address.suburb) fullAddress.push(address.suburb);
+                            if (address.village) fullAddress.push(address.village);
 
+                            // If no components were found, use the display name
+                            if (fullAddress.length === 0 && data.display_name) {
+                                const displayParts = data.display_name.split(',');
+                                // Use the first 2-3 parts of the display name for the address
+                                fullAddress = displayParts.slice(0, Math.min(3, displayParts.length));
+                            }
+
+                            // Set form fields
                             document.getElementById('address').value = fullAddress.join(', ');
-                            document.getElementById('city').value = address.city || address.town || address.village || 'Manila';
-                            document.getElementById('state').value = address.state || '';
+                            document.getElementById('city').value = address.city || address.town || address.village || address.municipality || 'Manila';
+                            document.getElementById('province').value = address.state || address.province || '';
                             document.getElementById('postal_code').value = address.postcode || '1000';
                             document.getElementById('country').value = address.country || 'Philippines';
+
+                            // Determine address type based on the location data
+                            let addressType = 'Home'; // Default
+
+                            // Check for commercial/work locations
+                            if (
+                                address.amenity === 'office' ||
+                                address.office ||
+                                address.building === 'commercial' ||
+                                address.shop ||
+                                address.amenity === 'school' ||
+                                address.amenity === 'university' ||
+                                address.amenity === 'college' ||
+                                address.amenity === 'restaurant' ||
+                                address.amenity === 'cafe'
+                            ) {
+                                addressType = 'Work';
+                            }
+
+                            // Set the appropriate radio button
+                            const radioHome = document.getElementById('address_type_home');
+                            const radioWork = document.getElementById('address_type_work');
+                            const radioOther = document.getElementById('address_type_other');
+
+                            if (radioHome && radioWork && radioOther) {
+                                if (addressType === 'Work') {
+                                    radioWork.checked = true;
+                                } else {
+                                    radioHome.checked = true;
+                                }
+                            }
                         }
                     })
                     .catch(error => {
+                        // Hide loading indicator
+                        if (loadingIndicator) {
+                            loadingIndicator.style.display = 'none';
+                        }
                         console.error('Error during reverse geocoding:', error);
                     });
             }
@@ -1193,7 +1437,7 @@ if (isset($_SESSION['error'])) {
                         const addressParts = props.address.split(',');
                         if (addressParts.length >= 3) {
                             document.getElementById('city').value = addressParts[addressParts.length - 3].trim();
-                            document.getElementById('state').value = addressParts[addressParts.length - 2].trim();
+                            document.getElementById('province').value = addressParts[addressParts.length - 2].trim();
 
                             // Try to extract postal code
                             const postalMatch = props.address.match(/\b\d{4,5}\b/);
@@ -1206,6 +1450,32 @@ if (isset($_SESSION['error'])) {
                     // Set country
                     if (props.country) {
                         document.getElementById('country').value = props.country;
+                    }
+
+                    // Also perform reverse geocoding to get more detailed address information
+                    if (geocodeResult.center) {
+                        reverseGeocode(geocodeResult.center.lat, geocodeResult.center.lng);
+                    }
+                } else if (geocodeResult && geocodeResult.name) {
+                    // Handle simple name-based results
+                    document.getElementById('address').value = geocodeResult.name;
+
+                    // Try to extract components from the name
+                    const nameParts = geocodeResult.name.split(',');
+                    if (nameParts.length >= 2) {
+                        // Use the first part as the address
+                        document.getElementById('address').value = nameParts[0].trim();
+
+                        // Try to identify city and province
+                        if (nameParts.length >= 3) {
+                            document.getElementById('city').value = nameParts[1].trim();
+                            document.getElementById('province').value = nameParts[2].trim();
+                        }
+                    }
+
+                    // Also perform reverse geocoding to get more detailed address information
+                    if (geocodeResult.center) {
+                        reverseGeocode(geocodeResult.center.lat, geocodeResult.center.lng);
                     }
                 }
             }
