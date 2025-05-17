@@ -1387,6 +1387,86 @@ try {
                 right: -50px;
             }
         }
+
+        /* Address Modal Styles */
+        #editAddressModal .modal-dialog {
+            max-width: 500px;
+        }
+
+        #editAddressModal .modal-content {
+            border-radius: 4px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #editAddressModal .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        #editAddressModal .form-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+
+        #editAddressModal .form-control {
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        #editAddressModal .input-group-text {
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        #editAddressModal .nav-tabs .nav-link {
+            color: #6c757d;
+            font-size: 0.85rem;
+            padding: 0.5rem;
+        }
+
+        #editAddressModal .nav-tabs .nav-link.active {
+            color: #111827;
+            font-weight: 500;
+        }
+
+        #editAddressModal .list-group-item {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        #editAddressModal .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        #editAddressModal .list-group-item.active {
+            background-color: #e9ecef;
+            color: #111827;
+            border-color: #dee2e6;
+        }
+
+        #editAddressModal .form-check-label {
+            font-size: 0.9rem;
+        }
+
+        #editAddressModal .btn-primary {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        #editAddressModal .btn-primary:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+
+        #editAddressModal .modal-footer {
+            border-top: 1px solid #dee2e6;
+            padding: 0.75rem 1rem;
+        }
     </style>
 </head>
 <body>
@@ -1566,72 +1646,49 @@ try {
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="order-summary">
-                                        <h3 class="order-summary-title">Order Summary</h3>
+                                        <div class="card mb-3">
+                                            <div class="card-body p-3">
+                                                <h6 class="card-title mb-3">Order Summary</h6>
 
-                                        <div class="summary-item">
-                                            <span>Subtotal</span>
-                                            <span id="summary-subtotal">₱<?= number_format($totalAmount, 2) ?></span>
-                                        </div>
-                                        <div class="mb-3 pb-2 border-bottom">
-                                            <h6 class="mb-2 fw-bold">Delivery Options</h6>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input delivery-option" type="radio" name="delivery_option" id="delivery-option-pickup" value="pickup" checked>
-                                                <label class="form-check-label" for="delivery-option-pickup">
-                                                    In-store Pickup <span class="badge bg-success ms-1">Free</span>
-                                                </label>
-                                            </div>
-                                            <div class="form-check d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <input class="form-check-input delivery-option" type="radio" name="delivery_option" id="delivery-option-delivery" value="delivery">
-                                                    <label class="form-check-label" for="delivery-option-delivery">
-                                                        Home Delivery
-                                                    </label>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Subtotal</span>
+                                                    <span id="summary-subtotal">₱<?= number_format($totalAmount, 2) ?></span>
                                                 </div>
-                                                <span id="delivery-fee" class="text-muted">₱50.00</span>
-                                            </div>
-                                        </div>
 
-                                        <div class="mb-3 pb-2 border-bottom">
-                                            <h6 class="mb-2 fw-bold">Payment Method</h6>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input payment-method" type="radio" name="payment_method" id="payment-method-cod" value="cod" checked>
-                                                <label class="form-check-label" for="payment-method-cod">
-                                                    Cash on Delivery (COD)
-                                                </label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input payment-method" type="radio" name="payment_method" id="payment-method-gcash" value="gcash">
-                                                <label class="form-check-label d-flex align-items-center" for="payment-method-gcash">
-                                                    <span class="me-2">GCash</span>
-                                                    <span class="badge bg-primary" style="background-color: #0063FB !important;">
-                                                        <i class="bi bi-wallet2"></i>
-                                                    </span>
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input payment-method" type="radio" name="payment_method" id="payment-method-maya" value="maya">
-                                                <label class="form-check-label d-flex align-items-center" for="payment-method-maya">
-                                                    <span class="me-2">Maya</span>
-                                                    <span class="badge bg-primary" style="background-color: #6435C9 !important;">
-                                                        <i class="bi bi-credit-card"></i>
-                                                    </span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="summary-total">
-                                            <span>Total</span>
-                                            <span id="summary-total">₱<?= number_format($totalAmount, 2) ?></span>
-                                        </div>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Delivery Fee</span>
+                                                    <span id="delivery-fee">₱0.00</span>
+                                                </div>
 
-                                        <div class="mt-3 mb-3">
-                                            <div class="alert alert-info py-2 mb-0" role="alert" style="font-size: 0.85rem;">
-                                                <i class="bi bi-info-circle"></i>
-                                                <div class="alert-content">
-                                                    <p class="mb-1">Select items to include in your order using the checkboxes.</p>
-                                                    <p class="mb-1">Choose between in-store pickup (free) or home delivery (₱50.00).</p>
-                                                    <p class="mb-0">Select your preferred payment method: Cash on Delivery, GCash, or Maya.</p>
+                                                <hr class="my-2">
+
+                                                <div class="d-flex justify-content-between mb-3 fw-bold">
+                                                    <span>Total</span>
+                                                    <span id="summary-total">₱<?= number_format($totalAmount, 2) ?></span>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="delivery-option-select" class="form-label">Delivery Option</label>
+                                                    <select class="form-select form-select-sm" id="delivery-option-select">
+                                                        <option value="pickup" selected>In-store Pickup (Free)</option>
+                                                        <option value="delivery">Home Delivery (₱50.00)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="mb-2">
+                                                    <label for="payment-method-select" class="form-label">Payment Method</label>
+                                                    <select class="form-select form-select-sm" id="payment-method-select">
+                                                        <option value="cod" selected>Cash on Delivery (COD)</option>
+                                                        <option value="gcash">GCash</option>
+                                                        <option value="maya">Maya</option>
+                                                    </select>
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div class="alert alert-info py-2 mb-3" role="alert" style="font-size: 0.85rem;">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            Use checkboxes to select items for your order
                                         </div>
 
                                         <div class="mt-4">
@@ -1781,6 +1838,9 @@ try {
             </div>
         </div>
     </div>
+
+    <!-- We're using the address modal from profile.php instead of duplicating it here -->
+    <?php include_once('../includes/address-modal.php'); ?>
 
 
     <!-- Footer -->
@@ -2121,10 +2181,11 @@ try {
             // Handle item selection checkboxes for order summary
             const selectAllCheckbox = document.getElementById('select-all-items');
             const itemCheckboxes = document.querySelectorAll('.item-checkbox');
-            const deliveryOptions = document.querySelectorAll('.delivery-option');
-            const paymentMethods = document.querySelectorAll('.payment-method');
+            const deliveryOptionSelect = document.getElementById('delivery-option-select');
+            const paymentMethodSelect = document.getElementById('payment-method-select');
             const summarySubtotalElement = document.getElementById('summary-subtotal');
             const summaryTotalElement = document.getElementById('summary-total');
+            const deliveryFeeElement = document.getElementById('delivery-fee');
             const selectedItemsJsonInput = document.getElementById('selected-items-json');
             const deliveryOptionInput = document.getElementById('delivery-option-input');
             const paymentMethodInput = document.getElementById('payment-method-input');
@@ -2156,17 +2217,20 @@ try {
                 }
 
                 // Get selected delivery option
-                let deliveryOption = 'pickup'; // Default to pickup
-                deliveryOptions.forEach(option => {
-                    if (option.checked) {
-                        deliveryOption = option.value;
-                    }
-                });
+                let deliveryOption = deliveryOptionSelect ? deliveryOptionSelect.value : 'pickup';
 
                 // Calculate total (with or without delivery fee)
                 let total = subtotal;
+                let deliveryFee = 0;
+
                 if (deliveryOption === 'delivery') {
-                    total += 50; // Add delivery fee only for home delivery
+                    deliveryFee = 50; // Add delivery fee only for home delivery
+                    total += deliveryFee;
+                }
+
+                // Update delivery fee display
+                if (deliveryFeeElement) {
+                    deliveryFeeElement.textContent = '₱' + deliveryFee.toFixed(2);
                 }
 
                 // Format total
@@ -2192,12 +2256,7 @@ try {
                 }
 
                 // Get selected payment method
-                let paymentMethod = 'cod'; // Default to COD
-                paymentMethods.forEach(option => {
-                    if (option.checked) {
-                        paymentMethod = option.value;
-                    }
-                });
+                let paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cod';
 
                 // Update payment method input
                 if (paymentMethodInput) {
@@ -2277,19 +2336,19 @@ try {
                 });
             });
 
-            // Add event listeners to delivery option radio buttons
-            deliveryOptions.forEach(option => {
-                option.addEventListener('change', function() {
+            // Add event listener to delivery option select
+            if (deliveryOptionSelect) {
+                deliveryOptionSelect.addEventListener('change', function() {
                     updateOrderSummary();
                 });
-            });
+            }
 
-            // Add event listeners to payment method radio buttons
-            paymentMethods.forEach(option => {
-                option.addEventListener('change', function() {
+            // Add event listener to payment method select
+            if (paymentMethodSelect) {
+                paymentMethodSelect.addEventListener('change', function() {
                     updateOrderSummary();
                 });
-            });
+            }
 
             // Initialize order summary
             updateOrderSummary();
@@ -2331,6 +2390,9 @@ try {
 
                             // Update modal content
                             orderDetailsContent.innerHTML = orderDetails;
+
+                            // Initialize edit address button
+                            initEditAddressButton(data);
                         })
                         .catch(error => {
                             console.error('Error fetching order details:', error);
@@ -2340,6 +2402,9 @@ try {
 
                             // Update modal content
                             orderDetailsContent.innerHTML = orderDetails;
+
+                            // Initialize edit address button with sample data
+                            initEditAddressButton();
                         });
                 });
             }
@@ -2452,7 +2517,12 @@ try {
                         <div class="col-md-6 mb-4">
                             <h6 class="text-muted mb-3">Order Information</h6>
                             ${orderData.address ? `
-                                <p class="mb-1"><strong>Address:</strong></p>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <p class="mb-0"><strong>Delivery Address:</strong></p>
+                                    <button type="button" class="btn btn-sm btn-outline-primary edit-address-btn" data-bs-toggle="modal" data-bs-target="#editAddressModal">
+                                        <i class="bi bi-pencil-square me-1"></i>Edit
+                                    </button>
+                                </div>
                                 <p class="mb-3">${orderData.address}</p>
                             ` : ''}
                             <p class="mb-1"><strong>Payment Status:</strong></p>
@@ -2487,6 +2557,40 @@ try {
                         </div>
                     </div>
                 `;
+            }
+
+            /**
+             * Initialize the edit address button functionality
+             * @param {Object} orderData - The order data containing address information
+             */
+            function initEditAddressButton(orderData = null) {
+                // Get the edit address button
+                const editAddressBtn = document.querySelector('.edit-address-btn');
+                if (!editAddressBtn) return;
+
+                // Default sample data if no order data is provided
+                const defaultData = {
+                    full_name: 'Juan Dela Cruz',
+                    phone: '9051234567',
+                    address: '123 Sample Street, Barangay Sample, Manila, Philippines',
+                    address_type: 'Home',
+                    latitude: 14.5995,
+                    longitude: 120.9842
+                };
+
+                // Use provided order data or default data
+                const data = orderData || defaultData;
+
+                // Add click event listener to the edit address button
+                editAddressBtn.addEventListener('click', function() {
+                    // We'll use the address modal from profile.php
+                    // This will be handled by including the address-modal.js file
+
+                    // Store the order data in sessionStorage to be used by the address modal
+                    sessionStorage.setItem('addressData', JSON.stringify(data));
+
+                    // The modal will be shown via data-bs-toggle="modal" data-bs-target="#address-modal"
+                });
             }
         });
     </script>
